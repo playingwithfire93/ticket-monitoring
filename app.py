@@ -162,7 +162,7 @@ URLS = [
 ]
 from datetime import datetime, timezone
 
-
+@app.route("/changes")
 def get_changes():
     changes = []
     for url in URLS:
