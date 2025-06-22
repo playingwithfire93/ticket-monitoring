@@ -111,6 +111,7 @@ def home():
 """)
 
 URLS = [
+    "https://httpbin.org/get",
     "https://wickedelmusical.com/",
     "https://wickedelmusical.com/elenco",
     "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01",
