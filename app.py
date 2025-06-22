@@ -1,11 +1,14 @@
 from flask import Flask, jsonify, render_template_string
 from apscheduler.schedulers.background import BackgroundScheduler
-
+import requests
+import json
+from pytz import utc  # or from datetime import timezone; timezone.utc
 import os
 
 app = Flask(__name__)
-import requests
-previous_states = {}
+
+
+scheduler = BackgroundScheduler(timezone=utc) 
 
 TELEGRAM_BOT_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 TELEGRAM_CHAT_ID = '553863319'
