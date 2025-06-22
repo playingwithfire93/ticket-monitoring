@@ -72,7 +72,6 @@ def home():
   </footer>
 
   <script>
-    <script>
   // Request permission for notifications on page load
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
@@ -132,8 +131,6 @@ def home():
   setInterval(loadChanges, 15000); // Refresh every 15 seconds
 </script>
 
-
-  </script>
 
 </body>
 </html>
