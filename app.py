@@ -99,6 +99,7 @@ def home():
           <p class="text-sm text-gray-700 mb-1"><strong>Status:</strong> <span class="text-green-600 font-semibold">${change.status}</span></p>
           <p class="text-sm text-gray-600 mb-3">${change.summary}</p>
           <time class="mt-auto text-xs text-gray-500 italic">Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
+
         `;
 
         container.appendChild(card);
@@ -152,6 +153,7 @@ URLS = [
     "https://buscandoaaudrey.com"
 ]
 from datetime import datetime, timezone
+datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
 
 @app.route("/changes")
 def get_changes():
@@ -182,7 +184,7 @@ def get_changes():
             "site": url,
             "status": status,
             "summary": summary,
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
 
 
         })
