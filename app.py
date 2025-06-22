@@ -79,11 +79,12 @@ def home():
               card.className = "card";
 
               card.innerHTML = `
-                <h3>${change.site}</h3>
+                <h3><a href="${change.site}" target="_blank" rel="noopener noreferrer">${change.site}</a></h3>
                 <p>Status: ${change.status}</p>
                 <p>Summary: ${change.summary}</p>
                 <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
-              `;
+        `;
+
 
               container.appendChild(card);
             });
