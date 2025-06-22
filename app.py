@@ -72,38 +72,67 @@ def home():
   </footer>
 
   <script>
-    async function loadChanges() {
-      const container = document.getElementById("changesContainer");
-      try {
-        const res = await fetch("/changes");
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
+    <script>
+  // Request permission for notifications on page load
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
 
-        container.innerHTML = "";
+  const alertSound = new Audio("/static/sounds/door-bell.mp3");
 
-        data.forEach(change => {
-          const card = document.createElement("div");
-          card.className = "bg-white bg-opacity-80 backdrop-blur-md rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col";
+  async function loadChanges() {
+    const container = document.getElementById("changesContainer");
+    try {
+      const res = await fetch("/changes");
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
 
-          card.innerHTML = `
-            <h3 class="text-purple-900 font-bold text-lg mb-2 truncate">
-              <a href="${change.site}" target="_blank" rel="noopener noreferrer" class="hover:text-pink-600 transition-colors duration-200 underline decoration-pink-400">${change.site}</a>
-            </h3>
-            <p class="text-sm text-gray-700 mb-1"><strong>Status:</strong> <span class="text-green-600 font-semibold">${change.status}</span></p>
-            <p class="text-sm text-gray-600 mb-3">${change.summary}</p>
-            <time class="mt-auto text-xs text-gray-500 italic">Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
-          `;
+      container.innerHTML = "";
 
-          container.appendChild(card);
-        });
-      } catch (err) {
-        container.innerHTML = '<p class="col-span-full text-center text-red-600 font-semibold">⚠️ Could not load data. Check connection or server.</p>';
-        console.error(err);
-      }
+      data.forEach(change => {
+        const card = document.createElement("div");
+        card.className = "bg-white bg-opacity-80 backdrop-blur-md rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col";
+
+        card.innerHTML = `
+          <h3 class="text-purple-900 font-bold text-lg mb-2 truncate">
+            <a href="${change.site}" target="_blank" rel="noopener noreferrer" class="hover:text-pink-600 transition-colors duration-200 underline decoration-pink-400">${change.site}</a>
+          </h3>
+          <p class="text-sm text-gray-700 mb-1"><strong>Status:</strong> <span class="text-green-600 font-semibold">${change.status}</span></p>
+          <p class="text-sm text-gray-600 mb-3">${change.summary}</p>
+          <time class="mt-auto text-xs text-gray-500 italic">Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
+        `;
+
+        container.appendChild(card);
+
+        // Trigger notification and alerts if changed
+        if (change.status === "changed") {
+          if (Notification.permission === "granted") {
+            new Notification("Ticket Monitor Update", {
+              body: `${change.site} — ${change.summary}`,
+              icon: "/static/icon.png",  // optional icon in static folder
+            });
+          }
+
+          alertSound.play().catch(e => console.log("Sound play failed:", e));
+
+          document.title = "🔔 Ticket Update!";
+
+          if ("vibrate" in navigator) {
+            navigator.vibrate(1000);
+          }
+        }
+      });
+    } catch (err) {
+      container.innerHTML = '<p class="col-span-full text-center text-red-600 font-semibold">⚠️ Could not load data. Check connection or server.</p>';
+      console.error(err);
     }
+  }
 
-    loadChanges(); // Initial load
-    setInterval(loadChanges, 15000); // Refresh every 15 seconds
+  loadChanges(); // Initial load
+  setInterval(loadChanges, 15000); // Refresh every 15 seconds
+</script>
+
+
   </script>
 
 </body>
@@ -111,6 +140,7 @@ def home():
 """)
 
 URLS = [
+    "https://httpbin.org/get/",
     "https://wickedelmusical.com/",
     "https://wickedelmusical.com/elenco",
     "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01",
