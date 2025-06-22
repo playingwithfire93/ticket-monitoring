@@ -8,11 +8,9 @@ from datetime import datetime, timezone
 
 app = Flask(__name__)
 
-# Global storage
 previous_states = {}
 latest_changes = []
 
-# Telegram Configuration
 TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 CHAT_ID = '553863319'
 
@@ -21,14 +19,12 @@ def send_telegram_message(message):
     if not TELEGRAM_TOKEN or not CHAT_ID:
         print("Telegram bot token or chat ID not set.")
         return False
-
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id": CHAT_ID,
         "text": message,
         "parse_mode": "Markdown",
     }
-
     try:
         response = requests.post(url, data=payload)
         return response.status_code == 200
@@ -62,7 +58,6 @@ URLS = [
 def check_sites():
     global previous_states, latest_changes
     print(f"Running scheduled check at {datetime.now().isoformat()}")
-
     changes = []
     for url in URLS:
         current_content = fetch_page_content(url)
@@ -90,7 +85,6 @@ def check_sites():
             "summary": summary,
             "timestamp": timestamp
         })
-
     latest_changes = changes
 
 @app.route("/")
@@ -105,7 +99,6 @@ def home():
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-r from-purple-300 via-pink-300 to-red-300 min-h-screen flex flex-col">
-
   <header class="bg-gradient-to-r from-purple-700 via-pink-700 to-red-700 text-white text-center py-6 shadow-lg font-extrabold text-3xl tracking-wide">
     🎭 Ticket Monitor Dashboard
   </header>
@@ -144,22 +137,20 @@ def home():
         data.forEach(change => {
           const card = document.createElement("div");
           card.className = "bg-white bg-opacity-80 backdrop-blur-md rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col";
-        const formatted = new Intl.DateTimeFormat("es-ES", {
-  dateStyle: "medium",
-  timeStyle: "short",
-}).format(new Date(Date.parse(change.timestamp)));
+
+          const formatted = new Intl.DateTimeFormat("es-ES", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(Date.parse(change.timestamp)));
+
           card.innerHTML = `
             <h3 class="text-purple-900 font-bold text-lg mb-2 truncate">
               <a href="${change.site}" target="_blank" rel="noopener noreferrer" class="hover:text-pink-600 transition-colors duration-200 underline decoration-pink-400">${change.site}</a>
             </h3>
             <p class="text-sm text-gray-700 mb-1"><strong>Status:</strong> <span class="text-green-600 font-semibold">${change.status}</span></p>
             <p class="text-sm text-gray-600 mb-3">${change.summary}</p>
-            time class="mt-auto text-xs text-gray-500 italic">
-  Last checked: ${new Date(change.timestamp).toLocaleString()}
-</time>
-
+            <time class="mt-auto text-xs text-gray-500 italic">Last checked: ${formatted}</time>
           `;
-
           container.appendChild(card);
 
           if (change.status === "changed") {
@@ -171,12 +162,8 @@ def home():
             }
 
             alertSound.play().catch(e => console.log("Sound play failed:", e));
-
             document.title = "🔔 Ticket Update!";
-
-            if ("vibrate" in navigator) {
-              navigator.vibrate(1000);
-            }
+            if ("vibrate" in navigator) navigator.vibrate(1000);
           }
         });
       } catch (err) {
@@ -205,12 +192,10 @@ def urls():
     except Exception as e:
         return jsonify({"error": f"Could not load URL list: {e}"}), 500
 
-# Start monitoring
 scheduler = BackgroundScheduler(timezone=utc)
 scheduler.add_job(func=check_sites, trigger="interval", seconds=60)
 scheduler.start()
 
-# Initial run so the UI has data on startup
 check_sites()
 
 if __name__ == "__main__":
