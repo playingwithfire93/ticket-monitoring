@@ -100,23 +100,31 @@ def home():
     </html>
     """)
 
+URLS = [
+    "https://wickedelmusical.com/",
+    "https://wickedelmusical.com/elenco",
+    "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01",
+    "https://www.houdinielmusical.com",
+    "https://miserableselmusical.es/",
+    "https://miserableselmusical.es/elenco",
+    "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01",
+    "https://thebookofmormonelmusical.es",
+    "https://thebookofmormonelmusical.es/elenco/",
+    "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01",
+    "https://buscandoaaudrey.com"
+]
+from datetime import datetime
 @app.route("/changes")
 def get_changes():
-    # Dummy data - replace with your real monitoring data
-    return jsonify([
-        {
-            "site": "https://wickedelmusical.es",
-            "status": "changed",
-            "summary": "New tickets available for July.",
-            "timestamp": "2025-06-22T18:43:00Z"
-        },
-        {
-            "site": "https://lesmiserables.es",
-            "status": "unchanged",
+    changes = []
+    for url in URLS:
+        changes.append({
+            "site": url,
+            "status": "unchanged",  # You can change this later via logic or data
             "summary": "No updates detected.",
-            "timestamp": "2025-06-22T18:40:00Z"
-        }
-    ])
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        })
+    return jsonify(changes)
 
 @app.route("/urls")
 def urls():
