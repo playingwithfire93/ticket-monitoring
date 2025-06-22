@@ -74,7 +74,6 @@ def check_sites():
             elif current_content != prev_content:
                 status = "changed"
                 summary = "New tickets or changes detected!"
-                send_telegram_message(f"🎟️ Update detected for {url}: {summary}")
                 previous_states[url] = current_content
 
         timestamp = datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
@@ -86,6 +85,8 @@ def check_sites():
             "timestamp": timestamp
         })
     latest_changes = changes
+    print(f"Updated latest_changes with {len(latest_changes)} entries")
+
 
 @app.route("/")
 def home():
@@ -157,7 +158,6 @@ def home():
             if (Notification.permission === "granted") {
               new Notification("Ticket Monitor Update", {
                 body: `${change.site} — ${change.summary}`,
-                icon: "/static/icon.png",
               });
             }
 
@@ -200,4 +200,4 @@ check_sites()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug =True)

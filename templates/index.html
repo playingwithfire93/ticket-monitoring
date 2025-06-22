@@ -18,7 +18,8 @@
 
   <main class="max-w-4xl mx-auto px-4 py-6">
     {% for item in changes %}
-    <div class="bg-white rounded-2xl shadow-md p-4 mb-4 border border-gray-200 hover:shadow-xl transition">
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-4 mb-4 transform transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:bg-gray-50">
+
       <h2 class="text-lg font-semibold break-words">
         <a href="{{ item.site }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">
           {{ item.site }}
