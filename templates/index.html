@@ -1,41 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ticket Monitor Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Ticket Monitor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script defer src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-100 text-gray-800 p-6">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4">🎭 Ticket Monitor Dashboard</h1>
+    <p class="mb-2 text-gray-600" id="lastChecked">Last Checked: ...</p>
+    <ul class="list-disc pl-6" id="changesList"></ul>
+  </div>
 
-  <header class="bg-indigo-600 text-white py-6 shadow-md mb-6">
-    <div class="max-w-6xl mx-auto px-4">
-      <h1 class="text-2xl font-bold flex items-center gap-2">
-        🎭 Ticket Monitor Dashboard
-      </h1>
-    </div>
-  </header>
+  <script>
+    async function update() {
+      const res = await fetch("/status");
+      const data = await res.json();
+      document.getElementById("lastChecked").textContent = "Last Checked: " + new Date(data.last_checked).toLocaleString();
 
-  <main class="max-w-4xl mx-auto px-4 py-6">
-    {% for item in changes %}
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-4 mb-4 transform transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:bg-gray-50">
+      const list = document.getElementById("changesList");
+      list.innerHTML = "";
+      data.changes.forEach(change => {
+        const li = document.createElement("li");
+        li.textContent = change;
+        list.appendChild(li);
+      });
+    }
 
-      <h2 class="text-lg font-semibold break-words">
-        <a href="{{ item.site }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">
-          {{ item.site }}
-        </a>
-      </h2>
-      <p class="mt-2">
-        <span class="font-medium">Status:</span>
-        <span class="{% if item.status == 'changed' %}text-green-600{% else %}text-gray-600{% endif %}">
-          {{ item.status }}
-        </span>
-      </p>
-      <p><span class="font-medium">Summary:</span> {{ item.summary }}</p>
-      <p class="text-sm text-gray-500 mt-1">Last checked: {{ item.timestamp }}</p>
-    </div>
-    {% endfor %}
-  </main>
-
+    update();
+    setInterval(update, 10000); // every 10 sec
+  </script>
 </body>
 </html>
