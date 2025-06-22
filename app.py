@@ -144,14 +144,20 @@ def home():
         data.forEach(change => {
           const card = document.createElement("div");
           card.className = "bg-white bg-opacity-80 backdrop-blur-md rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col";
-
+        const formatted = new Intl.DateTimeFormat("es-ES", {
+  dateStyle: "medium",
+  timeStyle: "short",
+}).format(new Date(Date.parse(change.timestamp)));
           card.innerHTML = `
             <h3 class="text-purple-900 font-bold text-lg mb-2 truncate">
               <a href="${change.site}" target="_blank" rel="noopener noreferrer" class="hover:text-pink-600 transition-colors duration-200 underline decoration-pink-400">${change.site}</a>
             </h3>
             <p class="text-sm text-gray-700 mb-1"><strong>Status:</strong> <span class="text-green-600 font-semibold">${change.status}</span></p>
             <p class="text-sm text-gray-600 mb-3">${change.summary}</p>
-            <time class="mt-auto text-xs text-gray-500 italic">Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
+            time class="mt-auto text-xs text-gray-500 italic">
+  Last checked: ${new Date(change.timestamp).toLocaleString()}
+</time>
+
           `;
 
           container.appendChild(card);
