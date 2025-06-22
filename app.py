@@ -203,8 +203,8 @@ def check_sites():
     latest_changes = changes
 
 # Start scheduler
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_sites, trigger="interval", seconds=60)  # every 60 seconds
+scheduler = BackgroundScheduler(timezone=utc)
+scheduler.add_job(func=check_sites, trigger="interval", seconds=60)
 scheduler.start()
 
 @app.route("/changes")
