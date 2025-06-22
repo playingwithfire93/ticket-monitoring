@@ -8,6 +8,7 @@ previous_states = {}
 TELEGRAM_BOT_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 TELEGRAM_CHAT_ID = '553863319'
 
+
 def send_telegram_message(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("Telegram bot token or chat ID not set in environment variables.")
@@ -77,7 +78,7 @@ def home():
     Notification.requestPermission();
   }
 
-  const alertSound = new Audio("/static/sounds/door-bell.mp3");
+  const alertSound = new Audio("/static/door-bell-sound-99933.mp3");
 
   async function loadChanges() {
     const container = document.getElementById("changesContainer");
@@ -153,11 +154,11 @@ URLS = [
     "https://buscandoaaudrey.com"
 ]
 from datetime import datetime, timezone
-datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
 
 @app.route("/changes")
 def get_changes():
     changes = []
+    timestamp = datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
     for url in URLS:
         current_content = fetch_page_content(url)
         status = "unchanged"
@@ -169,24 +170,20 @@ def get_changes():
             prev_content = previous_states.get(url)
 
             if prev_content is None:
-                # First time checking this url, store content
                 previous_states[url] = current_content
                 summary = "First check, no previous data."
             else:
-                # Compare current content with previous content
                 if current_content != prev_content:
                     status = "changed"
                     summary = "New tickets or changes detected!"
                     send_telegram_message(f"🎟️ Update detected for {url}: {summary}")
-                    previous_states[url] = current_content  # Update stored state
+                    previous_states[url] = current_content
 
         changes.append({
             "site": url,
             "status": status,
             "summary": summary,
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
-
-
+            "timestamp": timestamp
         })
     return jsonify(changes)
 
