@@ -2,7 +2,6 @@ from flask import Flask, jsonify, render_template_string
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 import json
-from pytz import utc
 import os
 from datetime import datetime, timezone
 
@@ -10,35 +9,6 @@ app = Flask(__name__)
 
 previous_states = {}
 latest_changes = []
-
-TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
-CHAT_ID = '553863319'
-
-
-def send_telegram_message(message):
-    if not TELEGRAM_TOKEN or not CHAT_ID:
-        print("Telegram bot token or chat ID not set.")
-        return False
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": message,
-        "parse_mode": "Markdown",
-    }
-    try:
-        response = requests.post(url, data=payload)
-        return response.status_code == 200
-    except Exception as e:
-        print(f"Exception sending Telegram message: {e}")
-        return False
-
-def fetch_page_content(url):
-    try:
-        response = requests.get(url, timeout=10)
-        return response.text if response.ok else None
-    except Exception as e:
-        print(f"Error fetching {url}: {e}")
-        return None
 
 URLS = [
     "https://httpbin.org/get/",
@@ -54,6 +24,14 @@ URLS = [
     "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01",
     "https://buscandoaaudrey.com"
 ]
+
+def fetch_page_content(url):
+    try:
+        response = requests.get(url, timeout=10)
+        return response.text if response.ok else None
+    except Exception as e:
+        print(f"Error fetching {url}: {e}")
+        return None
 
 def check_sites():
     global previous_states, latest_changes
@@ -86,7 +64,6 @@ def check_sites():
         })
     latest_changes = changes
     print(f"Updated latest_changes with {len(latest_changes)} entries")
-
 
 @app.route("/")
 def home():
@@ -158,6 +135,7 @@ def home():
             if (Notification.permission === "granted") {
               new Notification("Ticket Monitor Update", {
                 body: `${change.site} — ${change.summary}`,
+                icon: "/static/icon.png",
               });
             }
 
@@ -192,7 +170,7 @@ def urls():
     except Exception as e:
         return jsonify({"error": f"Could not load URL list: {e}"}), 500
 
-scheduler = BackgroundScheduler(timezone=utc)
+scheduler = BackgroundScheduler()
 scheduler.add_job(func=check_sites, trigger="interval", seconds=60)
 scheduler.start()
 
@@ -200,4 +178,4 @@ check_sites()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug =True)
+    app.run(host="0.0.0.0", port=port)
