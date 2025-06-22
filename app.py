@@ -151,7 +151,8 @@ URLS = [
     "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01",
     "https://buscandoaaudrey.com"
 ]
-from datetime import datetime
+from datetime import datetime, timezone
+
 @app.route("/changes")
 def get_changes():
     changes = []
@@ -181,7 +182,9 @@ def get_changes():
             "site": url,
             "status": status,
             "summary": summary,
-            "timestamp": datetime.datetime.now(datetime.UTC)
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+
+
         })
     return jsonify(changes)
 
