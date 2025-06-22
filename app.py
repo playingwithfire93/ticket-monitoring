@@ -1,4 +1,6 @@
 from flask import Flask, jsonify, render_template_string
+from apscheduler.schedulers.background import BackgroundScheduler
+
 import os
 
 app = Flask(__name__)
@@ -8,6 +10,8 @@ previous_states = {}
 TELEGRAM_BOT_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 TELEGRAM_CHAT_ID = '553863319'
 
+previous_states = {}
+latest_changes = []
 
 def send_telegram_message(message):
     print("Sending Telegram message...")  # debug
@@ -160,8 +164,11 @@ URLS = [
 ]
 from datetime import datetime, timezone
 
-@app.route("/changes")
-def get_changes():
+
+def check_sites():
+    global previous_states, latest_changes
+    print(f"Running scheduled check at {datetime.now()}")
+
     changes = []
     for url in URLS:
         current_content = fetch_page_content(url)
@@ -181,7 +188,6 @@ def get_changes():
                 send_telegram_message(f"🎟️ Update detected for {url}: {summary}")
                 previous_states[url] = current_content
 
-        # 🕒 Generate fresh timestamp per URL
         timestamp = datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
 
         changes.append({
@@ -190,7 +196,17 @@ def get_changes():
             "summary": summary,
             "timestamp": timestamp
         })
-    return jsonify(changes)
+
+    latest_changes = changes
+
+# Start scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_sites, trigger="interval", seconds=60)  # every 60 seconds
+scheduler.start()
+
+@app.route("/changes")
+def get_changes():
+    return jsonify(latest_changes)
 
 @app.route("/urls")
 def urls():
