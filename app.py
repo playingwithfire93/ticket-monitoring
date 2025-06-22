@@ -10,39 +10,44 @@ TELEGRAM_CHAT_ID = '553863319'
 
 
 def send_telegram_message(message):
+    print("Sending Telegram message...")  # debug
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Telegram bot token or chat ID not set in environment variables.")
+        print("Telegram bot token or chat ID not set.")
         return False
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
-        "parse_mode": "Markdown",  # or HTML if you prefer
+        "parse_mode": "Markdown",
     }
 
     try:
         response = requests.post(url, data=payload)
         if response.status_code == 200:
-            print("Telegram message sent!")
+            print("Telegram message sent successfully!")
             return True
         else:
-            print(f"Failed to send message. Response: {response.text}")
+            print(f"Failed to send Telegram message. Response: {response.text}")
             return False
     except Exception as e:
-        print(f"Error sending telegram message: {e}")
+        print(f"Exception sending Telegram message: {e}")
         return False
+
 
 def fetch_page_content(url):
     try:
         response = requests.get(url, timeout=10)
+        print(f"Fetched {url} with status {response.status_code}")  # Debug print
         if response.ok:
-            return response.text  # Or do response.text[:1000] to limit size
+            return response.text
         else:
+            print(f"Bad response from {url}: {response.status_code}")
             return None
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return None
+
 
 
 @app.route("/")
