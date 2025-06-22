@@ -181,7 +181,7 @@ def get_changes():
             "site": url,
             "status": status,
             "summary": summary,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.datetime.now(datetime.UTC)
         })
     return jsonify(changes)
 
