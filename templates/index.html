@@ -1,25 +1,30 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Ticket Monitor</title>
-  <meta charset="UTF-8" />
-  <style>
-    body { font-family: sans-serif; background: #111; color: #eee; padding: 2em; }
-    li { margin-bottom: 0.5em; }
-  </style>
-  <script>
-    async function update() {
-      const res = await fetch("/status");
+<script>
+  async function loadChanges() {
+    const container = document.getElementById("changesContainer");
+    try {
+      const res = await fetch("/changes");
       const data = await res.json();
-      document.getElementById("results").innerHTML =
-        data.map(x => `<li>${x}</li>`).join("");
+
+      container.innerHTML = ""; // Clear previous content
+
+      data.forEach(change => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <h3>${change.site}</h3>
+          <p>Status: ${change.status}</p>
+          <p>Message: ${change.message}</p>
+          <time>Last checked: ${change.timestamp}</time>
+        `;
+
+        container.appendChild(card);
+      });
+    } catch (err) {
+      container.innerHTML = "<p>⚠️ Could not load data. Check connection or server.</p>";
     }
-    setInterval(update, 5000);
-    window.onload = update;
-  </script>
-</head>
-<body>
-  <h1>🎟 Ticket Monitor</h1>
-  <ul id="results">Loading...</ul>
-</body>
-</html>
+  }
+
+  loadChanges(); // Initial load
+  setInterval(loadChanges, 15000); // Refresh every 15 seconds
+</script>
