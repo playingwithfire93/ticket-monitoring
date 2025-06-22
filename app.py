@@ -158,7 +158,6 @@ from datetime import datetime, timezone
 @app.route("/changes")
 def get_changes():
     changes = []
-    timestamp = datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
     for url in URLS:
         current_content = fetch_page_content(url)
         status = "unchanged"
@@ -168,16 +167,17 @@ def get_changes():
             summary = "Failed to fetch site."
         else:
             prev_content = previous_states.get(url)
-
             if prev_content is None:
                 previous_states[url] = current_content
                 summary = "First check, no previous data."
-            else:
-                if current_content != prev_content:
-                    status = "changed"
-                    summary = "New tickets or changes detected!"
-                    send_telegram_message(f"🎟️ Update detected for {url}: {summary}")
-                    previous_states[url] = current_content
+            elif current_content != prev_content:
+                status = "changed"
+                summary = "New tickets or changes detected!"
+                send_telegram_message(f"🎟️ Update detected for {url}: {summary}")
+                previous_states[url] = current_content
+
+        # 🕒 Generate fresh timestamp per URL
+        timestamp = datetime.now(timezone.utc).isoformat(timespec='milliseconds') + "Z"
 
         changes.append({
             "site": url,
@@ -186,8 +186,6 @@ def get_changes():
             "timestamp": timestamp
         })
     return jsonify(changes)
-
-
 
 @app.route("/urls")
 def urls():
