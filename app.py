@@ -2,6 +2,47 @@ from flask import Flask, jsonify, render_template_string
 import os
 
 app = Flask(__name__)
+import requests
+previous_states = {}
+
+TELEGRAM_BOT_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
+TELEGRAM_CHAT_ID = '553863319'
+
+def send_telegram_message(message):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Telegram bot token or chat ID not set in environment variables.")
+        return False
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown",  # or HTML if you prefer
+    }
+
+    try:
+        response = requests.post(url, data=payload)
+        if response.status_code == 200:
+            print("Telegram message sent!")
+            return True
+        else:
+            print(f"Failed to send message. Response: {response.text}")
+            return False
+    except Exception as e:
+        print(f"Error sending telegram message: {e}")
+        return False
+
+def fetch_page_content(url):
+    try:
+        response = requests.get(url, timeout=10)
+        if response.ok:
+            return response.text  # Or do response.text[:1000] to limit size
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching {url}: {e}")
+        return None
+
 
 @app.route("/")
 def home():
@@ -87,13 +128,36 @@ from datetime import datetime
 def get_changes():
     changes = []
     for url in URLS:
+        current_content = fetch_page_content(url)
+        status = "unchanged"
+        summary = "No updates detected."
+
+        if current_content is None:
+            summary = "Failed to fetch site."
+        else:
+            prev_content = previous_states.get(url)
+
+            if prev_content is None:
+                # First time checking this url, store content
+                previous_states[url] = current_content
+                summary = "First check, no previous data."
+            else:
+                # Compare current content with previous content
+                if current_content != prev_content:
+                    status = "changed"
+                    summary = "New tickets or changes detected!"
+                    send_telegram_message(f"🎟️ Update detected for {url}: {summary}")
+                    previous_states[url] = current_content  # Update stored state
+
         changes.append({
             "site": url,
-            "status": "unchanged",  # You can change this later via logic or data
-            "summary": "No updates detected.",
+            "status": status,
+            "summary": summary,
             "timestamp": datetime.utcnow().isoformat() + "Z"
         })
     return jsonify(changes)
+
+
 
 @app.route("/urls")
 def urls():
