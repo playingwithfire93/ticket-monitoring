@@ -68,6 +68,7 @@ def home():
           const container = document.getElementById("changesContainer");
           try {
             const res = await fetch("/changes");
+            if (!res.ok) throw new Error('Network response was not ok');
             const data = await res.json();
 
             container.innerHTML = "";
@@ -76,22 +77,23 @@ def home():
               const card = document.createElement("div");
               card.className = "card";
 
-              card.innerHTML = \`
-                <h3>\${change.site}</h3>
-                <p>Status: \${change.status}</p>
-                <p>Message: \${change.summary || change.message}</p>
-                <time>Last checked: \${change.timestamp}</time>
-              \`;
+              card.innerHTML = `
+                <h3>${change.site}</h3>
+                <p>Status: ${change.status}</p>
+                <p>Summary: ${change.summary}</p>
+                <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
+              `;
 
               container.appendChild(card);
             });
           } catch (err) {
             container.innerHTML = "<p>⚠️ Could not load data. Check connection or server.</p>";
+            console.error(err);
           }
         }
 
-        loadChanges();
-        setInterval(loadChanges, 15000);
+        loadChanges(); // Initial load
+        setInterval(loadChanges, 15000); // Refresh every 15 seconds
       </script>
     </body>
     </html>
@@ -99,7 +101,7 @@ def home():
 
 @app.route("/changes")
 def get_changes():
-    # Replace this with your actual results data
+    # Dummy data - replace with your real monitoring data
     return jsonify([
         {
             "site": "https://wickedelmusical.es",
@@ -114,3 +116,6 @@ def get_changes():
             "timestamp": "2025-06-22T18:40:00Z"
         }
     ])
+
+if __name__ == "__main__":
+    app.run(debug=True)
