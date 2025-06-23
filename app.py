@@ -305,37 +305,36 @@ def changes():
     now = datetime.now(UTC).isoformat()
 
     for item in URLS:
-    label = item["label"]
-    url = item["url"]
+        label = item["label"]
+        url = item["url"]
 
-    # For test URL, always mark as updated
-    if "httpbin.org" in url:
-        status = "¡Actualizado! 🎉"
-        state = str(datetime.now())
-    else:
-        state = extract_normalized_date_info(url)
-        if state is None:
-            state = hash_url_content(url)
-
-        last_state = previous_states.get(url)
-        if last_state is None:
-            status = "Primer chequeo 👀"
-        elif last_state != state:
+        # For test URL, always mark as updated
+        if "httpbin.org" in url:
             status = "¡Actualizado! 🎉"
+            state = str(datetime.now())
         else:
-            status = "Sin cambios ✨"
+            state = extract_normalized_date_info(url)
+            if state is None:
+                state = hash_url_content(url)
 
-    previous_states[url] = state
+            last_state = previous_states.get(url)
+            if last_state is None:
+                status = "Primer chequeo 👀"
+            elif last_state != state:
+                status = "¡Actualizado! 🎉"
+            else:
+                status = "Sin cambios ✨"
 
-    changes_list.append({
-        "label": label,
-        "url": url,
-        "status": status,
-        "timestamp": now
-    })
+        previous_states[url] = state
+
+        changes_list.append({
+            "label": label,
+            "url": url,
+            "status": status,
+            "timestamp": now
+        })
 
     return jsonify(changes_list)
-
 
 @app.route("/urls")
 def urls():
