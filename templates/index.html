@@ -11,29 +11,46 @@
           colors: {
             primary: '#8b5cf6',
             highlight: '#22c55e',
+            danger: '#ef4444',
           },
           animation: {
             fade: 'fadeIn 1s ease-in-out',
+            pulseFast: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
           },
           keyframes: {
             fadeIn: {
               '0%': { opacity: 0 },
               '100%': { opacity: 1 },
             }
+          },
+          backgroundImage: {
+            pattern: "radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1px)",
           }
         }
       }
     };
   </script>
 </head>
-<body class="bg-gradient-to-br from-purple-100 to-pink-100 min-h-screen text-gray-800 font-sans p-6">
-  <div class="max-w-3xl mx-auto space-y-6">
-    <h1 class="text-4xl font-extrabold text-center text-primary drop-shadow-sm animate-fade">🎭 Ticket Monitor Dashboard</h1>
+<body class="bg-gradient-to-br from-purple-100 to-pink-100 min-h-screen text-gray-800 font-sans p-6 relative">
 
-    <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
-      <p id="lastChecked" class="text-sm text-gray-500 italic mb-4">Last Checked: ...</p>
-      <ul id="changesList" class="space-y-3">
-        <li class="text-gray-500">⏳ Loading updates...</li>
+  <!-- Subtle Background Pattern -->
+  <div class="absolute inset-0 bg-[length:20px_20px] bg-pattern opacity-10 z-0"></div>
+
+  <div class="relative z-10 max-w-4xl mx-auto space-y-6">
+    <h1 class="text-5xl font-black text-center text-primary drop-shadow-sm animate-fade tracking-tight">
+      🎭 Ticket Monitor Dashboard
+    </h1>
+
+    <div class="bg-white shadow-2xl rounded-2xl p-6 border border-gray-200 transition-all hover:shadow-purple-300">
+      <div class="flex justify-between items-center mb-4">
+        <p id="lastChecked" class="text-sm text-gray-500 italic">Last Checked: ...</p>
+        <span class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-primary text-white animate-pulseFast">
+          🔄 Auto-refreshing
+        </span>
+      </div>
+
+      <ul id="changesList" class="space-y-4">
+        <li class="text-gray-500 animate-pulse">⏳ Loading updates...</li>
       </ul>
     </div>
   </div>
@@ -48,12 +65,19 @@
       const list = document.getElementById("changesList");
       list.innerHTML = "";
 
-      data.changes.forEach(change => {
+      if (data.changes.length === 0) {
         const li = document.createElement("li");
-        li.className = "bg-white border border-gray-300 p-3 rounded-md shadow hover:border-primary transition-all animate-fade";
-        li.innerHTML = `<span class="mr-2">🎫</span>${change}`;
+        li.className = "text-sm text-gray-400 italic";
+        li.innerHTML = "✅ No new changes detected.";
         list.appendChild(li);
-      });
+      } else {
+        data.changes.forEach(change => {
+          const li = document.createElement("li");
+          li.className = "bg-gradient-to-r from-purple-50 to-pink-50 border border-gray-300 p-4 rounded-xl shadow hover:border-primary transition-all animate-fade flex items-start gap-2";
+          li.innerHTML = `<span class="text-2xl">🎫</span><span>${change}</span>`;
+          list.appendChild(li);
+        });
+      }
     }
 
     update();
