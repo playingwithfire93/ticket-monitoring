@@ -179,17 +179,48 @@ URLS = [
 ]
 
 from datetime import datetime
+import hashlib
+
 @app.route("/changes")
 def get_changes():
     changes = []
     for item in URLS:
-        changes.append({
-            "site": item["url"],
-            "label": item["label"],
-            "status": "unchanged",  # Placeholder
-            "summary": "No updates detected.",
-            "timestamp": datetime.now(UTC).isoformat()
-        })
+        url = item["url"]
+        label = item["label"]
+        try:
+            response = requests.get(url, timeout=10)
+            content = response.text
+            content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()
+
+            last_hash = previous_states.get(url)
+            if last_hash != content_hash:
+                previous_states[url] = content_hash
+                changes.append({
+                    "site": url,
+                    "label": label,
+                    "status": "changed",
+                    "summary": "Page content updated.",
+                    "timestamp": datetime.now(UTC).isoformat()
+                })
+            else:
+                # only add if you want to show unchanged status too
+                changes.append({
+                    "site": url,
+                    "label": label,
+                    "status": "unchanged",
+                    "summary": "No updates detected.",
+                    "timestamp": datetime.now(UTC).isoformat()
+                })
+
+        except Exception as e:
+            changes.append({
+                "site": url,
+                "label": label,
+                "status": "error",
+                "summary": f"Error fetching site: {e}",
+                "timestamp": datetime.now(UTC).isoformat()
+            })
+
     return jsonify(changes)
 
 
