@@ -286,6 +286,7 @@ def extract_normalized_date_info(url):
 
       
 @app.route("/changes")
+@app.route("/changes")
 def changes():
     global previous_states
     updates = []
@@ -293,7 +294,14 @@ def changes():
     for item in URLS:
         label = item["label"]
         url = item["url"]
+
+        # Intentamos extraer solo .date_info si existe
         current_state = extract_normalized_date_info(url)
+
+        # Si no hay .date_info, se usa hash completo del HTML sin scripts/etc.
+        if current_state is None:
+            current_state = hash_url_content(url)
+
         last_state = previous_states.get(url)
 
         status = "Sin cambios ✨"
@@ -312,6 +320,7 @@ def changes():
         })
 
     return jsonify(updates)
+
 
 
 
