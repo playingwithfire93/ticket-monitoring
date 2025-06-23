@@ -13,11 +13,11 @@ def home():
     return render_template_string("""
     <style>
   body {
-    font-family: sans-serif;
-    background-color: #f9fafb;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to right, #fdfbfb, #ebedee);
     margin: 0;
     padding: 2rem;
-    color: #111827;
+      color: #1f2937;
   }
 
   h1 {
@@ -61,8 +61,12 @@ def home():
     padding: 1rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
   }
-
+  .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
   .card h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1.1rem;
@@ -84,6 +88,7 @@ def home():
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     display: none;
     z-index: 9999;
+    animation: fadeInUp 0.6s ease, fadeOut 0.6s ease 3.4s;
   }
 
   @keyframes fadeInOut {
@@ -115,6 +120,7 @@ def home():
       <audio id="notifSound" preload="auto">
           <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
       </audio>
+  <p id="loadingIndicator">🔎 Checking for updates...</p>
 
 
       <script>
@@ -127,7 +133,9 @@ def home():
             toast.style.display = "none";
           }, 4000);
         }
-
+        document.getElementById("loadingIndicator").style.display = "block";
+const res = await fetch("/changes");
+document.getElementById("loadingIndicator").style.display = "none";
         async function update() {
           const res = await fetch("/changes");
           const data = await res.json();
@@ -165,6 +173,10 @@ def home():
               // ✅ Toast and sound
               showToast(`🔔 Cambio en:\n${change.url}`);
               notifSound.play().catch(() => {}); // prevent autoplay errors
+              if ("vibrate" in navigator) {
+  navigator.vibrate([100, 50, 100]);
+}
+
             });
           }
         }
