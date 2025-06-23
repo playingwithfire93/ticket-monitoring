@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, render_template_string
 import os
 from datetime import datetime, UTC
+import requests
 
 app = Flask(__name__)
-
+previous_states = {}
 @app.route("/")
 def home():
     return render_template_string("""
@@ -108,7 +109,7 @@ async function loadChanges() {
   }
 }
 loadChanges();                       // 👈 Add this
-  setInterval(loadChanges, 15000);
+  setInterval(loadChanges, 15000);0
       </script>
     </body>
     </html>
@@ -133,14 +134,34 @@ from datetime import datetime
 def get_changes():
     changes = []
     for url in URLS:
+        try:
+            response = requests.get(url, timeout=10)
+            content = response.text if response.ok else None
+        except Exception as e:
+            content = None
+
+        status = "unchanged"
+        summary = "No updates detected."
+
+        if content is None:
+            summary = "Failed to fetch site."
+        else:
+            previous = previous_states.get(url)
+            if previous is None:
+                summary = "First check, no previous data."
+            elif previous != content:
+                status = "changed"
+                summary = "Content updated!"
+            previous_states[url] = content
+
         changes.append({
             "site": url,
-            "status": "unchanged",  # You can change this later via logic or data
-            "summary": "No updates detected.",
+            "status": status,
+            "summary": summary,
             "timestamp": datetime.now(UTC).isoformat()
-
         })
     return jsonify(changes)
+
 
 @app.route("/urls")
 def urls():
