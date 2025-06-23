@@ -237,11 +237,11 @@ URLS = [
 def hash_url_content(url):
     try:
         response = requests.get(url, timeout=10)
-        combined = response.content + json.dumps(dict(response.headers), sort_keys=True).encode()
-        content_hash = hashlib.md5(combined).hexdigest()
+        content_hash = hashlib.md5(response.content).hexdigest()
         return content_hash
     except Exception as e:
         return f"ERROR: {str(e)}"
+
 
       
 @app.route("/changes")
