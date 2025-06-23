@@ -9,13 +9,13 @@
       theme: {
         extend: {
           colors: {
-            primary: '#8b5cf6',
-            highlight: '#22c55e',
-            danger: '#ef4444',
+            primary: '#ec4899', // PINK-500
+            highlight: '#f472b6', // PINK-400
+            background: '#ffe4e6', // PINK-100
           },
           animation: {
-            fade: 'fadeIn 1s ease-in-out',
-            pulseFast: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            fade: 'fadeIn 0.8s ease-in-out',
+            pulseFast: 'pulse 1.5s ease-in-out infinite',
           },
           keyframes: {
             fadeIn: {
@@ -31,27 +31,28 @@
     };
   </script>
 </head>
-<body class="bg-gradient-to-br from-purple-100 to-pink-100 min-h-screen text-gray-800 font-sans p-6 relative">
+<body class="bg-gradient-to-br from-pink-100 to-pink-200 min-h-screen text-gray-800 font-sans p-6 relative">
 
-  <!-- Subtle Background Pattern -->
-  <div class="absolute inset-0 bg-[length:20px_20px] bg-pattern opacity-10 z-0"></div>
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 bg-[length:20px_20px] bg-pattern opacity-10 z-0 pointer-events-none"></div>
 
-  <div class="relative z-10 max-w-4xl mx-auto space-y-6">
+  <div class="relative z-10 max-w-6xl mx-auto space-y-6">
     <h1 class="text-5xl font-black text-center text-primary drop-shadow-sm animate-fade tracking-tight">
-      🎭 Ticket Monitor Dashboard
+      🎀 Ticket Monitor Dashboard
     </h1>
 
-    <div class="bg-white shadow-2xl rounded-2xl p-6 border border-gray-200 transition-all hover:shadow-purple-300">
-      <div class="flex justify-between items-center mb-4">
-        <p id="lastChecked" class="text-sm text-gray-500 italic">Last Checked: ...</p>
+    <div class="bg-white shadow-xl rounded-2xl p-6 border border-pink-200 transition hover:shadow-pink-300">
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <p id="lastChecked" class="text-sm text-pink-600 italic">Last Checked: ...</p>
         <span class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-primary text-white animate-pulseFast">
           🔄 Auto-refreshing
         </span>
       </div>
 
-      <ul id="changesList" class="space-y-4">
-        <li class="text-gray-500 animate-pulse">⏳ Loading updates...</li>
-      </ul>
+      <!-- Responsive Grid: 3 columns on md+ screens -->
+      <div id="changesList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="text-gray-500 animate-pulse col-span-full">⏳ Loading updates...</div>
+      </div>
     </div>
   </div>
 
@@ -66,16 +67,21 @@
       list.innerHTML = "";
 
       if (data.changes.length === 0) {
-        const li = document.createElement("li");
-        li.className = "text-sm text-gray-400 italic";
+        const li = document.createElement("div");
+        li.className = "text-sm text-pink-500 italic col-span-full";
         li.innerHTML = "✅ No new changes detected.";
         list.appendChild(li);
       } else {
         data.changes.forEach(change => {
-          const li = document.createElement("li");
-          li.className = "bg-gradient-to-r from-purple-50 to-pink-50 border border-gray-300 p-4 rounded-xl shadow hover:border-primary transition-all animate-fade flex items-start gap-2";
-          li.innerHTML = `<span class="text-2xl">🎫</span><span>${change}</span>`;
-          list.appendChild(li);
+          const card = document.createElement("div");
+          card.className = "bg-pink-50 border border-pink-300 p-4 rounded-xl shadow hover:shadow-md hover:border-primary transition-all animate-fade";
+          card.innerHTML = `
+            <div class="flex items-start gap-2">
+              <span class="text-2xl">🎫</span>
+              <span class="text-sm text-gray-700">${change}</span>
+            </div>
+          `;
+          list.appendChild(card);
         });
       }
     }
