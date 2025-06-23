@@ -19,7 +19,8 @@ def home():
       <style>
         body {
           font-family: 'Segoe UI', sans-serif;
-          background: linear-gradient(to right, #ffe6f0, #fff0f7);
+          background-color: #DFDBE5;
+          background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ctitle%3Ehoundstooth%3C/title%3E%3Cg fill='%23f9629f' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 18h6l6-6v6h6l-6 6H0M24 18v6h-6M24 0l-6 6h-6l6-6M12 0v6L0 18v-6l6-6H0V0'/%3E%3C/g%3E%3C/svg%3E");
           margin: 0;
           padding: 2rem;
           color: #4b006e;
@@ -86,6 +87,19 @@ def home():
           font-size: 0.9rem;
           color: #9d174d;
         }
+        .card:nth-child(even) {
+  background-color: #fff7fb;
+}
+.card.updated {
+  animation: flashBorder 1.2s ease;
+}
+
+@keyframes flashBorder {
+  0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244,63,94,0.7); }
+  50% { border-color: #fb7185; box-shadow: 0 0 8px 4px rgba(244,63,94,0.3); }
+  100% { border-color: #ec4899; box-shadow: none; }
+}
+
         #toast {
           position: fixed;
           bottom: 1rem;
@@ -104,6 +118,14 @@ def home():
           10% { opacity: 1; transform: translateY(0); }
           90% { opacity: 1; }
           100% { opacity: 0; transform: translateY(20px); }
+          @keyframes glow {
+            0% { box-shadow: 0 0 10px #ec4899; }
+            100% { box-shadow: none; }
+          }
+          .card.recent-change {
+            animation: glow 1s ease-in-out 3;
+          }
+
         }
         #loadingIndicator {
           text-align: center;
@@ -174,6 +196,7 @@ def home():
   if (change.status.includes("Actualizado")) {
     card.style.borderColor = "#ec4899";
     card.style.backgroundColor = "#ffe4f1";
+    card.classList.add("recent-change");
   }
   list.appendChild(card);
 
