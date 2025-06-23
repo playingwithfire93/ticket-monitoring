@@ -268,6 +268,21 @@ def hash_url_content(url):
 
 
 
+def extract_normalized_date_info(url):
+    """Get normalized text content from .date_info element."""
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.RequestException:
+        return None
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    date_info = soup.select_one('.date_info')
+    if not date_info:
+        return None
+
+    text = date_info.get_text(strip=True)
+    return ' '.join(text.split()).lower()
 
       
 @app.route("/changes")
@@ -278,17 +293,16 @@ def changes():
     for item in URLS:
         label = item["label"]
         url = item["url"]
-        current_hash = hash_url_content(url)
-        last_hash = previous_states.get(url)
-        
-        # Compare hashes to detect updates
+        current_state = extract_normalized_date_info(url)
+        last_state = previous_states.get(url)
+
         status = "Sin cambios ✨"
-        if last_hash and last_hash != current_hash:
+        if last_state and last_state != current_state:
             status = "¡Actualizado! 🎉"
-        elif last_hash is None:
+        elif last_state is None:
             status = "Primer chequeo 👀"
-        
-        previous_states[url] = current_hash
+
+        previous_states[url] = current_state
 
         updates.append({
             "label": label,
@@ -298,6 +312,7 @@ def changes():
         })
 
     return jsonify(updates)
+
 
 
 @app.route("/urls")
