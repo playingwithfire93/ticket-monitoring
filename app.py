@@ -102,6 +102,12 @@ def home():
           0%, 100 { opacity: 1; }
           50% { opacity: 0.6; }
         }
+        .container {
+  max-width: 800px;
+  margin: 1rem auto 2rem auto; /* menos margen arriba */
+  padding: 1rem;
+}
+
       </style>
     </head>
     <body>
