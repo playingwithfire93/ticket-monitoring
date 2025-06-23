@@ -105,7 +105,7 @@ def home():
       </style>
     </head>
     <body>
-      <h1>🎭 HOLAAAA</h1>
+      <h1>🎭 Ticket monitoring dashboard</h1>
 
       <div class="dashboard">
         <div class="header">
