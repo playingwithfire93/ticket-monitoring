@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template_string
 import os
+from datetime import datetime, UTC
 
 app = Flask(__name__)
 
@@ -124,7 +125,8 @@ def get_changes():
             "site": url,
             "status": "unchanged",  # You can change this later via logic or data
             "summary": "No updates detected.",
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now(UTC).isoformat()
+
         })
     return jsonify(changes)
 
