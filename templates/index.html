@@ -1,35 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ticket Monitor</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script defer src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <title>🎟️ Ticket Monitor Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8b5cf6',
+            highlight: '#22c55e',
+          },
+          animation: {
+            fade: 'fadeIn 1s ease-in-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0 },
+              '100%': { opacity: 1 },
+            }
+          }
+        }
+      }
+    };
+  </script>
 </head>
-<body class="bg-gray-100 text-gray-800 p-6">
-  <div class="max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold mb-4">🎭 Ticket Monitor Dashboard</h1>
-    <p class="mb-2 text-gray-600" id="lastChecked">Last Checked: ...</p>
-    <ul class="list-disc pl-6" id="changesList"></ul>
+<body class="bg-gradient-to-br from-purple-100 to-pink-100 min-h-screen text-gray-800 font-sans p-6">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <h1 class="text-4xl font-extrabold text-center text-primary drop-shadow-sm animate-fade">🎭 Ticket Monitor Dashboard</h1>
+
+    <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+      <p id="lastChecked" class="text-sm text-gray-500 italic mb-4">Last Checked: ...</p>
+      <ul id="changesList" class="space-y-3">
+        <li class="text-gray-500">⏳ Loading updates...</li>
+      </ul>
+    </div>
   </div>
 
   <script>
     async function update() {
       const res = await fetch("/status");
       const data = await res.json();
-      document.getElementById("lastChecked").textContent = "Last Checked: " + new Date(data.last_checked).toLocaleString();
+      document.getElementById("lastChecked").textContent =
+        "Last Checked: " + new Date(data.last_checked).toLocaleString("es-ES");
 
       const list = document.getElementById("changesList");
       list.innerHTML = "";
+
       data.changes.forEach(change => {
         const li = document.createElement("li");
-        li.textContent = change;
+        li.className = "bg-white border border-gray-300 p-3 rounded-md shadow hover:border-primary transition-all animate-fade";
+        li.innerHTML = `<span class="mr-2">🎫</span>${change}`;
         list.appendChild(li);
       });
     }
 
     update();
-    setInterval(update, 10000); // every 10 sec
+    setInterval(update, 10000);
   </script>
 </body>
 </html>
