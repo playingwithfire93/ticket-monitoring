@@ -81,6 +81,13 @@ def home():
         width: 100%;
         max-width: 340px;
       }
+      .card a {
+        word-break: break-all;
+        overflow-wrap: anywhere;
+        display: inline-block;
+        max-width: 100%;
+        text-align: center;
+      }
       .card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
