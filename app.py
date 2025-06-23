@@ -199,8 +199,12 @@ def home():
     card.style.borderColor = "#ec4899";
     card.style.backgroundColor = "#ffe4f1";
     card.classList.add("recent-change");
+    showToast(`🎀 Cambio en:\n${change.url}`);
+    notifSound.play().catch(() => {});
+    if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
   }
   list.appendChild(card);
+
 
   // ✅ Now safe to access `change.url` here
   showToast(`🎀 Cambio en:\n${change.url}`);
@@ -285,41 +289,6 @@ def extract_normalized_date_info(url):
     return ' '.join(text.split()).lower()
 
       
-@app.route("/changes")
-@app.route("/changes")
-def changes():
-    global previous_states
-    updates = []
-
-    for item in URLS:
-        label = item["label"]
-        url = item["url"]
-
-        # Intentamos extraer solo .date_info si existe
-        current_state = extract_normalized_date_info(url)
-
-        # Si no hay .date_info, se usa hash completo del HTML sin scripts/etc.
-        if current_state is None:
-            current_state = hash_url_content(url)
-
-        last_state = previous_states.get(url)
-
-        status = "Sin cambios ✨"
-        if last_state and last_state != current_state:
-            status = "¡Actualizado! 🎉"
-        elif last_state is None:
-            status = "Primer chequeo 👀"
-
-        previous_states[url] = current_state
-
-        updates.append({
-            "label": label,
-            "url": url,
-            "status": status,
-            "timestamp": datetime.now(UTC).isoformat()
-        })
-
-    return jsonify(updates)
 
 results = []
 
