@@ -290,31 +290,39 @@ def extract_normalized_date_info(url):
 
       
 
-results = []
-
-def check_sites():
-    global results
-    new_results = []
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+@app.route("/changes")
+def changes():
+    global previous_states
+    changes_list = []
+    now = datetime.now(UTC).isoformat()
 
     for item in URLS:
-        url = item["url"]
         label = item["label"]
-        try:
-            res = requests.get(url, timeout=10)
-            if "date_info" in res.text:
-                new_results.append(f"[{now}] {label} ({url}) ✅ Found .date_info")
-            else:
-                new_results.append(f"[{now}] {label} ({url}) ❌ MISSING .date_info")
-        except Exception as e:
-            new_results.append(f"[{now}] {label} ({url}) ❌ ERROR: {e}")
+        url = item["url"]
 
-    results[:] = new_results
+        # Try to get .date_info, fallback to hash
+        state = extract_normalized_date_info(url)
+        if state is None:
+            state = hash_url_content(url)
 
-@app.route("/diagnostic")
-def diagnostic():
-    check_sites()
-    return "<pre>" + "\n".join(results) + "</pre>"
+        last_state = previous_states.get(url)
+        if last_state is None:
+            status = "Primer chequeo 👀"
+        elif last_state != state:
+            status = "¡Actualizado! 🎉"
+        else:
+            status = "Sin cambios ✨"
+
+        previous_states[url] = state
+
+        changes_list.append({
+            "label": label,
+            "url": url,
+            "status": status,
+            "timestamp": now
+        })
+
+    return jsonify(changes_list)
 
 
 @app.route("/urls")
