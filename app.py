@@ -11,36 +11,89 @@ previous_states = {}
 @app.route("/")
 def home():
     return render_template_string("""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <title>🎟️ Ticket Monitor Dashboard</title>
-      <style>
-        /* Same styling as before... */
-        /* Keep your existing CSS here */
-        /* ... */
+    <style>
+  body {
+    font-family: sans-serif;
+    background-color: #f9fafb;
+    margin: 0;
+    padding: 2rem;
+    color: #111827;
+  }
 
-        #toast {
-          position: fixed;
-          bottom: 1rem;
-          right: 1rem;
-          background-color: #ec4899;
-          color: white;
-          padding: 1rem 1.5rem;
-          border-radius: 12px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          display: none;
-          z-index: 9999;
-        }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
 
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: translateY(20px); }
-          10% { opacity: 1; transform: translateY(0); }
-          90% { opacity: 1; }
-          100% { opacity: 0; transform: translateY(20px); }
-        }
-      </style>
+  .dashboard {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .last-checked {
+    font-size: 0.9rem;
+    color: #6b7280;
+  }
+
+  .badge {
+    background-color: #10b981;
+    color: white;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+
+  .card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+  }
+
+  .card p {
+    margin: 0.2rem 0;
+    font-size: 0.9rem;
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: #ec4899;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 9999;
+  }
+
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(20px); }
+  }
+</style>
+
     </head>
     <body>
       <h1>🎭 Ticket monitoring dashboard</h1>
