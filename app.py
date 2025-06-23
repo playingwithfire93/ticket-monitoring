@@ -186,7 +186,11 @@ def home():
     <p>${change.timestamp}</p>
   `;
   list.appendChild(card);
+
+  // 🔔 Show a pop-up alert
+  alert(`🔔 Cambio detectado en:\n${change.url}`);
 });
+
 
           }
         }
