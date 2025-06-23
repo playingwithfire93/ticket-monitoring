@@ -70,17 +70,19 @@ def home():
         }
 
         .card {
-          background: #ffe4e6;
-          border: 1px solid #f9a8d4;
-          padding: 1rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(249, 168, 212, 0.2);
-          transition: 0.3s ease all;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.5rem;
-          animation: fadeIn 0.5s ease-in-out;
-        }
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: background-color 0.3s ease;
+
+  /* Previene desbordamientos de texto */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 
         .card:hover {
           border-color: #ec4899;
