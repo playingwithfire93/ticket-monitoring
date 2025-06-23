@@ -162,14 +162,21 @@ def home():
           } else {
             const notifSound = document.getElementById("notifSound");
             data.forEach(change => {
-              const card = document.createElement("div");
-              card.className = "card";
-              card.innerHTML = `
-                <h3>✨ Cambio detectado ✨</h3>
-                <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-                <p>🕒 ${change.timestamp}</p>
-              `;
-              list.appendChild(card);
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <h3>${change.label}</h3>
+    <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+    <p>${change.status}</p>
+    <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+  `;
+  if (change.status.includes("Actualizado")) {
+    card.style.borderColor = "#ec4899";
+    card.style.backgroundColor = "#ffe4f1";
+  }
+  list.appendChild(card);
+});
+
 
               showToast(`🎀 Cambio en:\n${change.url}`);
               notifSound.play().catch(() => {});
@@ -210,24 +217,33 @@ def hash_url_content(url):
         return content_hash
     except Exception as e:
         return f"ERROR: {str(e)}"
-@app.route("/changes")  
+      
+@app.route("/changes")
 def changes():
     global previous_states
     updates = []
 
     for item in URLS:
+        label = item["label"]
         url = item["url"]
         current_hash = hash_url_content(url)
         last_hash = previous_states.get(url)
-
+        
+        # Compare hashes to detect updates
+        status = "Sin cambios ✨"
         if last_hash and last_hash != current_hash:
-            updates.append({
-                "url": url,
-                "timestamp": datetime.now(UTC).isoformat()
-            })
-
-        # This should be outside the if block
+            status = "¡Actualizado! 🎉"
+        elif last_hash is None:
+            status = "Primer chequeo 👀"
+        
         previous_states[url] = current_hash
+
+        updates.append({
+            "label": label,
+            "url": url,
+            "status": status,
+            "timestamp": datetime.now(UTC).isoformat()
+        })
 
     return jsonify(updates)
 
