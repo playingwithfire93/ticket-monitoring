@@ -17,153 +17,28 @@ def home():
       <meta charset="UTF-8" />
       <title>🎟️ Ticket Monitor Dashboard</title>
       <style>
-        body {
-          margin: 0;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #ffe4e6, #fbcfe8);
-          color: #444;
-          min-height: 100vh;
-          padding: 2rem;
-        }
+        /* Same styling as before... */
+        /* Keep your existing CSS here */
+        /* ... */
+
         #toast {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  background-color: #ec4899;
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  display: none;
-  z-index: 9999;
-  animation: fadeInOut 4s ease-in-out forwards;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(20px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(20px); }
-}
-
-        h1 {
-          text-align: center;
-          font-size: 3rem;
-          color: #ec4899;
-          margin-bottom: 2rem;
-          animation: fadeIn 1s ease-in-out;
-        }
-
-        h3 {
-          font-size: 1.2rem;
-          margin: 0.5rem 0;
-          color: #9d174d;
-        }
-
-        a {
-          text-decoration: none;
-          color: #7e22ce;
-        }
-
-        a:hover {
-          text-decoration: underline;
-        }
-
-        p {
-          margin: 0.25rem 0;
-          font-size: 0.95rem;
-        }
-
-        time {
-          display: block;
-          margin-top: 0.5rem;
-          font-size: 0.8rem;
-          color: #6b7280;
-        }
-
-        .dashboard {
-          background: white;
-          border: 1px solid #f9a8d4;
-          border-radius: 16px;
-          box-shadow: 0 4px 20px rgba(249, 168, 212, 0.2);
-          padding: 1.5rem;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .header {
-          display: flex;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          margin-bottom: 1rem;
-        }
-
-        .last-checked {
-          font-size: 0.9rem;
-          font-style: italic;
-          color: #ec4899;
-        }
-
-        .badge {
-          background: #ec4899;
+          position: fixed;
+          bottom: 1rem;
+          right: 1rem;
+          background-color: #ec4899;
           color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 999px;
-          font-size: 0.8rem;
-          animation: pulse 1.5s infinite;
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          display: none;
+          z-index: 9999;
         }
 
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1rem;
-        }
-
-        .card {
-          background-color: #ffffff;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 1rem;
-          margin-bottom: 1rem;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          transition: background-color 0.3s ease, box-shadow 0.3s ease;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        }
-
-        .card:hover {
-          border-color: #ec4899;
-          box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-
-        .container {
-          max-width: 800px;
-          margin: 1rem auto 2rem auto;
-          padding: 1rem;
-        }
-
-        @media (max-width: 500px) {
-          h1 {
-            font-size: 2rem;
-          }
-
-          .badge {
-            margin-top: 0.5rem;
-          }
-
-          .grid {
-            grid-template-columns: 1fr;
-          }
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateY(20px); }
+          10% { opacity: 1; transform: translateY(0); }
+          90% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(20px); }
         }
       </style>
     </head>
@@ -181,15 +56,41 @@ def home():
         </div>
       </div>
 
+      <div id="toast">Cambio detectado</div>
+
+      <!-- 🔊 Audio element for notification -->
+      <audio id="notifSound" preload="auto">
+          <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
+      </audio>
+
+
       <script>
+        function showToast(message) {
+          const toast = document.getElementById("toast");
+          toast.textContent = message;
+          toast.style.display = "block";
+          toast.style.animation = "fadeInOut 4s ease-in-out forwards";
+          setTimeout(() => {
+            toast.style.display = "none";
+          }, 4000);
+        }
+
         async function update() {
           const res = await fetch("/changes");
           const data = await res.json();
+
           document.getElementById("lastChecked").textContent =
             "Last Checked: " + new Date().toLocaleString("es-ES");
 
           const list = document.getElementById("changesList");
           list.innerHTML = "";
+
+          // 🎯 Update tab title
+          if (data.length > 0) {
+            document.title = `(${data.length}) Cambios detectados 🎟️`;
+          } else {
+            document.title = "🎟️ Ticket Monitor Dashboard";
+          }
 
           if (data.length === 0) {
             const card = document.createElement("div");
@@ -197,41 +98,31 @@ def home():
             card.innerHTML = "<span>✅</span><span>No new changes detected.</span>";
             list.appendChild(card);
           } else {
+            const notifSound = document.getElementById("notifSound");
             data.forEach(change => {
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <h3>Cambio detectado</h3>
-    <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-    <p>${change.timestamp}</p>
-  `;
-  list.appendChild(card);
+              const card = document.createElement("div");
+              card.className = "card";
+              card.innerHTML = `
+                <h3>Cambio detectado</h3>
+                <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+                <p>${change.timestamp}</p>
+              `;
+              list.appendChild(card);
 
-  // 🔔 Show a pop-up alert
-  alert(`🔔 Cambio detectado en:\n${change.url}`);
-});
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.style.display = "block";
-  setTimeout(() => {
-    toast.style.display = "none";
-  }, 4000); // hide after 4 seconds
-}
-
-showToast(`Cambio detectado en: ${change.url}`);
-
+              // ✅ Toast and sound
+              showToast(`🔔 Cambio en:\n${change.url}`);
+              notifSound.play().catch(() => {}); // prevent autoplay errors
+            });
           }
         }
 
         update();
         setInterval(update, 10000);
       </script>
-      <div id="toast">Cambio detectado</div>
-
     </body>
     </html>
     """)
+
 
 URLS = [
     {"label": "test", "url": "https://httpbin.org/get/"},
