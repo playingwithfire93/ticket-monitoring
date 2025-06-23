@@ -165,9 +165,11 @@ def home():
     <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
     <div class="dashboard">
     <div class="header">
-      <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-      <span class="badge">💖 Auto-refreshing</span>
-    </div>
+  <p id="lastChecked" class="last-checked">Last Checked: ...</p>
+  <div class="card" style="padding:0.5rem 1rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
+    💖 Auto-refreshing
+  </div>
+</div>
     <div id="changesList" class="grid">
       <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
     </div>
