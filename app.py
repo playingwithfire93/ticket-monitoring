@@ -232,8 +232,8 @@ URLS = [
     {"label": "Los Miserables entradas", "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"},
     {"label": "The Book of Mormon", "url": "https://thebookofmormonelmusical.es"},
     {"label": "Mormon elenco", "url": "https://thebookofmormonelmusical.es/elenco/"},
-    {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"}
-    # {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
+    {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
+    {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
 from bs4 import BeautifulSoup
 
@@ -242,23 +242,30 @@ def hash_url_content(url):
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.content, "html.parser")
 
-        # Remove common dynamic content that changes every request
-        for tag in soup(["script", "style", "noscript", "meta", "iframe"]):
+        # Remove tags that usually include changing content
+        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
             tag.decompose()
 
-        # Optionally: remove comments
+        # Remove comments
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
-        # You can also target a specific section like .date_info if known:
-        # relevant_section = soup.select_one(".date_info")
-        # content_to_hash = relevant_section.get_text(strip=True) if relevant_section else soup.get_text()
+        # Remove common dynamic elements by class/id (add more as needed)
+        dynamic_selectors = [
+            ".date_info", ".timestamp", "#ad", ".ads", ".cookie-banner", "#cookies", ".tracker"
+        ]
+        for selector in dynamic_selectors:
+            for tag in soup.select(selector):
+                tag.decompose()
 
-        content_to_hash = soup.get_text(separator=' ', strip=True)
+        # Normalize whitespace and strip
+        content_text = soup.get_text(separator=" ", strip=True)
+        normalized_text = " ".join(content_text.split())  # remove excessive whitespace
 
-        return hashlib.md5(content_to_hash.encode("utf-8")).hexdigest()
+        return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
     except Exception as e:
         return f"ERROR: {str(e)}"
+
 
 
 
