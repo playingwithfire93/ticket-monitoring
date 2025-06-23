@@ -11,117 +11,124 @@ previous_states = {}
 @app.route("/")
 def home():
     return render_template_string("""
-    <style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(to right, #fdfbfb, #ebedee);
-    margin: 0;
-    padding: 2rem;
-      color: #1f2937;
-  }
-
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .dashboard {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .last-checked {
-    font-size: 0.9rem;
-    color: #6b7280;
-  }
-
-  .badge {
-    background-color: #10b981;
-    color: white;
-    padding: 0.3rem 0.7rem;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  .grid {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
-  }
-  .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-  .card h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
-  }
-
-  .card p {
-    margin: 0.2rem 0;
-    font-size: 0.9rem;
-  }
-
-  #toast {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    background-color: #ec4899;
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    display: none;
-    z-index: 9999;
-    animation: fadeInUp 0.6s ease, fadeOut 0.6s ease 3.4s;
-  }
-
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(20px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; }
-    100% { opacity: 0; transform: translateY(20px); }
-  }
-</style>
-
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>🎟️ Ticket Monitor Glam Edition</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: linear-gradient(to right, #ffe6f0, #fff0f7);
+          margin: 0;
+          padding: 2rem;
+          color: #4b006e;
+        }
+        h1 {
+          font-size: 2.2rem;
+          text-align: center;
+          color: #d63384;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          margin-bottom: 1.5rem;
+        }
+        .dashboard {
+          max-width: 840px;
+          margin: 0 auto;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+        .last-checked {
+          font-size: 0.9rem;
+          color: #b84e8c;
+        }
+        .badge {
+          background: linear-gradient(45deg, #f472b6, #e879f9);
+          color: white;
+          padding: 0.4rem 0.8rem;
+          border-radius: 1rem;
+          font-size: 0.75rem;
+          font-weight: bold;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+          animation: pulse 2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        .grid {
+          display: grid;
+          gap: 1rem;
+        }
+        .card {
+          background: #fff0f7;
+          border: 2px dashed #f472b6;
+          padding: 1rem;
+          border-radius: 1rem;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+          transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        .card h3 {
+          margin-top: 0;
+          margin-bottom: 0.5rem;
+          font-size: 1.2rem;
+          color: #e11d48;
+        }
+        .card p {
+          margin: 0.2rem 0;
+          font-size: 0.9rem;
+          color: #9d174d;
+        }
+        #toast {
+          position: fixed;
+          bottom: 1rem;
+          right: 1rem;
+          background: #ec4899;
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 1rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          display: none;
+          z-index: 9999;
+          animation: fadeInOut 0.6s ease-in-out forwards;
+        }
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateY(20px); }
+          10% { opacity: 1; transform: translateY(0); }
+          90% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(20px); }
+        }
+        #loadingIndicator {
+          text-align: center;
+          font-style: italic;
+          color: #c026d3;
+          margin-top: 1rem;
+        }
+      </style>
     </head>
     <body>
-      <h1>🎭 Ticket monitoring dashboard</h1>
-
+      <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
       <div class="dashboard">
         <div class="header">
           <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-          <span class="badge">🔄 Auto-refreshing</span>
+          <span class="badge">💖 Auto-refreshing</span>
         </div>
-
         <div id="changesList" class="grid">
-          <div class="card"><span>⏳</span><span>Loading updates...</span></div>
+          <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
         </div>
       </div>
-
       <div id="toast">Cambio detectado</div>
-
-      <!-- 🔊 Audio element for notification -->
       <audio id="notifSound" preload="auto">
-          <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
+        <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
       </audio>
-  <p id="loadingIndicator">🔎 Checking for updates...</p>
-
+      <p id="loadingIndicator">🔎 Checking for updates...</p>
 
       <script>
         function showToast(message) {
@@ -133,51 +140,42 @@ def home():
             toast.style.display = "none";
           }, 4000);
         }
-        document.getElementById("loadingIndicator").style.display = "block";
-const res = await fetch("/changes");
-document.getElementById("loadingIndicator").style.display = "none";
+
         async function update() {
+          document.getElementById("loadingIndicator").style.display = "block";
           const res = await fetch("/changes");
           const data = await res.json();
+          document.getElementById("loadingIndicator").style.display = "none";
 
           document.getElementById("lastChecked").textContent =
-            "Last Checked: " + new Date().toLocaleString("es-ES");
+            "Última revisión: " + new Date().toLocaleString("es-ES");
 
           const list = document.getElementById("changesList");
           list.innerHTML = "";
 
-          // 🎯 Update tab title
-          if (data.length > 0) {
-            document.title = `(${data.length}) Cambios detectados 🎟️`;
-          } else {
-            document.title = "🎟️ Ticket Monitor Dashboard";
-          }
-
           if (data.length === 0) {
             const card = document.createElement("div");
             card.className = "card";
-            card.innerHTML = "<span>✅</span><span>No new changes detected.</span>";
+            card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
             list.appendChild(card);
+            document.title = "🎟️ Ticket Monitor Glam Edition";
           } else {
             const notifSound = document.getElementById("notifSound");
             data.forEach(change => {
               const card = document.createElement("div");
               card.className = "card";
               card.innerHTML = `
-                <h3>Cambio detectado</h3>
+                <h3>✨ Cambio detectado ✨</h3>
                 <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-                <p>${change.timestamp}</p>
+                <p>🕒 ${change.timestamp}</p>
               `;
               list.appendChild(card);
 
-              // ✅ Toast and sound
-              showToast(`🔔 Cambio en:\n${change.url}`);
-              notifSound.play().catch(() => {}); // prevent autoplay errors
-              if ("vibrate" in navigator) {
-  navigator.vibrate([100, 50, 100]);
-}
-
+              showToast(`🎀 Cambio en:\n${change.url}`);
+              notifSound.play().catch(() => {});
+              if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
             });
+            document.title = \`(${data.length}) 🎟️ Cambios detectados\`;
           }
         }
 
@@ -187,6 +185,7 @@ document.getElementById("loadingIndicator").style.display = "none";
     </body>
     </html>
     """)
+
 
 
 URLS = [
