@@ -4,6 +4,8 @@ from datetime import datetime, UTC
 import requests
 import hashlib
 import json
+from bs4 import BeautifulSoup
+from bs4.element import Comment
 
 app = Flask(__name__)
 previous_states = {}
@@ -233,14 +235,31 @@ URLS = [
     {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
+from bs4 import BeautifulSoup
 
 def hash_url_content(url):
     try:
         response = requests.get(url, timeout=10)
-        content_hash = hashlib.md5(response.content).hexdigest()
-        return content_hash
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Remove common dynamic content that changes every request
+        for tag in soup(["script", "style", "noscript", "meta", "iframe"]):
+            tag.decompose()
+
+        # Optionally: remove comments
+        for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+            comment.extract()
+
+        # You can also target a specific section like .date_info if known:
+        # relevant_section = soup.select_one(".date_info")
+        # content_to_hash = relevant_section.get_text(strip=True) if relevant_section else soup.get_text()
+
+        content_to_hash = soup.get_text(separator=' ', strip=True)
+
+        return hashlib.md5(content_to_hash.encode("utf-8")).hexdigest()
     except Exception as e:
         return f"ERROR: {str(e)}"
+
 
 
       
