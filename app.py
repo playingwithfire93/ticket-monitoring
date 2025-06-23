@@ -321,7 +321,31 @@ def changes():
 
     return jsonify(updates)
 
+results = []
 
+def check_sites():
+    global results
+    new_results = []
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    for item in URLS:
+        url = item["url"]
+        label = item["label"]
+        try:
+            res = requests.get(url, timeout=10)
+            if "date_info" in res.text:
+                new_results.append(f"[{now}] {label} ({url}) ✅ Found .date_info")
+            else:
+                new_results.append(f"[{now}] {label} ({url}) ❌ MISSING .date_info")
+        except Exception as e:
+            new_results.append(f"[{now}] {label} ({url}) ❌ ERROR: {e}")
+
+    results[:] = new_results
+
+@app.route("/diagnostic")
+def diagnostic():
+    check_sites()
+    return "<pre>" + "\n".join(results) + "</pre>"
 
 
 @app.route("/urls")
