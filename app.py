@@ -176,14 +176,14 @@ def home():
     card.style.backgroundColor = "#ffe4f1";
   }
   list.appendChild(card);
+
+  // ✅ Now safe to access `change.url` here
+  showToast(`🎀 Cambio en:\n${change.url}`);
+  notifSound.play().catch(() => {});
+  if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
 });
 
 
-              showToast(`🎀 Cambio en:\n${change.url}`);
-              notifSound.play().catch(() => {});
-              if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
-            });
-            document.title = \`(${data.length}) 🎟️ Cambios detectados\`;
           }
         }
 
