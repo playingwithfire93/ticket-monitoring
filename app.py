@@ -204,12 +204,6 @@ def home():
     if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
   }
   list.appendChild(card);
-
-
-  // ✅ Now safe to access `change.url` here
-  showToast(`🎀 Cambio en:\n${change.url}`);
-  notifSound.play().catch(() => {});
-  if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
 });
 
 
