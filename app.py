@@ -6,10 +6,22 @@ import hashlib
 import json
 from bs4 import BeautifulSoup
 from bs4.element import Comment
+from telegram import Bot
 
 app = Flask(__name__)
 previous_states = {}
-
+TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
+CHAT_ID = '553863319'
+def send_telegram_text(url, changes, timestamp):
+    bot = Bot(token=TELEGRAM_TOKEN)
+    message = (
+        f"🎭 Ticket Alert!\n"
+        f"🌐 URL: {url}\n"
+        f"🕒 Cambio detectado: {timestamp}\n"
+        f"📄 Cambios:\n{changes[:3500]}"
+    )
+    bot.send_message(chat_id=CHAT_ID, text=message)
+    
 @app.route("/")
 def home():
   return render_template_string("""
@@ -325,6 +337,8 @@ def changes():
                 status = "Primer chequeo 👀"
             elif last_state != state:
                 status = "¡Actualizado! 🎉"
+                # --- ENVÍA TELEGRAM SOLO SI NO ES EL TEST ---
+                send_telegram_text(url, "Cambio detectado en la web", now)
             else:
                 status = "Sin cambios ✨"
 
