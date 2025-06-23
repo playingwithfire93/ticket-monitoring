@@ -25,6 +25,26 @@ def home():
           min-height: 100vh;
           padding: 2rem;
         }
+        #toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: #ec4899;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 9999;
+  animation: fadeInOut 4s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(20px); }
+}
 
         h1 {
           text-align: center;
@@ -190,7 +210,16 @@ def home():
   // 🔔 Show a pop-up alert
   alert(`🔔 Cambio detectado en:\n${change.url}`);
 });
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.display = "block";
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 4000); // hide after 4 seconds
+}
 
+showToast(`Cambio detectado en: ${change.url}`);
 
           }
         }
@@ -198,6 +227,8 @@ def home():
         update();
         setInterval(update, 10000);
       </script>
+      <div id="toast">Cambio detectado</div>
+
     </body>
     </html>
     """)
