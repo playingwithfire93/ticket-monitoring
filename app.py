@@ -180,7 +180,6 @@ URLS = [
 
 from datetime import datetime
 @app.route("/changes")
-@app.route("/changes")
 def get_changes():
     changes = []
     for item in URLS:
