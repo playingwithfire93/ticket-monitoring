@@ -143,7 +143,13 @@ def home():
             data.forEach(change => {
               const card = document.createElement("div");
               card.className = "card";
-              card.innerHTML = `<span>🎫</span><span>${change.site}: ${change.summary}</span>`;
+              card.innerHTML = `
+  <h3><a href="${change.site}" target="_blank" rel="noopener noreferrer">${change.label}</a></h3>
+  <p>Status: ${change.status}</p>
+  <p>Summary: ${change.summary}</p>
+  <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
+`;
+;
               list.appendChild(card);
             });
           }
@@ -158,48 +164,30 @@ def home():
 
 
 URLS = [
-    "https://httpbin.org/get",
-    "https://wickedelmusical.com/",
-    "https://wickedelmusical.com/elenco",
-    "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01",
-    "https://www.houdinielmusical.com",
-    "https://miserableselmusical.es/",
-    "https://miserableselmusical.es/elenco",
-    "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01",
-    "https://thebookofmormonelmusical.es",
-    "https://thebookofmormonelmusical.es/elenco/",
-    "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01",
-    "https://buscandoaaudrey.com"
+    {"label": "Wicked", "url": "https://wickedelmusical.com/"},
+    {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
+    {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
+    {"label": "Houdini", "url": "https://www.houdinielmusical.com"},
+    {"label": "Los Miserables", "url": "https://miserableselmusical.es/"},
+    {"label": "Los Miserables elenco", "url": "https://miserableselmusical.es/elenco"},
+    {"label": "Los Miserables entradas", "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"},
+    {"label": "The Book of Mormon", "url": "https://thebookofmormonelmusical.es"},
+    {"label": "Mormon elenco", "url": "https://thebookofmormonelmusical.es/elenco/"},
+    {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
+    {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
+
 from datetime import datetime
+@app.route("/changes")
 @app.route("/changes")
 def get_changes():
     changes = []
-    for url in URLS:
-        try:
-            response = requests.get(url, timeout=10)
-            content = response.text if response.ok else None
-        except Exception as e:
-            content = None
-
-        status = "unchanged"
-        summary = "No updates detected."
-
-        if content is None:
-            summary = "Failed to fetch site."
-        else:
-            previous = previous_states.get(url)
-            if previous is None:
-                summary = "First check, no previous data."
-            elif previous != content:
-                status = "changed"
-                summary = "Content updated!"
-            previous_states[url] = content
-
+    for item in URLS:
         changes.append({
-            "site": url,
-            "status": status,
-            "summary": summary,
+            "site": item["url"],
+            "label": item["label"],
+            "status": "unchanged",  # Placeholder
+            "summary": "No updates detected.",
             "timestamp": datetime.now(UTC).isoformat()
         })
     return jsonify(changes)
