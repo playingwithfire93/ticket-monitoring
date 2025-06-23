@@ -158,7 +158,8 @@ def home():
             card.className = "card";
             card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
             list.appendChild(card);
-            document.title = "🎟️ Ticket Monitor Glam Edition";
+            document.title = `(${data.length}) 🎟️ Cambios detectados`;
+
           } else {
             const notifSound = document.getElementById("notifSound");
             data.forEach(change => {
