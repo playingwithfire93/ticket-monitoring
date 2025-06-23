@@ -232,8 +232,8 @@ URLS = [
     {"label": "Los Miserables entradas", "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"},
     {"label": "The Book of Mormon", "url": "https://thebookofmormonelmusical.es"},
     {"label": "Mormon elenco", "url": "https://thebookofmormonelmusical.es/elenco/"},
-    {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
-    {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
+    {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"}
+    # {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
 from bs4 import BeautifulSoup
 
