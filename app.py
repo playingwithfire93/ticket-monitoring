@@ -13,14 +13,18 @@ previous_states = {}
 TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 CHAT_ID = '553863319'
 def send_telegram_text(url, changes, timestamp):
-    bot = Bot(token=TELEGRAM_TOKEN)
-    message = (
-        f"🎭 Ticket Alert!\n"
-        f"🌐 URL: {url}\n"
-        f"🕒 Cambio detectado: {timestamp}\n"
-        f"📄 Cambios:\n{changes[:3500]}"
-    )
-    bot.send_message(chat_id=CHAT_ID, text=message)
+    try:
+        bot = Bot(token=TELEGRAM_TOKEN)
+        message = (
+            f"🎭 Ticket Alert!\n"
+            f"🌐 URL: {url}\n"
+            f"🕒 Cambio detectado: {timestamp}\n"
+            f"📄 Cambios:\n{changes[:3500]}"
+        )
+        bot.send_message(chat_id=CHAT_ID, text=message)
+        print("✅ Telegram message sent!")
+    except Exception as e:
+        print(f"❌ Telegram error: {e}")
     
 @app.route("/")
 def home():
