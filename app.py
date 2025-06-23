@@ -2,9 +2,12 @@ from flask import Flask, jsonify, render_template_string
 import os
 from datetime import datetime, UTC
 import requests
+import hashlib
+import json
 
 app = Flask(__name__)
 previous_states = {}
+
 @app.route("/")
 def home():
     return render_template_string("""
@@ -29,6 +32,33 @@ def home():
           color: #ec4899;
           margin-bottom: 2rem;
           animation: fadeIn 1s ease-in-out;
+        }
+
+        h3 {
+          font-size: 1.2rem;
+          margin: 0.5rem 0;
+          color: #9d174d;
+        }
+
+        a {
+          text-decoration: none;
+          color: #7e22ce;
+        }
+
+        a:hover {
+          text-decoration: underline;
+        }
+
+        p {
+          margin: 0.25rem 0;
+          font-size: 0.95rem;
+        }
+
+        time {
+          display: block;
+          margin-top: 0.5rem;
+          font-size: 0.8rem;
+          color: #6b7280;
         }
 
         .dashboard {
@@ -65,32 +95,25 @@ def home():
 
         .grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 1rem;
         }
 
         .card {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: background-color 0.3s ease;
-
-  /* Previene desbordamientos de texto */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
+          background-color: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          transition: background-color 0.3s ease, box-shadow 0.3s ease;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        }
 
         .card:hover {
           border-color: #ec4899;
           box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
-        }
-
-        .card span:first-child {
-          font-size: 1.5rem;
         }
 
         @keyframes fadeIn {
@@ -99,15 +122,29 @@ def home():
         }
 
         @keyframes pulse {
-          0%, 100 { opacity: 1; }
+          0%, 100% { opacity: 1; }
           50% { opacity: 0.6; }
         }
-        .container {
-  max-width: 800px;
-  margin: 1rem auto 2rem auto; /* menos margen arriba */
-  padding: 1rem;
-}
 
+        .container {
+          max-width: 800px;
+          margin: 1rem auto 2rem auto;
+          padding: 1rem;
+        }
+
+        @media (max-width: 500px) {
+          h1 {
+            font-size: 2rem;
+          }
+
+          .badge {
+            margin-top: 0.5rem;
+          }
+
+          .grid {
+            grid-template-columns: 1fr;
+          }
+        }
       </style>
     </head>
     <body>
@@ -144,12 +181,11 @@ def home():
               const card = document.createElement("div");
               card.className = "card";
               card.innerHTML = `
-  <h3><a href="${change.site}" target="_blank" rel="noopener noreferrer">${change.label}</a></h3>
-  <p>Status: ${change.status}</p>
-  <p>Summary: ${change.summary}</p>
-  <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
-`;
-;
+                <h3><a href="${change.site}" target="_blank" rel="noopener noreferrer">${change.label}</a></h3>
+                <p>Status: ${change.status}</p>
+                <p>Summary: ${change.summary}</p>
+                <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
+              `;
               list.appendChild(card);
             });
           }
@@ -161,7 +197,6 @@ def home():
     </body>
     </html>
     """)
-
 
 URLS = [
     {"label": "test", "url": "https://httpbin.org/get/"},
@@ -177,9 +212,6 @@ URLS = [
     {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
-
-from datetime import datetime
-import hashlib
 
 @app.route("/changes")
 def get_changes():
@@ -203,7 +235,6 @@ def get_changes():
                     "timestamp": datetime.now(UTC).isoformat()
                 })
             else:
-                # only add if you want to show unchanged status too
                 changes.append({
                     "site": url,
                     "label": label,
@@ -222,7 +253,6 @@ def get_changes():
             })
 
     return jsonify(changes)
-
 
 @app.route("/urls")
 def urls():
