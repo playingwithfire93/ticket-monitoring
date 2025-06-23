@@ -15,7 +15,7 @@ def home():
     <html lang="es">
     <head>
       <meta charset="UTF-8">
-      <title>🎟️ Ticket Monitor Glam Edition</title>
+      <title>🎟️ Ticket Monitor</title>
       <style>
         body {
           font-family: 'Segoe UI', sans-serif;
