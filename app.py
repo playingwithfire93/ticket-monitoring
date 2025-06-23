@@ -105,10 +105,10 @@ async function loadChanges() {
   } catch (err) {
     container.innerHTML = "<p>⚠️ Could not load data. Check connection or server.</p>";
     console.error(err);
-  }loadChanges();                       // 👈 Add this
-  setInterval(loadChanges, 15000);
+  }
 }
-
+loadChanges();                       // 👈 Add this
+  setInterval(loadChanges, 15000);
       </script>
     </body>
     </html>
