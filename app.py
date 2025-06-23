@@ -34,10 +34,11 @@ def home():
     }
     .grid {
       display: grid;
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, 300px);
       justify-content: center;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
     }
+
     @media (min-width: 600px) {
       .grid {
       grid-template-columns: repeat(2, 1fr);
