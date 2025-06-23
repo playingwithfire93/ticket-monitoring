@@ -9,111 +9,145 @@ previous_states = {}
 def home():
     return render_template_string("""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
-      <title>Ticket Monitor</title>
+      <meta charset="UTF-8" />
+      <title>🎟️ Ticket Monitor Dashboard</title>
       <style>
         body {
           margin: 0;
-          padding: 0;
-          font-family: system-ui, sans-serif;
-          background-color: #f9fafb;
-          color: #111827;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #ffe4e6, #fbcfe8);
+          color: #444;
+          min-height: 100vh;
+          padding: 2rem;
         }
-        header {
-          background-color: #111827;
-          color: #ffffff;
-          padding: 1rem;
+
+        h1 {
           text-align: center;
-          font-size: 1.5rem;
-          font-weight: bold;
+          font-size: 3rem;
+          color: #ec4899;
+          margin-bottom: 2rem;
+          animation: fadeIn 1s ease-in-out;
         }
-        .container {
-          max-width: 800px;
-          margin: 2rem auto;
-          padding: 1rem;
+
+        .dashboard {
+          background: white;
+          border: 1px solid #f9a8d4;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(249, 168, 212, 0.2);
+          padding: 1.5rem;
+          max-width: 1200px;
+          margin: 0 auto;
         }
-        .card {
-          background-color: #ffffff;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 1rem;
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          flex-wrap: wrap;
           margin-bottom: 1rem;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          transition: background-color 0.3s ease;
         }
+
+        .last-checked {
+          font-size: 0.9rem;
+          font-style: italic;
+          color: #ec4899;
+        }
+
+        .badge {
+          background: #ec4899;
+          color: white;
+          padding: 0.25rem 0.75rem;
+          border-radius: 999px;
+          font-size: 0.8rem;
+          animation: pulse 1.5s infinite;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1rem;
+        }
+
+        .card {
+          background: #ffe4e6;
+          border: 1px solid #f9a8d4;
+          padding: 1rem;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(249, 168, 212, 0.2);
+          transition: 0.3s ease all;
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          animation: fadeIn 0.5s ease-in-out;
+        }
+
         .card:hover {
-          background-color: #f3f4f6;
+          border-color: #ec4899;
+          box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
         }
-        .card h3 {
-          margin: 0 0 0.5rem;
-          font-size: 1.1rem;
-          color: #1f2937;
+
+        .card span:first-child {
+          font-size: 1.5rem;
         }
-        .card p {
-          margin: 0.3rem 0;
-          font-size: 0.95rem;
-          color: #374151;
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-        .card time {
-          font-size: 0.85rem;
-          color: #6b7280;
+
+        @keyframes pulse {
+          0%, 100 { opacity: 1; }
+          50% { opacity: 0.6; }
         }
       </style>
     </head>
     <body>
-      <header>🎭 Ticket Monitor Dashboard</header>
-      <div class="container" id="changesContainer">
-        <p>Loading...</p>
+      <h1>🎭 HOLAAAA</h1>
+
+      <div class="dashboard">
+        <div class="header">
+          <p id="lastChecked" class="last-checked">Last Checked: ...</p>
+          <span class="badge">🔄 Auto-refreshing</span>
+        </div>
+
+        <div id="changesList" class="grid">
+          <div class="card"><span>⏳</span><span>Loading updates...</span></div>
+        </div>
       </div>
+
       <script>
-        let previousData = [];
+        async function update() {
+          const res = await fetch("/changes");
+          const data = await res.json();
+          document.getElementById("lastChecked").textContent =
+            "Last Checked: " + new Date().toLocaleString("es-ES");
 
-async function loadChanges() {
-  const container = document.getElementById("changesContainer");
-  try {
-    const res = await fetch("/changes");
-    if (!res.ok) throw new Error('Network response was not ok');
-    const data = await res.json();
+          const list = document.getElementById("changesList");
+          list.innerHTML = "";
 
-    container.innerHTML = "";
-
-    data.forEach((change, index) => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <h3><a href="${change.site}" target="_blank" rel="noopener noreferrer">${change.site}</a></h3>
-        <p>Status: ${change.status}</p>
-        <p>Summary: ${change.summary}</p>
-        <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
-      `;
-
-      container.appendChild(card);
-
-      // Check for a change from the previous fetch
-      if (previousData.length && change.status !== previousData[index].status) {
-        if (Notification.permission === "granted") {
-          new Notification("🎭 Ticket Alert", {
-            body: `Change detected on ${change.site}`,
-            icon: "https://emojiapi.dev/api/v1/ticket/64.png"
-          });
+          if (data.length === 0) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = "<span>✅</span><span>No new changes detected.</span>";
+            list.appendChild(card);
+          } else {
+            data.forEach(change => {
+              const card = document.createElement("div");
+              card.className = "card";
+              card.innerHTML = `<span>🎫</span><span>${change.site}: ${change.summary}</span>`;
+              list.appendChild(card);
+            });
+          }
         }
-      }
-    });
 
-    previousData = data;
-  } catch (err) {
-    container.innerHTML = "<p>⚠️ Could not load data. Check connection or server.</p>";
-    console.error(err);
-  }
-}
-loadChanges();                       // 👈 Add this
-  setInterval(loadChanges, 15000);0
+        update();
+        setInterval(update, 10000);
       </script>
     </body>
     </html>
     """)
+
 
 URLS = [
     "https://httpbin.org/get",
