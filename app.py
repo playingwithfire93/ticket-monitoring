@@ -220,13 +220,13 @@ def hash_url_content(url):
         return content_hash
     except Exception as e:
         return f"ERROR: {str(e)}"
-
-@app.route("/changes")
+@app.route("/changes")  
 def changes():
     global previous_states
     updates = []
 
-    for url in URLS:
+    for item in URLS:
+        url = item["url"]
         current_hash = hash_url_content(url)
         last_hash = previous_states.get(url)
 
@@ -236,9 +236,11 @@ def changes():
                 "timestamp": datetime.now(UTC).isoformat()
             })
 
+        # This should be outside the if block
         previous_states[url] = current_hash
 
     return jsonify(updates)
+
 
 @app.route("/urls")
 def urls():
