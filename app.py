@@ -178,16 +178,16 @@ def home():
             list.appendChild(card);
           } else {
             data.forEach(change => {
-              const card = document.createElement("div");
-              card.className = "card";
-              card.innerHTML = `
-                <h3><a href="${change.site}" target="_blank" rel="noopener noreferrer">${change.label}</a></h3>
-                <p>Status: ${change.status}</p>
-                <p>Summary: ${change.summary}</p>
-                <time>Last checked: ${new Date(change.timestamp).toLocaleString()}</time>
-              `;
-              list.appendChild(card);
-            });
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <h3>Cambio detectado</h3>
+    <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+    <p>${change.timestamp}</p>
+  `;
+  list.appendChild(card);
+});
+
           }
         }
 
@@ -213,46 +213,32 @@ URLS = [
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
 
+def hash_url_content(url):
+    try:
+        response = requests.get(url, timeout=10)
+        content_hash = hashlib.md5(response.content).hexdigest()
+        return content_hash
+    except Exception as e:
+        return f"ERROR: {str(e)}"
+
 @app.route("/changes")
-def get_changes():
-    changes = []
-    for item in URLS:
-        url = item["url"]
-        label = item["label"]
-        try:
-            response = requests.get(url, timeout=10)
-            content = response.text
-            content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()
+def changes():
+    global previous_states
+    updates = []
 
-            last_hash = previous_states.get(url)
-            if last_hash != content_hash:
-                previous_states[url] = content_hash
-                changes.append({
-                    "site": url,
-                    "label": label,
-                    "status": "changed",
-                    "summary": "Page content updated.",
-                    "timestamp": datetime.now(UTC).isoformat()
-                })
-            else:
-                changes.append({
-                    "site": url,
-                    "label": label,
-                    "status": "unchanged",
-                    "summary": "No updates detected.",
-                    "timestamp": datetime.now(UTC).isoformat()
-                })
+    for url in URLS:
+        current_hash = hash_url_content(url)
+        last_hash = previous_states.get(url)
 
-        except Exception as e:
-            changes.append({
-                "site": url,
-                "label": label,
-                "status": "error",
-                "summary": f"Error fetching site: {e}",
+        if last_hash and last_hash != current_hash:
+            updates.append({
+                "url": url,
                 "timestamp": datetime.now(UTC).isoformat()
             })
 
-    return jsonify(changes)
+        previous_states[url] = current_hash
+
+    return jsonify(updates)
 
 @app.route("/urls")
 def urls():
