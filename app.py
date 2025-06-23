@@ -166,7 +166,7 @@ def home():
     <div class="dashboard">
     <div class="header">
   <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-  <div class="card" style="padding:0.5rem 1rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
+  <div class="card" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
     💖 Auto-refreshing
   </div>
 </div>
