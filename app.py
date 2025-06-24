@@ -156,10 +156,10 @@ def home():
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;      /* Centra verticalmente */
-  text-align: center;           /* Centra horizontalmente */
+  justify-content: center;
+  text-align: center;
   font-weight: 500;
-  padding: 0.5rem 1rem;         /* Menos padding vertical */
+  padding: 0.5rem 1rem 0 1rem; /* Top, right, bottom=0, left */
   height: 100%;
   min-height: 0;
   z-index: 3;
@@ -176,7 +176,12 @@ def home():
   text-align: center;
   margin-left: 0;
   margin-right: 0;
+  margin-bottom: 0; /* Remove extra margin at bottom */
   box-sizing: border-box;
+}
+
+.card-back p:last-child {
+  margin-bottom: 0;
 }
   .card-back h3 {
     color: #ec4899;
