@@ -303,7 +303,9 @@ def home():
     }
     </style>
   </head>
+  
   <body>
+  <div id="toast-container"></div>
     <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
     <div class="dashboard">
     <div class="header">
@@ -316,9 +318,7 @@ def home():
       <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
     </div>
     </div>
-    <div id="toast">
-    <span id="toast-message">Cambio detectado</span>
-    <button id="toast-close" style="margin-left:1em;background:none;border:none;color:white;font-size:1.2em;cursor:pointer;">&times;</button>
+  
     </div>
     <audio id="notifSound" preload="auto">
     <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
