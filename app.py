@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, render_template_string
+from flask_socketio import SocketIO
 import os
 from datetime import datetime, UTC
 import requests
@@ -9,6 +10,7 @@ from bs4.element import Comment
 from telegram import Bot
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 previous_states = {}
 TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 CHAT_ID = '553863319'
@@ -454,7 +456,9 @@ URLS = [
     {"label": "Houdini", "url": "https://www.houdinielmusical.com"}
 ]
 from bs4 import BeautifulSoup
-
+def broadcast_change(url, data):
+    socketio.emit('update', {'url': url, 'data': data})
+    
 def hash_url_content(url):
     try:
         response = requests.get(url, timeout=10)
@@ -525,6 +529,7 @@ def changes():
             elif last_state != state:
                 status = "¡Actualizado! 🎉"
                 send_telegram_text(url, "Cambio detectado en la web", now)
+                broadcast_change(url, status)  # <-- Add this line
             else:
                 status = "Sin cambios ✨"
 
