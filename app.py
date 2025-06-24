@@ -10,6 +10,8 @@ from telegram import Bot
 
 app = Flask(__name__)
 previous_states = {}
+change_log = []  # <-- Add this line
+MAX_LOG_ENTRIES = 50  # Show last 50 changes
 TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 CHAT_ID = '553863319'
 
@@ -93,7 +95,8 @@ def home():
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
+        align-items: center;IS IT POSSIBLE TO ADD A LOG OF  
+        
         text-align: center;
         width: 100%;
         max-width: 340px;
@@ -245,6 +248,34 @@ def home():
       });
       }
     }
+          <!-- Add at the bottom of your HTML, before </body> -->
+      <div id="changeLogContainer" style="width:100%;margin-top:2rem;">
+        <h2 style="text-align:center;color:#ec4899;">📝 Historial de Cambios</h2>
+        <ul id="changeLog" style="list-style:none;padding:0;text-align:center;"></ul>
+      </div>
+      <script>
+      async function updateLog() {
+        const res = await fetch("/changelog");
+        const log = await res.json();
+        const logList = document.getElementById("changeLog");
+        logList.innerHTML = "";
+        if (log.length === 0) {
+          logList.innerHTML = "<li style='color:#aaa;'>Sin cambios recientes.</li>";
+        } else {
+          log.slice().reverse().forEach(entry => {
+            const li = document.createElement("li");
+            li.style.marginBottom = "0.5rem";
+            li.innerHTML = `<b style="color:#e11d48;">${entry.label}</b> 
+              <a href="${entry.url}" target="_blank" style="color:#c026d3;">${entry.url}</a>
+              <span style="color:#9d174d;">${entry.status}</span>
+              <span style="color:#aaa;">${new Date(entry.timestamp).toLocaleString("es-ES")}</span>`;
+            logList.appendChild(li);
+          });
+        }
+      }
+      updateLog();
+      setInterval(updateLog, 15000);
+      </script>
     update();
     setInterval(update, 10000);
     </script>
@@ -343,8 +374,16 @@ def changes():
                 status = "Primer chequeo 👀"
             elif last_state != state:
                 status = "¡Actualizado! 🎉"
-                # --- ENVÍA TELEGRAM SOLO SI NO ES EL TEST ---
                 send_telegram_text(url, "Cambio detectado en la web", now)
+                # --- Add to log ---
+                change_log.append({
+                    "label": label,
+                    "url": url,
+                    "timestamp": now,
+                    "status": status
+                })
+                if len(change_log) > MAX_LOG_ENTRIES:
+                    change_log.pop(0)
             else:
                 status = "Sin cambios ✨"
 
@@ -358,7 +397,9 @@ def changes():
         })
 
     return jsonify(changes_list)
-
+@app.route("/changelog")
+def changelog():
+    return jsonify(list(change_log))
 @app.route("/urls")
 def urls():
     with open("urls.json") as f:
