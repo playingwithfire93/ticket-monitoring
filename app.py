@@ -81,39 +81,40 @@ def home():
           width: 100%;
         }
         .card {
+          position: relative;
           width: 17em;
-          min-height: 11em;
-          background: linear-gradient(270deg, #fce7f3, #f9a8d4, #fbcfe8, #fce7f3, #f9a8d4, #fbcfe8);
-          background-size: 800% 800%;
-          animation: pinkCardAnim 8s ease infinite; /* slower animation */
+          min-height: 220px;
           border-radius: 1.2rem;
+          overflow: hidden;
           box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
           border: 1.5px solid rgba(236, 72, 153, 0.15);
-          backdrop-filter: blur(12px) saturate(160%);
-          -webkit-backdrop-filter: blur(12px) saturate(160%);
-          color: #d63384;
-          padding: 1.7rem 1.3rem;
+          background: #fff7fb;
           margin: 0.7rem 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
           transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
-          position: relative;
-          overflow: hidden;
-          animation: fadeIn 0.7s, pinkCardAnim 8s ease infinite;
-      }
-      .card-overlay {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(255,255,255,0.92);
-        color: #d63384;
-        border-radius: 1.2rem;
-        opacity: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        transition: opacity 0.3s;
-        padding: 1.2rem 1rem;
-        text-align: center;
-      }
+          animation: fadeIn 0.7s;
+        }
+      
+        .card-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.96); /* more opaque for better contrast */
+  color: #d63384;
+  border-radius: 1.2rem;
+  opacity: 0;
+  z-index: 2; /* must be higher than .musical-img */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
         .card a { 
         
           word-break: break-all;
@@ -199,14 +200,16 @@ def home():
         .card.recent-change {
           animation: glow 1s ease-in-out 3;
         }
-        .musical-img {
-          width: 100%;
-          height: 140px;
-          background-size: cover;
-          background-position: center;
-          border-radius: 1.2rem 1.2rem 0 0;
-          transition: filter 0.3s;
-        }
+        
+      .musical-img {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+  transition: filter 0.3s;
+}
         #loadingIndicator {
           text-align: center;
           font-style: italic;
