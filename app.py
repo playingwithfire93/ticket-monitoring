@@ -311,27 +311,32 @@ def home():
     }
 
     function showToast(message) {
-      const container = document.getElementById("toast-container");
-      const toast = document.createElement("div");
-      toast.className = "toast";
-      toast.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
-      `;
-      container.appendChild(toast);
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
+  `;
+  container.appendChild(toast);
 
-      // Show browser notification if not focused
-      if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-        new Notification("🎟️ Ticket Monitor", { body: message.replace(/\\n/g, " ") });
-      }
+  // Show browser notification if not focused
+  if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+    const notification = new Notification("🎟️ Ticket Monitor", { body: message.replace(/\\n/g, " ") });
+    notification.onclick = function(event) {
+      event.preventDefault();
+      window.focus();
+      this.close();
+    };
+  }
 
-      // Save to sessionStorage
-      let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-      if (!toasts.includes(message)) {
-        toasts.push(message);
-        sessionStorage.setItem("toasts", JSON.stringify(toasts));
-      }
-    }
+  // Save to sessionStorage
+  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+  if (!toasts.includes(message)) {
+    toasts.push(message);
+    sessionStorage.setItem("toasts", JSON.stringify(toasts));
+  }
+}
 
     function removeToastFromSession(message) {
       let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
