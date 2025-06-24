@@ -129,19 +129,17 @@ def home():
     align-items: center;
     justify-content: center;
   }
-  .card-front {
-    background: transparent; /* or remove this line */
+.card-front {
+    background: transparent;
     z-index: 2;
     transform: rotateY(0deg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     position: relative;
     overflow: hidden;
   }
   .musical-img {
     position: absolute;
-    top: 0; left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     background-size: cover;
