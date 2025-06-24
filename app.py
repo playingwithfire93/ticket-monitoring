@@ -12,6 +12,7 @@ app = Flask(__name__)
 previous_states = {}
 TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
 CHAT_ID = '553863319'
+
 def send_telegram_text(url, changes, timestamp):
     try:
         bot = Bot(token=TELEGRAM_TOKEN)
@@ -253,7 +254,7 @@ def home():
 
 
 URLS = [
-    {"label": "test", "url": "https://httpbin.org/get/"},
+    #{"label": "test", "url": "https://httpbin.org/get/"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
