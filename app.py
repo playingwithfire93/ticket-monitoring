@@ -29,13 +29,13 @@ def send_telegram_text(url, changes, timestamp):
 
 @app.route("/")
 def home():
-  return render_template_string("""
-  <!DOCTYPE html>
-  <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <title>🎟️ Ticket Monitor</title>
-    <style>
+    return render_template_string("""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🎟️ Ticket Monitor</title>
+  <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #DFDBE5;
@@ -48,6 +48,14 @@ def home():
       flex-direction: column;
       align-items: center;
       justify-content: center;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-align: center;
+      color: #d63384;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+      width: 100%;
     }
     .dashboard {
       max-width: 1100px;
@@ -66,14 +74,6 @@ def home():
       gap: 2rem;
       width: 100%;
     }
-    h1 {
-      font-size: 2.2rem;
-      text-align: center;
-      color: #d63384;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      margin-bottom: 1.5rem;
-      width: 100%;
-    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -81,19 +81,23 @@ def home():
       width: 100%;
     }
     .card {
-  perspective: 1200px;
-  width: 17em;
-  min-height: 220px;
-  border-radius: 1.2rem;
-  overflow: hidden;
-  background: linear-gradient(135deg, #ffe4f1 0%, #fbc2eb 50%, #f9a8d4 100%);
-  border: 1.5px solid #ec4899;
-  box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
-  margin: 0.7rem 0;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-}
+      perspective: 1200px;
+      width: 17em;
+      min-height: 220px;
+      border-radius: 1.2rem;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ffe4f1 0%, #fbc2eb 50%, #f9a8d4 100%);
+      border: 1.5px solid #ec4899;
+      box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
+      margin: 0.7rem 0;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+    .autorefresh-glow {
+      animation: glow 1.2s ease-in-out infinite alternate;
+      box-shadow: 0 0 16px #ec4899, 0 0 4px #fff0f6;
+    }
     .card-inner {
       position: relative;
       width: 100%;
@@ -127,6 +131,10 @@ def home():
       background-size: cover;
       background-position: center;
       border-radius: 1.2rem;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 1;
+      transition: filter 0.3s;
     }
     .card-back {
       background: rgba(255,255,255,0.97);
@@ -180,10 +188,6 @@ def home():
       box-shadow: 0 16px 40px 0 rgba(236, 72, 153, 0.28), 0 2px 12px 0 rgba(255, 192, 203, 0.22);
       border-color: #ec4899;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
     .card h3 {
       color: #ec4899;
       font-weight: 700;
@@ -220,54 +224,6 @@ def home():
       50% { border-color: #fb7185; box-shadow: 0 0 8px 4px rgba(244,63,94,0.3); }
       100% { border-color: #ec4899; box-shadow: none; }
     }
-    #toast-container {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: flex-end;
-}
-
-  .toast {
-    background: #ec4899;
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    min-width: 220px;
-    max-width: 350px;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    animation: fadeInOut 0.6s ease-in-out;
-    position: relative;
-  }
-
-  .toast button {
-    margin-left: 1em;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2em;
-    cursor: pointer;
-    position: absolute;
-    top: 0.5em;
-    right: 0.7em;
-  }
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translateY(20px); }
-      10% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; }
-      100% { opacity: 0; transform: translateY(20px); }
-    }
-    @keyframes pinkCardAnim {
-      0% { background-position: 0% 50% }
-      50% { background-position: 100% 50% }
-      100% { background-position: 0% 50% }
-    }
     @keyframes glow {
       0% { box-shadow: 0 0 10px #ec4899; }
       100% { box-shadow: none; }
@@ -275,14 +231,46 @@ def home():
     .card.recent-change {
       animation: glow 1s ease-in-out 3;
     }
-    .musical-img {
+    #toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+    .toast {
+      background: #ec4899;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      min-width: 220px;
+      max-width: 350px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      animation: fadeInOut 0.6s ease-in-out;
+      position: relative;
+    }
+    .toast button {
+      margin-left: 1em;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2em;
+      cursor: pointer;
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      width: 100%; height: 100%;
-      background-size: cover;
-      background-position: center;
-      z-index: 1;
-      transition: filter 0.3s;
+      top: 0.5em;
+      right: 0.7em;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(20px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(20px); }
     }
     #loadingIndicator {
       text-align: center;
@@ -292,151 +280,151 @@ def home():
       width: 100%;
     }
     @media (max-width: 900px) {
-      .grid {
-      grid-template-columns: repeat(2, 1fr);
-      }
+      .grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
-      .grid {
-      grid-template-columns: 1fr;
-      }
+      .grid { grid-template-columns: 1fr; }
     }
-    </style>
-  </head>
-  
-  <body>
+  </style>
+</head>
+<body>
   <div id="toast-container"></div>
-    <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
-    <div class="dashboard">
+  <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
+  <div class="dashboard">
     <div class="header">
       <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-      <div class="card" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
-      💖 Auto-refreshing
+      <div class="card autorefresh-glow" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
+        💖 Auto-refreshing
       </div>
     </div>
     <div id="changesList" class="grid">
       <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
     </div>
-
-    <audio id="notifSound" preload="auto">
+  </div>
+  <audio id="notifSound" preload="auto">
     <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
-    </audio>
-    <p id="loadingIndicator">🔎 Checking for updates...</p>
-    <script>
+  </audio>
+  <p id="loadingIndicator">🔎 Checking for updates...</p>
+  <script>
     if ("Notification" in window && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
+      Notification.requestPermission();
+    }
+
     function showToast(message) {
-  const container = document.getElementById("toast-container");
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.innerHTML = `
-    <span>${message}</span>
-    <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
-  `;
-  container.appendChild(toast);
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
+      `;
+      container.appendChild(toast);
 
-  // Show browser notification if not focused
-  if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-    new Notification("🎟️ Ticket Monitor", { body: message.replace(/\n/g, " ") });
-  }
+      // Show browser notification if not focused
+      if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+        new Notification("🎟️ Ticket Monitor", { body: message.replace(/\\n/g, " ") });
+      }
 
-  // Save to sessionStorage
-  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-  if (!toasts.includes(message)) {
-    toasts.push(message);
-    sessionStorage.setItem("toasts", JSON.stringify(toasts));
-  }
-}
+      // Save to sessionStorage
+      let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+      if (!toasts.includes(message)) {
+        toasts.push(message);
+        sessionStorage.setItem("toasts", JSON.stringify(toasts));
+      }
+    }
 
-function removeToastFromSession(message) {
-  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-  toasts = toasts.filter(m => m !== decodeURIComponent(message));
-  sessionStorage.setItem("toasts", JSON.stringify(toasts));
-}
+    function removeToastFromSession(message) {
+      let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+      toasts = toasts.filter(m => m !== decodeURIComponent(message));
+      sessionStorage.setItem("toasts", JSON.stringify(toasts));
+    }
 
-// On page load, restore toasts
-// On page load, restore toasts
-window.addEventListener("DOMContentLoaded", () => {
-  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-  const container = document.getElementById("toast-container");
-  toasts.forEach(msg => {
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerHTML = `
-      <span>${msg}</span>
-      <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(msg)}')">&times;</button>
-    `;
-    container.appendChild(toast);
-  });
-});
-  
+    // On page load, restore toasts visually only
+    window.addEventListener("DOMContentLoaded", () => {
+      let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+      const container = document.getElementById("toast-container");
+      toasts.forEach(msg => {
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerHTML = `
+          <span>${msg}</span>
+          <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(msg)}')">&times;</button>
+        `;
+        container.appendChild(toast);
+      });
+    });
+
     async function update() {
       document.getElementById("loadingIndicator").style.display = "block";
-      const res = await fetch("/changes");
-      const data = await res.json();
-      document.getElementById("loadingIndicator").style.display = "none";
-      document.getElementById("lastChecked").textContent =
-      "Última revisión: " + new Date().toLocaleString("es-ES");
-      const list = document.getElementById("changesList");
-      list.innerHTML = "";
-      if (data.length === 0) {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
-      list.appendChild(card);
-      document.title = `(${data.length}) 🎟️ Cambios detectados`;
-      } else {
-      const notifSound = document.getElementById("notifSound");
-      data.forEach(change => {
-        const card = document.createElement("div");
-        card.className = "card";
-        // You need to provide a mapping from label to image URL
-        const musicalImages = {
-        "Wicked": "static/wicked-reparto-673ca639117ae.avif",
-        "Wicked elenco": "static/wicked-reparto-673ca639117ae.avif",
-        "Wicked entradas": "static/wicked-reparto-673ca639117ae.avif",
-        "Houdini": "static/cartel_movil4.webp",
-        "Los Miserables": "static/les-mis-banner.jpg",
-        "Los Miserables elenco": "static/les-mis-banner.jpg",
-        "Los Miserables entradas": "static/les-mis-banner.jpg",
-        "The Book of Mormon": "static/foto.webp",
-        "The Book of Mormon elenco": "static/foto.webp",
-        "The Book of Mormon entradas": "static/foto.webp",
-        "Buscando a Audrey": "static/audrey-hepburn-in-breakfast-at-tiffanys.jpg"
-        };
-        const imgSrc = musicalImages[change.label] || "static/default.jpg";
-        card.innerHTML = `
-        <div class="card-inner">
-          <div class="card-front">
-          <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-          </div>
-          <div class="card-back">
-          <h3>${change.label}</h3>
-          <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-          <p>${change.status}</p>
-          <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
-          </div>
-        </div>
-        `;
-        if (change.status.includes("Actualizado")) {
-        card.style.borderColor = "#ec4899";
-        card.style.backgroundColor = "#ffe4f1";
-        card.classList.add("recent-change");
-        showToast(`🎀 Cambio en:\n${change.url}`);
-        notifSound.play().catch(() => {});
-        if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
+      try {
+        const res = await fetch("/changes");
+        if (!res.ok) throw new Error("Network error");
+        const data = await res.json();
+        document.getElementById("loadingIndicator").style.display = "none";
+        document.getElementById("lastChecked").textContent =
+          "Última revisión: " + new Date().toLocaleString("es-ES");
+        const list = document.getElementById("changesList");
+        list.innerHTML = "";
+        if (data.length === 0) {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
+          list.appendChild(card);
+          document.title = `(${data.length}) 🎟️ Cambios detectados`;
+        } else {
+          const notifSound = document.getElementById("notifSound");
+          data.forEach(change => {
+            const card = document.createElement("div");
+            card.className = "card";
+            const musicalImages = {
+              "Wicked": "static/wicked-reparto-673ca639117ae.avif",
+              "Wicked elenco": "static/wicked-reparto-673ca639117ae.avif",
+              "Wicked entradas": "static/wicked-reparto-673ca639117ae.avif",
+              "Houdini": "static/cartel_movil4.webp",
+              "Los Miserables": "static/les-mis-banner.jpg",
+              "Los Miserables elenco": "static/les-mis-banner.jpg",
+              "Los Miserables entradas": "static/les-mis-banner.jpg",
+              "The Book of Mormon": "static/foto.webp",
+              "The Book of Mormon elenco": "static/foto.webp",
+              "The Book of Mormon entradas": "static/foto.webp",
+              "Buscando a Audrey": "static/audrey-hepburn-in-breakfast-at-tiffanys.jpg"
+            };
+            const imgSrc = musicalImages[change.label] || "static/default.jpg";
+            card.innerHTML = `
+              <div class="card-inner">
+                <div class="card-front">
+                  <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
+                </div>
+                <div class="card-back">
+                  <h3>${change.label}</h3>
+                  <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+                  <p>${change.status}</p>
+                  <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+                </div>
+              </div>
+            `;
+            if (change.status.includes("Actualizado")) {
+              card.style.borderColor = "#ec4899";
+              card.style.backgroundColor = "#ffe4f1";
+              card.classList.add("recent-change");
+              showToast(`🎀 Cambio en:\n${change.url}`);
+              notifSound.play().catch(() => {});
+              if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
+            }
+            list.appendChild(card);
+          });
         }
-        list.appendChild(card);
-      });
+      } catch (e) {
+        document.getElementById("loadingIndicator").textContent = "❌ Error cargando actualizaciones";
+        console.error(e);
       }
     }
     update();
     setInterval(update, 10000);
-    </script>
-  </body>
-  </html>
-  """)
+  </script>
+</body>
+</html>
+""")
 
 URLS = [
     {"label": "test", "url": "https://httpbin.org/get/"},
