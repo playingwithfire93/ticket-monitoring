@@ -173,6 +173,20 @@ def home():
     word-break: break-all;
     font-size: 0.95em;
   }
+  .card-back a {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    color: #b91c5c;
+    text-align: center;
+    font-size: 0.95em;
+    margin: 0.2em 0;
+    background: none;
+    border: none;
+    text-decoration: underline;
+  }
   .card-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -446,7 +460,7 @@ def home():
               </div>
               <div class="card-back">
                 <h3>${change.label}</h3>
-                <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+                <a href="${change.url}" target="_blank">${change.url}</a>
                 <p>${change.status}</p>
                 <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
               </div>
