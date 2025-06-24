@@ -213,6 +213,16 @@ def home():
     color: #9d174d;
     width: 100%;
   }
+  .card-front-text {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  background: rgba(255,255,255,0.85);
+  padding: 0.5em 0.2em;
+  border-radius: 0 0 1.2rem 1.2rem;
+  margin-top: auto;
+}
   .card:nth-child(even) {
     background-color: #fff7fb;
   }
@@ -426,17 +436,22 @@ def home():
       card.className = "card";
       const imgSrc = musicalImages[change.label] || musicalImages["default"];
       card.innerHTML = `
-        <div class="card-inner">
-        <div class="card-front">
-          <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-        </div>
-        <div class="card-back">
-          <h3>${change.label}</h3>
-          <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-          <p>${change.status}</p>
-          <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
-        </div>
-        </div>
+  <div class="card-inner">
+    <div class="card-front">
+      <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
+      <div class="card-front-text">
+        <h3>${change.label}</h3>
+        <p>${change.status}</p>
+      </div>
+    </div>
+    <div class="card-back">
+      <h3>${change.label}</h3>
+      <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+      <p>${change.status}</p>
+      <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+    </div>
+  </div>
+`;
       `;
       if (change.status.includes("Actualizado")) {
         card.style.borderColor = "#ec4899";
