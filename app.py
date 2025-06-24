@@ -80,7 +80,7 @@ def home():
       gap: 2.2rem;
       width: 100%;
     }
-    ..card {
+    .card {
   perspective: 1200px;
   width: 17em;
   min-height: 220px;
