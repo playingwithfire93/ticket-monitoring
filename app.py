@@ -130,24 +130,28 @@ def home():
     justify-content: center;
   }
 .card-front {
-    background: transparent;
-    z-index: 2;
-    transform: rotateY(0deg);
-    display: block;
-    position: relative;
-    overflow: hidden;
-  }
-  .musical-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    border-radius: 1.2rem;
-    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
-    z-index: 1;
-  }
+  background: transparent;
+  z-index: 2;
+  transform: rotateY(0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.musical-img {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  background-size: cover;
+  background-position: center;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  z-index: 1;
+}
   .card-back {
     display: flex;
     flex-direction: column;
