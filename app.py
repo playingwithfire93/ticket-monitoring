@@ -318,8 +318,6 @@ def home():
       <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
     </div>
 
-  
-    </div>
     <audio id="notifSound" preload="auto">
     <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
     </audio>
