@@ -97,7 +97,7 @@ def home():
           text-align: center;
           width: 100%;
           max-width: 340px;
-          color: #e11d48;
+          color: #ff9eff;
         }
         .card a {
           word-break: break-all;
@@ -262,8 +262,8 @@ URLS = [
     {"label": "Los Miserables elenco", "url": "https://miserableselmusical.es/elenco"},
     {"label": "Los Miserables entradas", "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"},
     {"label": "The Book of Mormon", "url": "https://thebookofmormonelmusical.es"},
-    {"label": "Mormon elenco", "url": "https://thebookofmormonelmusical.es/elenco/"},
-    {"label": "Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
+    {"label": "The Book of Mormon elenco", "url": "https://thebookofmormonelmusical.es/elenco/"},
+    {"label": "The Book of Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"}
 ]
 from bs4 import BeautifulSoup
