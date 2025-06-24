@@ -329,15 +329,29 @@ def home():
   toast.className = "toast";
   toast.innerHTML = `
     <span>${message}</span>
-    <button onclick="this.parentElement.remove()">&times;</button>
+    <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
   `;
   container.appendChild(toast);
 
-  // Auto-remove after 12s
-  setTimeout(() => {
-    if (toast.parentElement) toast.remove();
-  }, 12000);
+  // Save to sessionStorage
+  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+  if (!toasts.includes(message)) {
+    toasts.push(message);
+    sessionStorage.setItem("toasts", JSON.stringify(toasts));
+  }
 }
+
+function removeToastFromSession(message) {
+  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+  toasts = toasts.filter(m => m !== decodeURIComponent(message));
+  sessionStorage.setItem("toasts", JSON.stringify(toasts));
+}
+
+// On page load, restore toasts
+window.addEventListener("DOMContentLoaded", () => {
+  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+  toasts.forEach(msg => showToast(msg));
+});
   
     async function update() {
       document.getElementById("loadingIndicator").style.display = "block";
