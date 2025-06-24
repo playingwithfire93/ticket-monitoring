@@ -328,17 +328,18 @@ def home():
   }
 
   function showToast(message, url = null) {
-    const container = document.getElementById("toast-container");
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerHTML = `
-    <span>${message}</span>
-    <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
-    `;
-    container.appendChild(toast);
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = url
+    ? `<span><a href="${url}" target="_blank" style="color:white;text-decoration:underline;">${message}</a></span>
+       <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`
+    : `<span>${message}</span>
+       <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`;
+  container.appendChild(toast);
 
-    // Show browser notification if not focused
-    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+  // Browser notification (as before)
+  if (document.hidden && "Notification" in window && Notification.permission === "granted") {
     const notification = new Notification("🎟️ Ticket Monitor", { 
       body: message.replace(/\\n/g, " "),
       data: { url: url }
@@ -346,21 +347,21 @@ def home():
     notification.onclick = function(event) {
       event.preventDefault();
       if (notification.data && notification.data.url) {
-      window.open(notification.data.url, "_blank");
+        window.open(notification.data.url, "_blank");
       } else {
-      window.focus();
+        window.focus();
       }
       this.close();
     };
-    }
+  }
 
-    // Save to sessionStorage
-    let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-    if (!toasts.includes(message)) {
+  // Save to sessionStorage
+  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+  if (!toasts.includes(message)) {
     toasts.push(message);
     sessionStorage.setItem("toasts", JSON.stringify(toasts));
-    }
   }
+}
 
   function removeToastFromSession(message) {
     let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
