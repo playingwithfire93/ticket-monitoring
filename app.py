@@ -170,7 +170,6 @@ def home():
   .card-back h3,
   .card-back p,
   .card-back a {
-    width: 100%;
     text-align: center;
     margin-left: auto;
     margin-right: auto;
