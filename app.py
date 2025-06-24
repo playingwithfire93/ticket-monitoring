@@ -97,7 +97,8 @@ def home():
         text-align: center;
         width: 100%;
         max-width: 340px;
-      }
+        color: #e11d48; /* <-- TEXTO ROSA */
+    }
       .card a {
         word-break: break-all;
         overflow-wrap: anywhere;
