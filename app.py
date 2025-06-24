@@ -141,7 +141,7 @@ def home():
     border-radius: 1.2rem;
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 1;
+    z-index: 0; /* <-- Asegura que la imagen esté detrás */
     transition: filter 0.3s;
   }
   .card-back {
@@ -153,6 +153,7 @@ def home():
     font-weight: 500;
     padding: 1.2rem 1rem;
     height: 100%;
+    z-index: 1; 
   }
   .card-back h3,
   .card-back p,
@@ -229,7 +230,7 @@ def home():
   }
   .card-front-text {
     position: relative;
-    z-index: 2;
+    z-index: 1; /* <-- El texto va encima de la imagen */
     width: 100%;
     text-align: center;
     background: rgba(255,255,255,0.85);
