@@ -130,7 +130,7 @@ def home():
     justify-content: center;
   }
   .card-front {
-    background: #fff7fb;
+    background: transparent; /* or remove this line */
     z-index: 2;
     transform: rotateY(0deg);
     display: flex;
@@ -148,6 +148,7 @@ def home():
     background-position: center;
     border-radius: 1.2rem;
     box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+    z-index: 1;
   }
   .card-back {
     display: flex;
