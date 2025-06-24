@@ -75,13 +75,11 @@ def home():
           width: 100%;
         }
         .grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 2rem;
-          justify-items: center;
-          align-items: stretch;
-          width: 100%;
-        }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.2rem;
+  width: 100%;
+}
         .card {
           background: rgba(255, 240, 247, 0.85);
           border: none;
