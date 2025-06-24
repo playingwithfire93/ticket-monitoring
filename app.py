@@ -317,7 +317,7 @@ def home():
     <div id="changesList" class="grid">
       <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
     </div>
-    </div>
+
   
     </div>
     <audio id="notifSound" preload="auto">
