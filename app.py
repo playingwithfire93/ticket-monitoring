@@ -137,16 +137,18 @@ def home():
     align-items: center;
     justify-content: center;
     position: relative;
+    overflow: hidden;
   }
   .musical-img {
-  width: 90%;
-  height: 90%;
-  background-size: cover;
-  background-position: center;
-  border-radius: 1.2rem;
-  position: relative;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
-}
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  }
   .card-back {
     display: flex;
     flex-direction: column;
