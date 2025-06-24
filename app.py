@@ -81,21 +81,84 @@ def home():
           width: 100%;
         }
         .card {
-          position: relative;
-          width: 17em;
-          min-height: 220px;
-          border-radius: 1.2rem;
-          overflow: hidden;
-          box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
-          border: 1.5px solid rgba(236, 72, 153, 0.15);
-          background: #fff7fb;
-          margin: 0.7rem 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
-          animation: fadeIn 0.7s;
-        }
+  perspective: 1200px;
+  width: 17em;
+  min-height: 220px;
+  border-radius: 1.2rem;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0.7rem 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s cubic-bezier(.4,2,.6,1);
+  transform-style: preserve-3d;
+  border-radius: 1.2rem;
+  min-height: 220px;
+}
+
+.card:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-front {
+  background: #fff7fb;
+  z-index: 2;
+}
+
+.musical-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  border-radius: 1.2rem;
+}
+
+.card-back {
+  background: rgba(255,255,255,0.97);
+  color: #d63384;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  font-weight: 500;
+  transform: rotateY(180deg);
+  z-index: 3;
+}
+
+.card-back h3 {
+  color: #ec4899;
+  font-weight: 700;
+  margin-bottom: 0.5em;
+}
+
+.card-back p, .card-back a {
+  color: #b91c5c;
+  margin: 0.2em 0;
+  word-break: break-all;
+  font-size: 0.95em;
+}
       
         .card-overlay {
   position: absolute;
@@ -293,15 +356,19 @@ def home():
             };
             const imgSrc = musicalImages[change.label] || "static/default.jpg";
             card.innerHTML = `
-              <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-              <div class="card-overlay">
-                <h3>${change.label}</h3>
-                <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-                <p>${change.status}</p>
-                <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+              <div class="card-inner">
+                <div class="card-front">
+                  <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
+                </div>
+                <div class="card-back">
+                  <h3>${change.label}</h3>
+                  <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+                  <p>${change.status}</p>
+                  <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+                </div>
               </div>
             `;
-            if (change.status.includes("Actualizado")) {
+                        if (change.status.includes("Actualizado")) {
               card.style.borderColor = "#ec4899";
               card.style.backgroundColor = "#ffe4f1";
               card.classList.add("recent-change");
