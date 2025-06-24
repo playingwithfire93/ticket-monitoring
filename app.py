@@ -437,7 +437,6 @@ def home():
     console.error(e);
   }
 }
-    }
     update();
     setInterval(update, 10000);
   </script>
