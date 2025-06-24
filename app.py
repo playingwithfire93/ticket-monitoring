@@ -83,23 +83,21 @@ def home():
           width: 100%;
         }
         .card {
-          background: #fff0f7;
-          border: 2px dashed #f472b6;
-          padding: 1.2rem 1rem;
-          border-radius: 1rem;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-          transition: transform 0.2s ease, box-shadow 0.3s ease;
-          min-height: 180px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          text-align: center;
-          width: 100%;
-          max-width: 340px;
+          background: rgba(255, 240, 247, 0.85);
+          border: none;
+          box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.18);
+          backdrop-filter: blur(6px);
+          border-radius: 1.2rem;
+          padding: 1.5rem 1.2rem;
+          margin: 0.5rem 0;
+          transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
           color: #d63384;
+          position: relative;
+          overflow: hidden;
+          animation: fadeIn 0.7s;
         }
-        .card a {
+        .card a { 
+        
           word-break: break-all;
           overflow-wrap: anywhere;
           display: inline-block;
@@ -107,8 +105,12 @@ def home():
           text-align: center;
         }
         .card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+          transform: translateY(-6px) scale(1.03);
+          box-shadow: 0 12px 32px 0 rgba(236, 72, 153, 0.22);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px);}
+          to { opacity: 1; transform: translateY(0);}
         }
         .card h3 {
           margin-top: 0;
@@ -128,6 +130,20 @@ def home():
         }
         .card.updated {
           animation: flashBorder 1.2s ease;
+        }
+        .card .status-dot {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #ec4899;
+          box-shadow: 0 0 8px #ec4899aa;
+        }
+        .card.updated .status-dot {
+          background: #22c55e;
+          box-shadow: 0 0 8px #22c55e99;
         }
         @keyframes flashBorder {
           0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244,63,94,0.7); }
