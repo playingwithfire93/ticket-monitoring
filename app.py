@@ -323,6 +323,9 @@ def home():
     </audio>
     <p id="loadingIndicator">🔎 Checking for updates...</p>
     <script>
+    if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
     function showToast(message) {
   const container = document.getElementById("toast-container");
   const toast = document.createElement("div");
@@ -332,6 +335,11 @@ def home():
     <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>
   `;
   container.appendChild(toast);
+
+  // Show browser notification if not focused
+  if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+    new Notification("🎟️ Ticket Monitor", { body: message.replace(/\n/g, " ") });
+  }
 
   // Save to sessionStorage
   let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
@@ -421,7 +429,7 @@ window.addEventListener("DOMContentLoaded", () => {
   """)
 
 URLS = [
-    #{"label": "test", "url": "https://httpbin.org/get/"},
+    {"label": "test", "url": "https://httpbin.org/get/"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
