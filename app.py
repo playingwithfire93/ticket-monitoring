@@ -369,69 +369,74 @@ def home():
     });
 
     async function update() {
-      document.getElementById("loadingIndicator").style.display = "block";
-      try {
-        const res = await fetch("/changes");
-        if (!res.ok) throw new Error("Network error");
-        const data = await res.json();
-        document.getElementById("loadingIndicator").style.display = "none";
-        document.getElementById("lastChecked").textContent =
-          "Última revisión: " + new Date().toLocaleString("es-ES");
-        const list = document.getElementById("changesList");
-        list.innerHTML = "";
-        if (data.length === 0) {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
-          list.appendChild(card);
-          document.title = `(${data.length}) 🎟️ Cambios detectados`;
-        } else {
-          const notifSound = document.getElementById("notifSound");
-          data.forEach(change => {
-            const card = document.createElement("div");
-            card.className = "card";
-            const musicalImages = {
-              "Wicked": "static/wicked-reparto-673ca639117ae.avif",
-              "Wicked elenco": "static/wicked-reparto-673ca639117ae.avif",
-              "Wicked entradas": "static/wicked-reparto-673ca639117ae.avif",
-              "Houdini": "static/cartel_movil4.webp",
-              "Los Miserables": "static/les-mis-banner.jpg",
-              "Los Miserables elenco": "static/les-mis-banner.jpg",
-              "Los Miserables entradas": "static/les-mis-banner.jpg",
-              "The Book of Mormon": "static/foto.webp",
-              "The Book of Mormon elenco": "static/foto.webp",
-              "The Book of Mormon entradas": "static/foto.webp",
-              "Buscando a Audrey": "static/audrey-hepburn-in-breakfast-at-tiffanys.jpg"
-            };
-            const imgSrc = musicalImages[change.label] || "static/default.jpg";
-            card.innerHTML = `
-              <div class="card-inner">
-                <div class="card-front">
-                  <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-                </div>
-                <div class="card-back">
-                  <h3>${change.label}</h3>
-                  <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-                  <p>${change.status}</p>
-                  <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
-                </div>
-              </div>
-            `;
-            if (change.status.includes("Actualizado")) {
-              card.style.borderColor = "#ec4899";
-              card.style.backgroundColor = "#ffe4f1";
-              card.classList.add("recent-change");
-              showToast(`🎀 Cambio en:\n${change.url}`, change.url); // Pass the URL here
-              notifSound.play().catch(() => {});
-              if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
-            }
-            list.appendChild(card);
-          });
+  document.getElementById("loadingIndicator").style.display = "block";
+  try {
+    const res = await fetch("/changes");
+    if (!res.ok) throw new Error("Network error");
+    const data = await res.json();
+    document.getElementById("loadingIndicator").style.display = "none";
+    document.getElementById("lastChecked").textContent =
+      "Última revisión: " + new Date().toLocaleString("es-ES");
+    const list = document.getElementById("changesList");
+    list.innerHTML = "";
+
+    // Cuenta los cambios (status "¡Actualizado! 🎉")
+    const cambios = data.filter(change => change.status.includes("Actualizado")).length;
+    document.title = `(${cambios}) 🎟️ Ticket Monitor`;
+
+    if (data.length === 0) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
+      list.appendChild(card);
+    } else {
+      const notifSound = document.getElementById("notifSound");
+      data.forEach(change => {
+        const card = document.createElement("div");
+        card.className = "card";
+        const musicalImages = {
+          "Wicked": "static/wicked-reparto-673ca639117ae.avif",
+          "Wicked elenco": "static/wicked-reparto-673ca639117ae.avif",
+          "Wicked entradas": "static/wicked-reparto-673ca639117ae.avif",
+          "Houdini": "static/cartel_movil4.webp",
+          "Los Miserables": "static/les-mis-banner.jpg",
+          "Los Miserables elenco": "static/les-mis-banner.jpg",
+          "Los Miserables entradas": "static/les-mis-banner.jpg",
+          "The Book of Mormon": "static/foto.webp",
+          "The Book of Mormon elenco": "static/foto.webp",
+          "The Book of Mormon entradas": "static/foto.webp",
+          "Buscando a Audrey": "static/audrey-hepburn-in-breakfast-at-tiffanys.jpg"
+        };
+        const imgSrc = musicalImages[change.label] || "static/default.jpg";
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="card-front">
+              <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
+            </div>
+            <div class="card-back">
+              <h3>${change.label}</h3>
+              <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+              <p>${change.status}</p>
+              <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+            </div>
+          </div>
+        `;
+        if (change.status.includes("Actualizado")) {
+          card.style.borderColor = "#ec4899";
+          card.style.backgroundColor = "#ffe4f1";
+          card.classList.add("recent-change");
+          showToast(`🎀 Cambio en:\n${change.url}`, change.url);
+          notifSound.play().catch(() => {});
+          if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
         }
-      } catch (e) {
-        document.getElementById("loadingIndicator").textContent = "❌ Error cargando actualizaciones";
-        console.error(e);
-      }
+        list.appendChild(card);
+      });
+    }
+  } catch (e) {
+    document.getElementById("loadingIndicator").textContent = "❌ Error cargando actualizaciones";
+    console.error(e);
+  }
+}
     }
     update();
     setInterval(update, 10000);
