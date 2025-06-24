@@ -131,7 +131,7 @@ def home():
   }
   .card-front {
     background: #fff7fb;
-    z-index: 2;
+    z-index: 1;
   }
   .musical-img {
     width: 100%;
@@ -456,10 +456,7 @@ def home():
             <div class="card-inner">
               <div class="card-front">
                 <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-                <div class="card-front-text">
-                  <h3>${change.label}</h3>
-                  <p>${change.status}</p>
-                </div>
+                <!-- SOLO imagen aquí, NO texto -->
               </div>
               <div class="card-back">
                 <h3>${change.label}</h3>
