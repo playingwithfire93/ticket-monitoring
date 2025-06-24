@@ -310,7 +310,7 @@ def home():
       Notification.requestPermission();
     }
 
-    function showToast(message) {
+    function showToast(message, url = null) {
   const container = document.getElementById("toast-container");
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -322,10 +322,17 @@ def home():
 
   // Show browser notification if not focused
   if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-    const notification = new Notification("🎟️ Ticket Monitor", { body: message.replace(/\\n/g, " ") });
+    const notification = new Notification("🎟️ Ticket Monitor", { 
+      body: message.replace(/\\n/g, " "),
+      data: { url: url }
+    });
     notification.onclick = function(event) {
       event.preventDefault();
-      window.focus();
+      if (notification.data && notification.data.url) {
+        window.open(notification.data.url, "_blank");
+      } else {
+        window.focus();
+      }
       this.close();
     };
   }
@@ -412,7 +419,7 @@ def home():
               card.style.borderColor = "#ec4899";
               card.style.backgroundColor = "#ffe4f1";
               card.classList.add("recent-change");
-              showToast(`🎀 Cambio en:\n${change.url}`);
+              showToast(`🎀 Cambio en:\n${change.url}`, change.url); // Pass the URL here
               notifSound.play().catch(() => {});
               if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
             }
