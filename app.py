@@ -83,12 +83,12 @@ def home():
         .card {
           width: 17em;
           min-height: 11em;
-          background: linear-gradient(270deg, #f472b6, #ec4899, #f9a8d4, #f472b6, #ec4899, #f9a8d4);
+          background: linear-gradient(270deg, #fce7f3, #f9a8d4, #fbcfe8, #fce7f3, #f9a8d4, #fbcfe8);
           background-size: 800% 800%;
-          animation: pinkCardAnim 3s ease infinite;
+          animation: pinkCardAnim 8s ease infinite; /* slower animation */
           border-radius: 1.2rem;
-          box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.18), 0 1.5px 8px 0 rgba(255, 192, 203, 0.18);
-          border: 1.5px solid rgba(236, 72, 153, 0.25);
+          box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
+          border: 1.5px solid rgba(236, 72, 153, 0.15);
           backdrop-filter: blur(12px) saturate(160%);
           -webkit-backdrop-filter: blur(12px) saturate(160%);
           color: #d63384;
@@ -97,8 +97,8 @@ def home():
           transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
           position: relative;
           overflow: hidden;
-          animation: fadeIn 0.7s, pinkCardAnim 3s ease infinite;
-        }
+          animation: fadeIn 0.7s, pinkCardAnim 8s ease infinite;
+      }
         .card a { 
         
           word-break: break-all;
@@ -171,11 +171,11 @@ def home():
           90% { opacity: 1; }
           100% { opacity: 0; transform: translateY(20px); }
         }
-        @keyframes pinkCardAnim {
+       @keyframes pinkCardAnim {
           0% { background-position: 0% 50% }
           50% { background-position: 100% 50% }
           100% { background-position: 0% 50% }
-        }
+      }
         @keyframes glow {
           0% { box-shadow: 0 0 10px #ec4899; }
           100% { box-shadow: none; }
