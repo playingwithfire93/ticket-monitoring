@@ -114,7 +114,7 @@ def home():
           margin-top: 0;
           margin-bottom: 0.5rem;
           font-size: 1.2rem;
-          color: #e11d48;
+          color: #ff9eff;
           width: 100%;
         }
         .card p {
