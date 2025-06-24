@@ -352,51 +352,51 @@ def extract_normalized_date_info(url):
 
 @app.route("/changes")
 def changes():
-    global previous_states
-    changes_list = []
-    now = datetime.now(UTC).isoformat()
+  global previous_states
+  changes_list = []
+  now = datetime.now(UTC).isoformat()
 
-    for item in URLS:
-        label = item["label"]
-        url = item["url"]
+  for item in URLS:
+    label = item["label"]
+    url = item["url"]
 
-        # For test URL, always mark as updated
-        if "httpbin.org" in url:
-            status = "¡Actualizado! 🎉"
-            state = str(datetime.now())
-        else:
-            state = extract_normalized_date_info(url)
-            if state is None:
-                state = hash_url_content(url)
+    # For test URL, always mark as updated
+    if "httpbin.org" in url:
+      status = "¡Actualizado! 🎉"
+      state = str(datetime.now())
+    else:
+      state = extract_normalized_date_info(url)
+      if state is None:
+        state = hash_url_content(url)
 
-            last_state = previous_states.get(url)
-            if last_state is None:
-                status = "Primer chequeo 👀"
-            elif last_state != state:
-                status = "¡Actualizado! 🎉"
-                send_telegram_text(url, "Cambio detectado en la web", now)
-                # --- Add to log ---
-                change_log.append({
-                    "label": label,
-                    "url": url,
-                    "timestamp": now,
-                    "status": status
-                })
-                if len(change_log) > MAX_LOG_ENTRIES:
-                    change_log.pop(0)
-            else:
-                status = "Sin cambios ✨"
-
-        previous_states[url] = state
-
-        changes_list.append({
-            "label": label,
-            "url": url,
-            "status": status,
-            "timestamp": now
+      last_state = previous_states.get(url)
+      if last_state is None:
+        status = "Primer chequeo 👀"
+      elif last_state != state:
+        status = "¡Actualizado! 🎉"
+        send_telegram_text(url, "Cambio detectado en la web", now)
+        # --- Add to log ---
+        change_log.append({
+          "label": label,
+          "url": url,
+          "timestamp": now,
+          "status": status
         })
+        if len(change_log) > MAX_LOG_ENTRIES:
+          change_log.pop(0)
+      else:
+        status = "Sin cambios ✨"
 
-    return jsonify(changes_list)
+    previous_states[url] = state
+
+    changes_list.append({
+      "label": label,
+      "url": url,
+      "status": status,
+      "timestamp": now
+    })
+
+  return jsonify(changes_list)
 @app.route("/changelog")
 def changelog():
     return jsonify(list(change_log))
