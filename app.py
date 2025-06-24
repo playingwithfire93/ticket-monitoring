@@ -75,24 +75,29 @@ def home():
           width: 100%;
         }
         .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2.2rem;
-  width: 100%;
-}
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 2.2rem;
+          width: 100%;
+        }
         .card {
-          background: rgba(255, 240, 247, 0.85);
-          border: none;
-          box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.18);
-          backdrop-filter: blur(6px);
+          width: 17em;
+          min-height: 11em;
+          background: linear-gradient(270deg, #f472b6, #ec4899, #f9a8d4, #f472b6, #ec4899, #f9a8d4);
+          background-size: 800% 800%;
+          animation: pinkCardAnim 3s ease infinite;
           border-radius: 1.2rem;
-          padding: 1.5rem 1.2rem;
-          margin: 0.5rem 0;
-          transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
+          box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.18), 0 1.5px 8px 0 rgba(255, 192, 203, 0.18);
+          border: 1.5px solid rgba(236, 72, 153, 0.25);
+          backdrop-filter: blur(12px) saturate(160%);
+          -webkit-backdrop-filter: blur(12px) saturate(160%);
           color: #d63384;
+          padding: 1.7rem 1.3rem;
+          margin: 0.7rem 0;
+          transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
           position: relative;
           overflow: hidden;
-          animation: fadeIn 0.7s;
+          animation: fadeIn 0.7s, pinkCardAnim 3s ease infinite;
         }
         .card a { 
         
@@ -103,19 +108,18 @@ def home():
           text-align: center;
         }
         .card:hover {
-          transform: translateY(-6px) scale(1.03);
-          box-shadow: 0 12px 32px 0 rgba(236, 72, 153, 0.22);
+          transform: translateY(-8px) scale(1.04);
+          box-shadow: 0 16px 40px 0 rgba(236, 72, 153, 0.28), 0 2px 12px 0 rgba(255, 192, 203, 0.22);
+          border-color: #ec4899;
         }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px);}
           to { opacity: 1; transform: translateY(0);}
         }
         .card h3 {
-          margin-top: 0;
-          margin-bottom: 0.5rem;
-          font-size: 1.2rem;
-          color: #d63384;
-          width: 100%;
+          color: #ec4899;
+          font-weight: 700;
+          letter-spacing: 0.5px;
         }
         .card p {
           margin: 0.2rem 0;
@@ -166,6 +170,11 @@ def home():
           10% { opacity: 1; transform: translateY(0); }
           90% { opacity: 1; }
           100% { opacity: 0; transform: translateY(20px); }
+        }
+        @keyframes pinkCardAnim {
+          0% { background-position: 0% 50% }
+          50% { background-position: 100% 50% }
+          100% { background-position: 0% 50% }
         }
         @keyframes glow {
           0% { box-shadow: 0 0 10px #ec4899; }
