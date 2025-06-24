@@ -220,19 +220,43 @@ def home():
       50% { border-color: #fb7185; box-shadow: 0 0 8px 4px rgba(244,63,94,0.3); }
       100% { border-color: #ec4899; box-shadow: none; }
     }
-    #toast {
-      position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      background: #ec4899;
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      display: none;
-      z-index: 9999;
-      animation: fadeInOut 0.6s ease-in-out forwards;
-    }
+    #toast-container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+  .toast {
+    background: #ec4899;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    min-width: 220px;
+    max-width: 350px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    animation: fadeInOut 0.6s ease-in-out;
+    position: relative;
+  }
+
+  .toast button {
+    margin-left: 1em;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2em;
+    cursor: pointer;
+    position: absolute;
+    top: 0.5em;
+    right: 0.7em;
+  }
     @keyframes fadeInOut {
       0% { opacity: 0; transform: translateY(20px); }
       10% { opacity: 1; transform: translateY(0); }
@@ -302,17 +326,20 @@ def home():
     <p id="loadingIndicator">🔎 Checking for updates...</p>
     <script>
     function showToast(message) {
-      const toast = document.getElementById("toast");
-      const toastMsg = document.getElementById("toast-message");
-      toastMsg.textContent = message;
-      toast.style.display = "block";
-      toast.style.animation = "fadeInOut 12s ease-in-out forwards";
-      // Remove any previous timeout
-      if (toast.hideTimeout) clearTimeout(toast.hideTimeout);
-      toast.hideTimeout = setTimeout(() => {
-      toast.style.display = "none";
-      }, 12000);
-    }
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove()">&times;</button>
+  `;
+  container.appendChild(toast);
+
+  // Auto-remove after 12s
+  setTimeout(() => {
+    if (toast.parentElement) toast.remove();
+  }, 12000);
+}
     document.getElementById("toast-close").onclick = function() {
       document.getElementById("toast").style.display = "none";
     };
