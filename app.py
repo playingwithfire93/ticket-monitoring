@@ -78,14 +78,20 @@ def home():
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 2.2rem;
     width: 100%;
+    justify-items: center;      /* Centra las tarjetas en su celda */
+    align-items: start;
+    justify-content: center;    /* Centra el grid completo */
   }
+  
   .card {
     perspective: 1200px;
     width: 17em;
     min-height: 220px;
+    max-width: 320px; /* o el valor que prefieras */
+    min-width: 0;
     border-radius: 1.2rem;
     overflow: hidden;
     background: linear-gradient(135deg, #ffe4f1 0%, #fbc2eb 50%, #f9a8d4 100%);
