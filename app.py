@@ -99,6 +99,21 @@ def home():
           overflow: hidden;
           animation: fadeIn 0.7s, pinkCardAnim 8s ease infinite;
       }
+      .card-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.92);
+        color: #d63384;
+        border-radius: 1.2rem;
+        opacity: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.3s;
+        padding: 1.2rem 1rem;
+        text-align: center;
+      }
         .card a { 
         
           word-break: break-all;
@@ -184,6 +199,14 @@ def home():
         .card.recent-change {
           animation: glow 1s ease-in-out 3;
         }
+        .musical-img {
+          width: 100%;
+          height: 140px;
+          background-size: cover;
+          background-position: center;
+          border-radius: 1.2rem 1.2rem 0 0;
+          transition: filter 0.3s;
+        }
         #loadingIndicator {
           text-align: center;
           font-style: italic;
@@ -251,11 +274,29 @@ def home():
           data.forEach(change => {
             const card = document.createElement("div");
             card.className = "card";
+            // You need to provide a mapping from label to image URL
+            const musicalImages = {
+              "Wicked": "static/wicked-reparto-673ca639117ae.avif",
+              "Wicked elenco": "static/wicked-reparto-673ca639117ae.avif",
+              "Wicked entradas": "static/wicked-reparto-673ca639117ae.avif",
+              "Houdini": "static/cartel_movil4.webp",
+              "Los Miserables": "static/les-mis-banner.jpg",
+              "Los Miserables elenco": "static/les-mis-banner.jpg",
+              "Los Miserables entradas": "static/les-mis-banner.jpg",
+              "The Book of Mormon": "static/foto.webp",
+              "The Book of Mormon elenco": "static/foto.webp",
+              "The Book of Mormon entradas": "static/foto.webp",
+              "Buscando a Audrey": "static/audrey-hepburn-in-breakfast-at-tiffanys.jpg"
+            };
+            const imgSrc = musicalImages[change.label] || "static/default.jpg";
             card.innerHTML = `
-              <h3>${change.label}</h3>
-              <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-              <p>${change.status}</p>
-              <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+              <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
+              <div class="card-overlay">
+                <h3>${change.label}</h3>
+                <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+                <p>${change.status}</p>
+                <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+              </div>
             `;
             if (change.status.includes("Actualizado")) {
               card.style.borderColor = "#ec4899";
