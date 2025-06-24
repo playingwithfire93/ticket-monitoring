@@ -356,9 +356,19 @@ function removeToastFromSession(message) {
 }
 
 // On page load, restore toasts
+// On page load, restore toasts
 window.addEventListener("DOMContentLoaded", () => {
   let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-  toasts.forEach(msg => showToast(msg));
+  const container = document.getElementById("toast-container");
+  toasts.forEach(msg => {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = `
+      <span>${msg}</span>
+      <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(msg)}')">&times;</button>
+    `;
+    container.appendChild(toast);
+  });
 });
   
     async function update() {
