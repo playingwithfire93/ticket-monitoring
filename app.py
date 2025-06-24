@@ -153,7 +153,9 @@ def home():
     font-weight: 500;
     padding: 1.2rem 1rem;
     height: 100%;
-    z-index: 1; 
+    z-index: 2; /* sube el z-index */
+    position: relative; /* crea stacking context */
+    background: rgba(255,255,255,0.96); /* fondo blanco semitransparente */
   }
   .card-back h3,
   .card-back p,
