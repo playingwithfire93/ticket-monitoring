@@ -31,7 +31,7 @@ def send_telegram_text(url, changes, timestamp):
 
 @app.route("/")
 def home():
-  return render_template_string("""
+    return render_template_string("""
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -145,23 +145,23 @@ def home():
     transition: filter 0.3s;
   }
   .card-back {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-weight: 500;
-  padding: 1.2rem 1rem;
-  height: 100%;
-}
-.card-back h3,
-.card-back p,
-.card-back a {
-  width: 100%;
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
-}
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    padding: 1.2rem 1rem;
+    height: 100%;
+  }
+  .card-back h3,
+  .card-back p,
+  .card-back a {
+    width: 100%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
   .card-back h3 {
     color: #ec4899;
     font-weight: 700;
@@ -214,15 +214,15 @@ def home():
     width: 100%;
   }
   .card-front-text {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  text-align: center;
-  background: rgba(255,255,255,0.85);
-  padding: 0.5em 0.2em;
-  border-radius: 0 0 1.2rem 1.2rem;
-  margin-top: auto;
-}
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    text-align: center;
+    background: rgba(255,255,255,0.85);
+    padding: 0.5em 0.2em;
+    border-radius: 0 0 1.2rem 1.2rem;
+    margin-top: auto;
+  }
   .card:nth-child(even) {
     background-color: #fff7fb;
   }
@@ -315,18 +315,18 @@ def home():
   <div id="toast-container"></div>
   <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
   <div class="dashboard">
-  <div class="header">
-    <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-    <div class="card autorefresh-glow" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
-    💖 Auto-refreshing
+    <div class="header">
+      <p id="lastChecked" class="last-checked">Last Checked: ...</p>
+      <div class="card autorefresh-glow" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
+        💖 Auto-refreshing
+      </div>
+    </div>
+    <div id="changesList" class="grid">
+      <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
     </div>
   </div>
-  <div id="changesList" class="grid">
-    <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
-  </div>
-  </div>
   <audio id="notifSound" preload="auto">
-  <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
+    <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
   </audio>
   <p id="loadingIndicator">🔎 Checking for updates...</p>
   <script>
@@ -350,40 +350,40 @@ def home():
   }
 
   function showToast(message, url = null) {
-  const container = document.getElementById("toast-container");
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.innerHTML = url
-    ? `<span><a href="${url}" target="_blank" style="color:white;text-decoration:underline;">${message}</a></span>
-       <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`
-    : `<span>${message}</span>
-       <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`;
-  container.appendChild(toast);
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = url
+      ? `<span><a href="${url}" target="_blank" style="color:white;text-decoration:underline;">${message}</a></span>
+         <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`
+      : `<span>${message}</span>
+         <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`;
+    container.appendChild(toast);
 
-  // Browser notification (as before)
-  if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-    const notification = new Notification("🎟️ Ticket Monitor", { 
-      body: message.replace(/\\n/g, " "),
-      data: { url: url }
-    });
-    notification.onclick = function(event) {
-      event.preventDefault();
-      if (notification.data && notification.data.url) {
-        window.open(notification.data.url, "_blank");
-      } else {
-        window.focus();
-      }
-      this.close();
-    };
-  }
+    // Browser notification (as before)
+    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      const notification = new Notification("🎟️ Ticket Monitor", { 
+        body: message.replace(/\\n/g, " "),
+        data: { url: url }
+      });
+      notification.onclick = function(event) {
+        event.preventDefault();
+        if (notification.data && notification.data.url) {
+          window.open(notification.data.url, "_blank");
+        } else {
+          window.focus();
+        }
+        this.close();
+      };
+    }
 
-  // Save to sessionStorage
-  let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-  if (!toasts.includes(message)) {
-    toasts.push(message);
-    sessionStorage.setItem("toasts", JSON.stringify(toasts));
+    // Save to sessionStorage
+    let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
+    if (!toasts.includes(message)) {
+      toasts.push(message);
+      sessionStorage.setItem("toasts", JSON.stringify(toasts));
+    }
   }
-}
 
   function removeToastFromSession(message) {
     let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
@@ -396,13 +396,13 @@ def home():
     let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
     const container = document.getElementById("toast-container");
     toasts.forEach(msg => {
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerHTML = `
-      <span>${msg}</span>
-      <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(msg)}')">&times;</button>
-    `;
-    container.appendChild(toast);
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `
+        <span>${msg}</span>
+        <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(msg)}')">&times;</button>
+      `;
+      container.appendChild(toast);
     });
   });
 
@@ -411,62 +411,61 @@ def home():
   async function update() {
     document.getElementById("loadingIndicator").style.display = "block";
     try {
-    const res = await fetch("/changes");
-    if (!res.ok) throw new Error("Network error");
-    const data = await res.json();
-    document.getElementById("loadingIndicator").style.display = "none";
-    document.getElementById("lastChecked").textContent =
-      "Última revisión: " + new Date().toLocaleString("es-ES");
-    const list = document.getElementById("changesList");
-    list.innerHTML = "";
+      const res = await fetch("/changes");
+      if (!res.ok) throw new Error("Network error");
+      const data = await res.json();
+      document.getElementById("loadingIndicator").style.display = "none";
+      document.getElementById("lastChecked").textContent =
+        "Última revisión: " + new Date().toLocaleString("es-ES");
+      const list = document.getElementById("changesList");
+      list.innerHTML = "";
 
-    const cambios = data.filter(change => change.status.includes("Actualizado")).length;
-    totalCambios += cambios;
-    document.title = `(${totalCambios}) 🎟️ Ticket Monitor`;
+      const cambios = data.filter(change => change.status.includes("Actualizado")).length;
+      totalCambios += cambios;
+      document.title = `(${totalCambios}) 🎟️ Ticket Monitor`;
 
-    if (data.length === 0) {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
-      list.appendChild(card);
-    } else {
-      const notifSound = document.getElementById("notifSound");
-      data.forEach(change => {
-      const card = document.createElement("div");
-      card.className = "card";
-      const imgSrc = musicalImages[change.label] || musicalImages["default"];
-      card.innerHTML = `
-  <div class="card-inner">
-    <div class="card-front">
-      <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-      <div class="card-front-text">
-        <h3>${change.label}</h3>
-        <p>${change.status}</p>
-      </div>
-    </div>
-    <div class="card-back">
-      <h3>${change.label}</h3>
-      <p><a href="${change.url}" target="_blank">${change.url}</a></p>
-      <p>${change.status}</p>
-      <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
-    </div>
-  </div>
-`;
-      `;
-      if (change.status.includes("Actualizado")) {
-        card.style.borderColor = "#ec4899";
-        card.style.backgroundColor = "#ffe4f1";
-        card.classList.add("recent-change");
-        showToast(`🎀 Cambio en:\n${change.url}`, change.url);
-        notifSound.play().catch(() => {});
-        if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
+      if (data.length === 0) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
+        list.appendChild(card);
+      } else {
+        const notifSound = document.getElementById("notifSound");
+        data.forEach(change => {
+          const card = document.createElement("div");
+          card.className = "card";
+          const imgSrc = musicalImages[change.label] || musicalImages["default"];
+          card.innerHTML = `
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
+                <div class="card-front-text">
+                  <h3>${change.label}</h3>
+                  <p>${change.status}</p>
+                </div>
+              </div>
+              <div class="card-back">
+                <h3>${change.label}</h3>
+                <p><a href="${change.url}" target="_blank">${change.url}</a></p>
+                <p>${change.status}</p>
+                <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
+              </div>
+            </div>
+          `;
+          if (change.status.includes("Actualizado")) {
+            card.style.borderColor = "#ec4899";
+            card.style.backgroundColor = "#ffe4f1";
+            card.classList.add("recent-change");
+            showToast(`🎀 Cambio en:\n${change.url}`, change.url);
+            notifSound.play().catch(() => {});
+            if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
+          }
+          list.appendChild(card);
+        });
       }
-      list.appendChild(card);
-      });
-    }
     } catch (e) {
-    document.getElementById("loadingIndicator").textContent = "❌ Error cargando actualizaciones";
-    console.error(e);
+      document.getElementById("loadingIndicator").textContent = "❌ Error cargando actualizaciones";
+      console.error(e);
     }
   }
   update();
