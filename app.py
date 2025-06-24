@@ -153,19 +153,20 @@ def home():
   z-index: 1;
 }
   .card-back {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-weight: 500;
-    padding: 1.2rem 1rem;
-    height: 100%;
-    z-index: 3; /* sube el z-index */
-    transform: rotateY(180deg);
-    position: relative; /* crea stacking context */
-    background: rgba(255,255,255,0.96); /* fondo blanco semitransparente */
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;   /* This vertically centers the content */
+  text-align: center;        /* This horizontally centers the text */
+  font-weight: 500;
+  padding: 1.2rem 1rem;
+  height: 100%;
+  z-index: 3;
+  transform: rotateY(180deg);
+  position: relative;
+  background: rgba(255,255,255,0.96);
+}
+
   .card-back h3,
   .card-back p,
   .card-back a {
