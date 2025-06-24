@@ -97,7 +97,7 @@ def home():
           text-align: center;
           width: 100%;
           max-width: 340px;
-          color: #ff9eff;
+          color: #d63384;
         }
         .card a {
           word-break: break-all;
@@ -114,7 +114,7 @@ def home():
           margin-top: 0;
           margin-bottom: 0.5rem;
           font-size: 1.2rem;
-          color: #ff9eff;
+          color: #d63384;
           width: 100%;
         }
         .card p {
