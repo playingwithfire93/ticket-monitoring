@@ -130,21 +130,23 @@ def home():
     justify-content: center;
   }
   .card-front {
-  background: #fff7fb;
-  z-index: 2;
-  transform: rotateY(0deg);
-}
-  .musical-img {
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    border-radius: 1.2rem;
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 0; /* <-- Asegura que la imagen esté detrás */
-    transition: filter 0.3s;
+    background: #fff7fb;
+    z-index: 2;
+    transform: rotateY(0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
   }
+  .musical-img {
+  width: 90%;
+  height: 90%;
+  background-size: cover;
+  background-position: center;
+  border-radius: 1.2rem;
+  position: relative;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+}
   .card-back {
     display: flex;
     flex-direction: column;
