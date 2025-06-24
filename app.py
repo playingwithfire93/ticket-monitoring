@@ -130,9 +130,10 @@ def home():
     justify-content: center;
   }
   .card-front {
-    background: #fff7fb;
-    z-index: 1;
-  }
+  background: #fff7fb;
+  z-index: 2;
+  transform: rotateY(0deg);
+}
   .musical-img {
     width: 100%;
     height: 100%;
@@ -153,7 +154,8 @@ def home():
     font-weight: 500;
     padding: 1.2rem 1rem;
     height: 100%;
-    z-index: 2; /* sube el z-index */
+    z-index: 3; /* sube el z-index */
+    transform: rotateY(180deg);
     position: relative; /* crea stacking context */
     background: rgba(255,255,255,0.96); /* fondo blanco semitransparente */
   }
