@@ -152,6 +152,61 @@ def home():
           50% { border-color: #fb7185; box-shadow: 0 0 8px 4px rgba(244,63,94,0.3); }
           100% { border-color: #ec4899; box-shadow: none; }
         }
+        /* Special style for the auto-refreshing card */
+        .autorefresh-card {
+          position: relative;
+          width: 200px;
+          height: 90px;
+          border-radius: 14px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 32px 0 #fbcfe8, 0 1.5px 8px 0 #fff0f7;
+          background: transparent;
+          margin: 0 0.5rem;
+        }
+        .autorefresh-bg {
+          position: absolute;
+          top: 5px;
+          left: 5px;
+          width: 190px;
+          height: 80px;
+          z-index: 2;
+          background: rgba(255, 240, 247, 0.95);
+          backdrop-filter: blur(24px);
+          border-radius: 10px;
+          outline: 2px solid #f9a8d4;
+        }
+        .autorefresh-blob {
+          position: absolute;
+          z-index: 1;
+          top: 50%;
+          left: 50%;
+          width: 110px;
+          height: 110px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 30% 30%, #f9a8d4 60%, #ec4899 100%);
+          opacity: 0.7;
+          filter: blur(18px);
+          animation: blob-bounce 7s infinite ease;
+        }
+        @keyframes blob-bounce {
+          0%   { transform: translate(-100%, -100%) translate3d(0, 0, 0);}
+          25%  { transform: translate(-100%, -100%) translate3d(100%, 0, 0);}
+          50%  { transform: translate(-100%, -100%) translate3d(100%, 100%, 0);}
+          75%  { transform: translate(-100%, -100%) translate3d(0, 100%, 0);}
+          100% { transform: translate(-100%, -100%) translate3d(0, 0, 0);}
+        }
+        .autorefresh-content {
+          position: relative;
+          z-index: 3;
+          color: #d63384;
+          font-weight: bold;
+          font-size: 1.1em;
+          text-align: center;
+          letter-spacing: 0.5px;
+        }
         #toast {
           position: fixed;
           bottom: 1rem;
@@ -207,8 +262,12 @@ def home():
       <div class="dashboard">
       <div class="header">
         <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-        <div class="card" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
-          💖 Auto-refreshing
+        <div class="autorefresh-card">
+          <div class="autorefresh-blob"></div>
+          <div class="autorefresh-bg"></div>
+          <div class="autorefresh-content">
+            💖 Auto-refreshing
+          </div>
         </div>
       </div>
       <div id="changesList" class="grid">
