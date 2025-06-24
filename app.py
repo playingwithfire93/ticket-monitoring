@@ -80,14 +80,14 @@ def home():
       gap: 2.2rem;
       width: 100%;
     }
-    .card {
+    ..card {
   perspective: 1200px;
   width: 17em;
   min-height: 220px;
   border-radius: 1.2rem;
-  overflow: hidden; /* <-- was visible, should be hidden for flip effect */
-  background: #fff7fb; /* <-- was transparent, set a background */
-  border: 1.5px solid #ec4899; /* <-- was none, add a border for visibility */
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffe4f1 0%, #fbc2eb 50%, #f9a8d4 100%);
+  border: 1.5px solid #ec4899;
   box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
   margin: 0.7rem 0;
   display: flex;
