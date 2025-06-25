@@ -616,6 +616,10 @@ def urls():
     with open("urls.json") as f:
         data = json.load(f)
     return jsonify(data)
+  
+@app.route("/ping")
+def ping():
+    return "pong", 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
