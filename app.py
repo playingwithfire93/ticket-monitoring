@@ -293,7 +293,7 @@ HTML_TEMPLATE = """
         <img src="/static/cartel_movil4.webp" alt="Houdini">
     </div>
     <div class="slide">
-        <img src="bom-ticket-monitoring/static/foto.webp" alt="Houdini">
+        <img src="/static/foto.webp" alt="Houdini">
     </div>
     <div class="slide">
         <img src="/static/wicked-reparto-673ca639117ae.avif" alt="Houdini">
