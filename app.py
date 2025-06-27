@@ -613,22 +613,23 @@ def get_changes_json():
         mimetype='application/json'
     )
     return response
+import threading
+import time
 
-@app.route('/api/ticket-changes')
-def get_ticket_changes():
-    """Get ticket changes for the dashboard"""
-    global previous_states
+latest_changes = []
+
+def scrape_all_sites():
+    # Copia aquí la lógica de tu función get_ticket_changes, pero que devuelva la lista
+    # No uses jsonify aquí, solo devuelve la lista de dicts
+    global previous_states, change_counts
     changes_list = []
     now = datetime.now(UTC).isoformat()
-
     for item in URLS:
         label = item["label"]
         url = item["url"]
-
         state = extract_normalized_date_info(url)
         if state is None:
             state = hash_url_content(url)
-
         last_state = previous_states.get(url)
         if last_state is None:
             status = "Primer chequeo 👀"
@@ -641,9 +642,7 @@ def get_ticket_changes():
             status = "Sin cambios ✨"
             if url not in change_counts:
                 change_counts[url] = 0
-
         previous_states[url] = state
-
         changes_list.append({
             "label": label,
             "url": url,
@@ -651,9 +650,12 @@ def get_ticket_changes():
             "timestamp": now,
             "change_count": change_counts[url]
         })
+    return changes_list
 
-    return jsonify(changes_list)
-
+@app.route('/api/ticket-changes')
+def get_ticket_changes():
+    return jsonify(latest_changes)
+  
 @app.route('/api/check-changes')
 def check_changes():
     """Check if there are any new changes"""
