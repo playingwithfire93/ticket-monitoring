@@ -321,7 +321,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
 
-<h1>✨ Ticket Monitor Dashboard ✨</h1>
+<h1>✨ Panel de Monitoreo de Entradas ✨</h1>
 
 <div class="sparkle" style="top: 10%; left: 10%;">💖</div>
 <div class="sparkle" style="top: 20%; right: 15%;">✨</div>
@@ -330,22 +330,22 @@ HTML_TEMPLATE = """
 
 <div class="notification-overlay" id="notificationOverlay"></div>
 <div class="notification-popup" id="notificationPopup">
-    <h2>✨ New Changes Detected! ✨</h2>
-    <p>💖 Fresh ticket updates are available! 💖</p>
+    <h2>✨ ¡Nuevos cambios detectados! ✨</h2>
+    <p>💖 ¡Hay actualizaciones frescas de entradas! 💖</p>
     <div>
-        <button class="popup-button" onclick="viewJsonFromPopup()">📄 View JSON Data</button>
-        <button class="popup-button" onclick="closeNotification()">Close</button>
+        <button class="popup-button" onclick="viewJsonFromPopup()">📄 Ver datos JSON</button>
+        <button class="popup-button" onclick="closeNotification()">Cerrar</button>
     </div>
 </div>
 
 <div class="json-overlay" id="jsonOverlay" onclick="closeJsonPopup()"></div>
 <div class="json-popup" id="jsonPopup">
     <div class="json-popup-header">
-        <h3>📄 JSON Changes Data</h3>
-        <button class="close-json-btn" onclick="closeJsonPopup()">✕ Close</button>
+        <h3>📄 Datos de cambios (JSON)</h3>
+        <button class="close-json-btn" onclick="closeJsonPopup()">✕ Cerrar</button>
     </div>
     <div class="json-popup-content">
-        <div class="json-code" id="jsonContent">Loading...</div>
+        <div class="json-code" id="jsonContent">Cargando...</div>
     </div>
 </div>
 
@@ -361,18 +361,17 @@ HTML_TEMPLATE = """
     </div>
 </div>
 
-
-<div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
+<div class="last-checked" id="lastChecked">Última revisión: Cargando...</div>
 
 <table id="changesTable">
     <tr>
-        <th>Show/Website</th>
+        <th>Obra/Sitio web</th>
         <th>URL</th>
-        <th>Status</th>
-        <th>Last Update</th>
+        <th>Estado</th>
+        <th>Última actualización</th>
     </tr>
     <tr>
-        <td colspan="4" style="text-align: center;">Loading ticket data...</td>
+        <td colspan="4" style="text-align: center;">Cargando datos de entradas...</td>
     </tr>
 </table>
 
@@ -442,14 +441,14 @@ HTML_TEMPLATE = """
     async function showJsonPopup() {
         document.getElementById('jsonOverlay').style.display = 'block';
         document.getElementById('jsonPopup').style.display = 'block';
-        document.getElementById('jsonContent').textContent = 'Loading JSON data...';
+        document.getElementById('jsonContent').textContent = 'Cargando datos JSON...';
         
         try {
             const response = await fetch('/api/changes.json');
             const jsonData = await response.text();
             document.getElementById('jsonContent').textContent = jsonData;
         } catch (error) {
-            document.getElementById('jsonContent').textContent = 'Error loading JSON data: ' + error.message;
+            document.getElementById('jsonContent').textContent = 'Error cargando datos JSON: ' + error.message;
         }
     }
     
@@ -464,15 +463,15 @@ HTML_TEMPLATE = """
             const data = await response.json();
             
             document.getElementById('lastChecked').textContent = 
-                'Last Checked: ' + new Date().toLocaleString();
+                'Última revisión: ' + new Date().toLocaleString();
             
             const table = document.getElementById('changesTable');
             table.innerHTML = `
                 <tr>
-                    <th>Show/Website</th>
+                    <th>Obra/Sitio web</th>
                     <th>URL</th>
-                    <th>Status</th>
-                    <th>Last Update</th>
+                    <th>Estado</th>
+                    <th>Última actualización</th>
                 </tr>
             `;
             
@@ -500,14 +499,14 @@ HTML_TEMPLATE = """
             }
             
         } catch (error) {
-            console.error('Error fetching ticket data:', error);
-            document.getElementById('lastChecked').textContent = 'Error loading data';
+            console.error('Error al obtener los datos de entradas:', error);
+            document.getElementById('lastChecked').textContent = 'Error cargando datos';
         }
     }
 
-    // Initial load and periodic updates
+    // Carga inicial y actualizaciones periódicas
     updateTicketData();
-    setInterval(updateTicketData, 5000); // Check every 5 seconds
+    setInterval(updateTicketData, 5000); // Revisar cada 5 segundos
 </script>
 
 </body>
