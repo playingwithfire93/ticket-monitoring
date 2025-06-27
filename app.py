@@ -366,12 +366,13 @@ HTML_TEMPLATE = """
 <table id="changesTable">
     <tr>
         <th>Obra/Sitio web</th>
+        <th>Cambios</th>
         <th>URL</th>
         <th>Estado</th>
         <th>Última actualización</th>
     </tr>
     <tr>
-        <td colspan="4" style="text-align: center;">Cargando datos de entradas...</td>
+        <td colspan="5" style="text-align: center;">Cargando datos de entradas...</td>
     </tr>
 </table>
 
@@ -469,6 +470,7 @@ HTML_TEMPLATE = """
             table.innerHTML = `
                 <tr>
                     <th>Obra/Sitio web</th>
+                    <th>Cambios</th>
                     <th>URL</th>
                     <th>Estado</th>
                     <th>Última actualización</th>
@@ -482,7 +484,8 @@ HTML_TEMPLATE = """
                 const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
                 
                 row.innerHTML = `
-                    <td>${item.label}<span class="${badgeClass}">${changeCount}</span></td>
+                    <td>${item.label}</td>
+                    <td><span class="${badgeClass}">${changeCount}</span></td>
                     <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
                     <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
                     <td>${new Date(item.timestamp).toLocaleString()}</td>
@@ -503,6 +506,7 @@ HTML_TEMPLATE = """
             document.getElementById('lastChecked').textContent = 'Error cargando datos';
         }
     }
+
 
     // Carga inicial y actualizaciones periódicas
     updateTicketData();
