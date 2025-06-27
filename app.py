@@ -287,7 +287,7 @@ HTML_TEMPLATE = """
         <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
     </div>
     <div class="slide">
-        <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\audrey-hepburn-in-breakfast-at-tiffanys.jpg" alt="Buscando a Audrey">
+        <img src="/static/audrey-hepburn-in-breakfast-at-tiffanys.jpg" alt="Buscando a Audrey">
     </div>
     <div class="slide">
         <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\cartel_movil4.webp" alt="Houdini">
