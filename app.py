@@ -9,6 +9,9 @@ from bs4.element import Comment
 from flask import Flask, jsonify, render_template_string
 from flask_socketio import SocketIO
 
+import threading
+import time
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -37,6 +40,22 @@ URLS = [
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"},
     {"label": "Houdini", "url": "https://www.houdinielmusical.com"}
 ]
+latest_changes = {}
+
+def background_checker():
+    global latest_changes
+    while True:
+        # Your scraping/checking logic here
+        # Save results to latest_changes
+        latest_changes = get_changes_json()
+        time.sleep(100)  # Check every 5 minutes
+
+# Start background thread
+threading.Thread(target=background_checker, daemon=True).start()
+
+@app.route('/api/changes.json')
+def get_changes_json():
+    return jsonify(latest_changes)
 
 def hash_url_content(url):
     try:
