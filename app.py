@@ -290,13 +290,13 @@ HTML_TEMPLATE = """
         <img src="/static/audrey-hepburn-in-breakfast-at-tiffanys.jpg" alt="Buscando a Audrey">
     </div>
     <div class="slide">
-        <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\cartel_movil4.webp" alt="Houdini">
+        <img src="/static/cartel_movil4.webp" alt="Houdini">
     </div>
     <div class="slide">
         <img src="bom-ticket-monitoring/static/foto.webp" alt="Houdini">
     </div>
     <div class="slide">
-        <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\wicked-reparto-673ca639117ae.avif" alt="Houdini">
+        <img src="/static/wicked-reparto-673ca639117ae.avif" alt="Houdini">
     </div>
 </div>
 
