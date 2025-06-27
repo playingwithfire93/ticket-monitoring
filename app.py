@@ -9,9 +9,6 @@ from bs4.element import Comment
 from flask import Flask, jsonify, render_template_string
 from flask_socketio import SocketIO
 
-import threading
-import time
-
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -27,7 +24,7 @@ new_changes_detected = True
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "Wicked", "url": "https://httpbin.org/get"},
+    {"label": "Wicked", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -40,22 +37,6 @@ URLS = [
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"},
     {"label": "Houdini", "url": "https://www.houdinielmusical.com"}
 ]
-latest_changes = {}
-
-def background_checker():
-    global latest_changes
-    while True:
-        # Your scraping/checking logic here
-        # Save results to latest_changes
-        latest_changes = get_changes_json()
-        time.sleep(100)  # Check every 5 minutes
-
-# Start background thread
-threading.Thread(target=background_checker, daemon=True).start()
-
-@app.route('/api/changes.json')
-def get_changes_json():
-    return jsonify(latest_changes)
 
 def hash_url_content(url):
     try:
@@ -277,7 +258,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-<audio id="notifSound" src="/static/door-bell-sound-99933.mp3" preload="auto"></audio>
+
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
 
 <div class="sparkle" style="top: 10%; left: 10%;">💖</div>
@@ -304,18 +285,6 @@ HTML_TEMPLATE = """
     </div>
     <div class="slide">
         <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
-    </div>
-    <div class="slide">
-        <img src="/static/audrey-hepburn-in-breakfast-at-tiffanys.jpg" alt="Buscando a Audrey">
-    </div>
-    <div class="slide">
-        <img src="/static/cartel_movil4.webp" alt="Houdini">
-    </div>
-    <div class="slide">
-        <img src="/static/foto.webp" alt="Houdini">
-    </div>
-    <div class="slide">
-        <img src="/static/wicked-reparto-673ca639117ae.avif" alt="Houdini">
     </div>
 </div>
 
@@ -358,12 +327,34 @@ HTML_TEMPLATE = """
     }
     
     function playNotificationSound() {
-      const audio = document.getElementById('notifSound');
-      if (audio) {
-          audio.currentTime = 0;
-          audio.play();
-      }
-  }
+        // Create audio context for a pleasant notification sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create a pleasant notification melody
+        const playTone = (frequency, startTime, duration) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, startTime);
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        };
+        
+        // Play a pleasant notification melody (C-E-G chord progression)
+        const now = audioContext.currentTime;
+        playTone(523.25, now, 0.2);        // C5
+        playTone(659.25, now + 0.1, 0.2);  // E5
+        playTone(783.99, now + 0.2, 0.3);  // G5
+    }
 
     function closeNotification() {
         document.getElementById('notificationOverlay').style.display = 'none';
