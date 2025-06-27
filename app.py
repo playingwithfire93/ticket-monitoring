@@ -255,6 +255,68 @@ HTML_TEMPLATE = """
             background: #ddd;
             color: #666;
         }
+        .json-popup {
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background: white;
+            border: 3px solid #d63384;
+            border-radius: 20px;
+            z-index: 2000;
+            display: none;
+            overflow: hidden;
+        }
+        .json-popup-header {
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .json-popup-content {
+            height: calc(100% - 80px);
+            overflow: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .json-code {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 100%;
+            overflow: auto;
+        }
+        .close-json-btn {
+            background: white;
+            color: #d63384;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .close-json-btn:hover {
+            background: #f0f0f0;
+        }
+        .json-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1999;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -273,6 +335,17 @@ HTML_TEMPLATE = """
     <div>
         <button class="popup-button" onclick="viewJsonFromPopup()">📄 View JSON Data</button>
         <button class="popup-button" onclick="closeNotification()">Close</button>
+    </div>
+</div>
+
+<div class="json-overlay" id="jsonOverlay" onclick="closeJsonPopup()"></div>
+<div class="json-popup" id="jsonPopup">
+    <div class="json-popup-header">
+        <h3>📄 JSON Changes Data</h3>
+        <button class="close-json-btn" onclick="closeJsonPopup()">✕ Close</button>
+    </div>
+    <div class="json-popup-content">
+        <div class="json-code" id="jsonContent">Loading...</div>
     </div>
 </div>
 
@@ -362,8 +435,27 @@ HTML_TEMPLATE = """
     }
 
     function viewJsonFromPopup() {
-        window.open('/api/changes.json', '_blank');
+        showJsonPopup();
         closeNotification();
+    }
+    
+    async function showJsonPopup() {
+        document.getElementById('jsonOverlay').style.display = 'block';
+        document.getElementById('jsonPopup').style.display = 'block';
+        document.getElementById('jsonContent').textContent = 'Loading JSON data...';
+        
+        try {
+            const response = await fetch('/api/changes.json');
+            const jsonData = await response.text();
+            document.getElementById('jsonContent').textContent = jsonData;
+        } catch (error) {
+            document.getElementById('jsonContent').textContent = 'Error loading JSON data: ' + error.message;
+        }
+    }
+    
+    function closeJsonPopup() {
+        document.getElementById('jsonOverlay').style.display = 'none';
+        document.getElementById('jsonPopup').style.display = 'none';
     }
 
     async function updateTicketData() {
