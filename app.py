@@ -24,7 +24,6 @@ new_changes_detected = True
 
 # Real ticket monitoring URLs
 URLS = [
-    {"label": "Wicked", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
