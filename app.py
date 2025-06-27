@@ -652,6 +652,14 @@ def scrape_all_sites():
         })
     return changes_list
 
+def background_checker():
+    global latest_changes
+    while True:
+        latest_changes = scrape_all_sites()
+        time.sleep(300)  # cada 5 minutos
+
+threading.Thread(target=background_checker, daemon=True).start()
+
 @app.route('/api/ticket-changes')
 def get_ticket_changes():
     return jsonify(latest_changes)
