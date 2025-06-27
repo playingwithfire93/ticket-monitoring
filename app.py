@@ -1,518 +1,33 @@
-from flask import Flask, jsonify, render_template_string
-from flask_socketio import SocketIO
-import os
-from datetime import datetime, UTC
-import requests
+
 import hashlib
 import json
+from datetime import UTC, datetime
+
+import requests
 from bs4 import BeautifulSoup
 from bs4.element import Comment
-from telegram import Bot
+from flask import Flask, jsonify, render_template_string
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
 socketio = SocketIO(app)
+
+# Track previous states for change detection
 previous_states = {}
-TELEGRAM_TOKEN = '7763897628:AAEQVDEOBfHmWHbyfeF_Cx99KrJW2ILlaw0'
-CHAT_ID = '553863319'
+previous_contents = {}
 
-def send_telegram_text(url, changes, timestamp):
-    try:
-        bot = Bot(token=TELEGRAM_TOKEN)
-        message = (
-            f"🎭 Ticket Alert!\n"
-            f"🌐 URL: {url}\n"
-            f"🕒 Cambio detectado: {timestamp}\n"
-            f"📄 Cambios:\n{changes[:3500]}"
-        )
-        bot.send_message(chat_id=CHAT_ID, text=message)
-        print("✅ Telegram message sent!")
-    except Exception as e:
-        print(f"❌ Telegram error: {e}")
+# Track change counts for each website
+change_counts = {}
 
-@app.route("/")
-def home():
-    return render_template_string("""
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>🎟️ Ticket Monitor</title>
-  <style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #DFDBE5;
-    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ctitle%3Ehoundstooth%3C/title%3E%3Cg fill='%23f9629f' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 18h6l6-6v6h6l-6 6H0M24 18v6h-6M24 0l-6 6h-6l6-6M12 0v6L0 18v-6l6-6H0V0'/%3E%3C/g%3E%3C/svg%3E");
-    margin: 0;
-    padding: 2rem;
-    color: #4b006e;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  h1 {
-    font-size: 2.2rem;
-    text-align: center;
-    color: #d63384;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    margin-bottom: 1.5rem;
-    width: 100%;
-  }
-  .dashboard {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 1rem;
-    gap: 2rem;
-    width: 100%;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 2.2rem;
-    width: 100%;
-    justify-items: center;      /* Centra las tarjetas en su celda */
-    align-items: start;
-    justify-content: center;    /* Centra el grid completo */
-  }
-  
-  .card {
-    perspective: 1200px;
-    width: 17em;
-    min-height: 220px;
-    max-width: 320px; /* o el valor que prefieras */
-    min-width: 0;
-    border-radius: 1.2rem;
-    overflow: hidden;
-    background: linear-gradient(135deg, #ffe4f1 0%, #fbc2eb 50%, #f9a8d4 100%);
-    border: 1.5px solid #ec4899;
-    box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.13), 0 1.5px 8px 0 rgba(255, 192, 203, 0.13);
-    margin: 0.7rem 0;
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-  }
-  .autorefresh-glow {
-    animation: glow 1.2s ease-in-out infinite alternate;
-    box-shadow: 0 0 16px #ec4899, 0 0 4px #fff0f6;
-  }
-  .card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.7s cubic-bezier(.4,2,.6,1);
-    transform-style: preserve-3d;
-    border-radius: 1.2rem;
-    min-height: 220px;
-  }
-  .card:hover .card-inner {
-    transform: rotateY(180deg);
-  }
-  .card-front, .card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    border-radius: 1.2rem;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-.card-front {
-  background: transparent;
-  z-index: 2;
-  transform: rotateY(0deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+# Track if there are new changes for notification
+new_changes_detected = True
 
-.musical-img {
-  position: relative;
-  width: 90%;
-  height: 90%;
-  background-size: cover;
-  background-position: center;
-  border-radius: 1.2rem;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
-  z-index: 1;
-}
-  .card-back {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-weight: 500;
-  padding: 0.5rem 1rem 0 1rem; /* Top, right, bottom=0, left */
-  height: 100%;
-  min-height: 0;
-  z-index: 3;
-  transform: rotateY(180deg);
-  position: relative;
-  background: rgba(255,255,255,0.96);
-  box-sizing: border-box;
-}
-
-.card-back h3,
-.card-back p,
-.card-back a {
-  width: 100%;
-  text-align: center;
-  margin-left: 0;
-  margin-right: 0;
-  margin-bottom: 0; /* Remove extra margin at bottom */
-  box-sizing: border-box;
-}
-
-.card-back p:last-child {
-  margin-bottom: 0;
-}
-  .card-back h3 {
-    color: #ec4899;
-    font-weight: 700;
-    margin-bottom: 0.5em;
-  }
-  .card-back p, .card-back a {
-    color: #b91c5c;
-    margin: 0.2em 0;
-    word-break: break-all;
-    font-size: 0.95em;
-  }
-  .card-back a {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-all;
-    color: #b91c5c;
-    text-align: center;
-    font-size: 0.95em;
-    margin: 0.2em 0;
-    background: none;
-    border: none;
-    text-decoration: underline;
-  }
-  .card-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.96);
-    color: #d63384;
-    border-radius: 1.2rem;
-    opacity: 0;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s;
-    padding: 1.2rem 1rem;
-    text-align: center;
-    font-weight: 500;
-  }
-  .card a { 
-    word-break: break-all;
-    overflow-wrap: anywhere;
-    display: inline-block;
-    max-width: 100%;
-    text-align: center;
-  }
-  .card:hover {
-    transform: translateY(-8px) scale(1.04);
-    box-shadow: 0 16px 40px 0 rgba(236, 72, 153, 0.28), 0 2px 12px 0 rgba(255, 192, 203, 0.22);
-    border-color: #ec4899;
-  }
-  .card h3 {
-    color: #ec4899;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
-  .card p {
-    margin: 0.2rem 0;
-    font-size: 0.95rem;
-    color: #9d174d;
-    width: 100%;
-  }
-  .card-front-text {
-    position: relative;
-    z-index: 1; /* <-- El texto va encima de la imagen */
-    width: 100%;
-    text-align: center;
-    background: rgba(255,255,255,0.85);
-    padding: 0.5em 0.2em;
-    border-radius: 0 0 1.2rem 1.2rem;
-    margin-top: auto;
-  }
-  .card:nth-child(even) {
-    background-color: #fff7fb;
-  }
-  .card.updated {
-    animation: flashBorder 1.2s ease;
-  }
-  .card .status-dot {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #ec4899;
-    box-shadow: 0 0 8px #ec4899aa;
-  }
-  .card.updated .status-dot {
-    background: #22c55e;
-    box-shadow: 0 0 8px #22c55e99;
-  }
-  @keyframes flashBorder {
-    0% { border-color: #f43f5e; box-shadow: 0 0 0 0 rgba(244,63,94,0.7); }
-    50% { border-color: #fb7185; box-shadow: 0 0 8px 4px rgba(244,63,94,0.3); }
-    100% { border-color: #ec4899; box-shadow: none; }
-  }
-  @keyframes glow {
-    0% { box-shadow: 0 0 10px #ec4899; }
-    100% { box-shadow: none; }
-  }
-  .card.recent-change {
-    animation: glow 1s ease-in-out 3;
-  }
-  #toast-container {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-end;
-  }
-  .toast {
-    background: #ec4899;
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    min-width: 220px;
-    max-width: 350px;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    animation: fadeInOut 0.6s ease-in-out;
-    position: relative;
-  }
-  .toast button {
-    margin-left: 1em;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2em;
-    cursor: pointer;
-    position: absolute;
-    top: 0.5em;
-    right: 0.7em;
-  }
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(20px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; }
-    100% { opacity: 0; transform: translateY(20px); }
-  }
-  #loadingIndicator {
-    text-align: center;
-    font-style: italic;
-    color: #c026d3;
-    margin-top: 1rem;
-    width: 100%;
-  }
-  @media (max-width: 900px) {
-    .grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 600px) {
-    .grid { grid-template-columns: 1fr; }
-  }
-  </style>
-</head>
-<body>
-  <div id="toast-container"></div>
-  <h1>🌸✨ Ticket Monitoring Dashboard ✨🌸</h1>
-  <div class="dashboard">
-    <div class="header">
-      <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-      <div class="card autorefresh-glow" style="padding:0.5rem 0.5rem; max-width:180px; min-height:auto; background:#ffe4f1; border-color:#ec4899;">
-        💖 Auto-refreshing
-      </div>
-    </div>
-    <div id="changesList" class="grid">
-      <div class="card"><span>⏳</span> <span>Loading updates...</span></div>
-    </div>
-  </div>
-  <audio id="notifSound" preload="auto">
-    <source src="{{ url_for('static', filename='door-bell-sound-99933.mp3') }}" type="audio/mpeg">
-  </audio>
-  <p id="loadingIndicator">🔎 Checking for updates...</p>
-  <script>
-  // --- Add this block at the top of your <script> ---
-  const musicalImages = {
-    "Wicked": "{{ url_for('static', filename='wicked-reparto-673ca639117ae.avif') }}",
-    "Wicked elenco": "{{ url_for('static', filename='wicked-reparto-673ca639117ae.avif') }}",
-    "Wicked entradas": "{{ url_for('static', filename='wicked-reparto-673ca639117ae.avif') }}",
-    "Houdini": "{{ url_for('static', filename='cartel_movil4.webp') }}",
-    "Los Miserables": "{{ url_for('static', filename='les-mis-banner.jpg') }}",
-    "Los Miserables elenco": "{{ url_for('static', filename='les-mis-banner.jpg') }}",
-    "Los Miserables entradas": "{{ url_for('static', filename='les-mis-banner.jpg') }}",
-    "The Book of Mormon": "{{ url_for('static', filename='foto.webp') }}",
-    "The Book of Mormon elenco": "{{ url_for('static', filename='foto.webp') }}",
-    "The Book of Mormon entradas": "{{ url_for('static', filename='foto.webp') }}",
-    "Buscando a Audrey": "{{ url_for('static', filename='audrey-hepburn-in-breakfast-at-tiffanys.jpg') }}",
-    "default": "{{ url_for('static', filename='default.jpg') }}"
-  };
-  if ("Notification" in window && Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
-
-  function showToast(message, url = null) {
-    const container = document.getElementById("toast-container");
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerHTML = url
-      ? `<span><a href="${url}" target="_blank" style="color:white;text-decoration:underline;">${message}</a></span>
-         <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`
-      : `<span>${message}</span>
-         <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(message)}')">&times;</button>`;
-    container.appendChild(toast);
-
-    // Browser notification (as before)
-    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-      const notification = new Notification("🎟️ Ticket Monitor", { 
-        body: message.replace(/\\n/g, " "),
-        data: { url: url }
-      });
-      notification.onclick = function(event) {
-        event.preventDefault();
-        if (notification.data && notification.data.url) {
-          window.open(notification.data.url, "_blank");
-        } else {
-          window.focus();
-        }
-        this.close();
-      };
-    }
-
-    // Save to sessionStorage
-    let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-    if (!toasts.includes(message)) {
-      toasts.push(message);
-      sessionStorage.setItem("toasts", JSON.stringify(toasts));
-    }
-  }
-
-  function removeToastFromSession(message) {
-    let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-    toasts = toasts.filter(m => m !== decodeURIComponent(message));
-    sessionStorage.setItem("toasts", JSON.stringify(toasts));
-  }
-
-  // On page load, restore toasts visually only
-  window.addEventListener("DOMContentLoaded", () => {
-    let toasts = JSON.parse(sessionStorage.getItem("toasts") || "[]");
-    const container = document.getElementById("toast-container");
-    toasts.forEach(msg => {
-      const toast = document.createElement("div");
-      toast.className = "toast";
-      toast.innerHTML = `
-        <span>${msg}</span>
-        <button onclick="this.parentElement.remove();removeToastFromSession('${encodeURIComponent(msg)}')">&times;</button>
-      `;
-      container.appendChild(toast);
-    });
-  });
-
-  let totalCambios = 0;
-
-  async function update() {
-    document.getElementById("loadingIndicator").style.display = "block";
-    try {
-      const res = await fetch("/changes");
-      if (!res.ok) throw new Error("Network error");
-      const data = await res.json();
-      document.getElementById("loadingIndicator").style.display = "none";
-      document.getElementById("lastChecked").textContent =
-        "Última revisión: " + new Date().toLocaleString("es-ES");
-      const list = document.getElementById("changesList");
-      list.innerHTML = "";
-
-      const cambios = data.filter(change => change.status.includes("Actualizado")).length;
-      totalCambios += cambios;
-      document.title = `(${totalCambios}) 🎟️ Ticket Monitor`;
-
-      if (data.length === 0) {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = "<span>✅</span><span> Todo está fabuloso. Sin cambios detectados.</span>";
-        list.appendChild(card);
-      } else {
-        const notifSound = document.getElementById("notifSound");
-        data.forEach(change => {
-          const card = document.createElement("div");
-          card.className = "card";
-          const imgSrc = musicalImages[change.label] || musicalImages["default"];
-          card.innerHTML = `
-            <div class="card-inner">
-              <div class="card-front">
-                <div class="musical-img" style="background-image:url('${imgSrc}')"></div>
-                <!-- SOLO imagen aquí, NO texto -->
-              </div>
-              <div class="card-back">
-                <h3>${change.label}</h3>
-                <a href="${change.url}" target="_blank">${change.url}</a>
-                <p>${change.status}</p>
-                <p>🕒 ${new Date(change.timestamp).toLocaleString("es-ES")}</p>
-              </div>
-            </div>
-          `;
-          if (change.status.includes("Actualizado")) {
-            card.style.borderColor = "#ec4899";
-            card.style.backgroundColor = "#ffe4f1";
-            card.classList.add("recent-change");
-            showToast(`🎀 Cambio en:\n${change.url}`, change.url);
-            notifSound.play().catch(() => {});
-            if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
-          }
-          list.appendChild(card);
-        });
-      }
-    } catch (e) {
-      document.getElementById("loadingIndicator").textContent = "❌ Error cargando actualizaciones";
-      console.error(e);
-    }
-  }
-  update();
-  setInterval(update, 10000);
-  </script>
-</body>
-</html>
-""")
-
+# Real ticket monitoring URLs
 URLS = [
-    #{"label": "test", "url": "https://httpbin.org/get/"},
+    {"label": "Wicked", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
-    
     {"label": "Los Miserables", "url": "https://miserableselmusical.es/"},
     {"label": "Los Miserables elenco", "url": "https://miserableselmusical.es/elenco"},
     {"label": "Los Miserables entradas", "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"},
@@ -522,10 +37,7 @@ URLS = [
     {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"},
     {"label": "Houdini", "url": "https://www.houdinielmusical.com"}
 ]
-from bs4 import BeautifulSoup
-def broadcast_change(url, data):
-    socketio.emit('update', {'url': url, 'data': data})
-    
+
 def hash_url_content(url):
     try:
         response = requests.get(url, timeout=10)
@@ -539,7 +51,7 @@ def hash_url_content(url):
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
-        # Remove common dynamic elements by class/id (add more as needed)
+        # Remove common dynamic elements by class/id
         dynamic_selectors = [
             ".date_info", ".timestamp", "#ad", ".ads", ".cookie-banner", "#cookies", ".tracker"
         ]
@@ -549,7 +61,7 @@ def hash_url_content(url):
 
         # Normalize whitespace and strip
         content_text = soup.get_text(separator=" ", strip=True)
-        normalized_text = " ".join(content_text.split())  # remove excessive whitespace
+        normalized_text = " ".join(content_text.split())
 
         return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
     except Exception as e:
@@ -558,7 +70,7 @@ def hash_url_content(url):
 def extract_normalized_date_info(url):
     """Get normalized text content from .date_info element."""
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
     except requests.RequestException:
         return None
@@ -571,8 +83,342 @@ def extract_normalized_date_info(url):
     text = date_info.get_text(strip=True)
     return ' '.join(text.split()).lower()
 
-@app.route("/changes")
-def changes():
+import difflib
+
+
+def find_differences(old_text, new_text):
+    """Generate a diff showing changes between old and new content."""
+    diff = difflib.unified_diff(
+        old_text.splitlines(), 
+        new_text.splitlines(), 
+        fromfile='anterior', 
+        tofile='actual', 
+        lineterm=""
+    )
+    return "\n".join(diff)
+
+def broadcast_change(url, data):
+    socketio.emit('update', {'url': url, 'data': data})
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Monitor Dashboard</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #d63384;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .slideshow-container {
+            max-width: 800px;
+            margin: 20px auto;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(214, 51, 132, 0.3);
+            border: 3px solid #ff69b4;
+        }
+        .slide {
+            display: none;
+            width: 100%;
+        }
+        .slide img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(214, 51, 132, 0.2);
+            border: 2px solid #ff69b4;
+        }
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid #ffb3d9;
+            text-align: left;
+            font-weight: 500;
+        }
+        th {
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        tr:hover {
+            background: #ffe6f2;
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+        }
+        td {
+            color: #8b2c5c;
+        }
+        .sparkle {
+            position: absolute;
+            color: #ff69b4;
+            animation: sparkle 2s infinite;
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .notification-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ff69b4, #ffc0cb);
+            border: 3px solid #d63384;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(214, 51, 132, 0.4);
+            z-index: 1000;
+            text-align: center;
+            color: #fff;
+            display: none;
+            max-width: 400px;
+        }
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        .popup-button {
+            background: #fff;
+            color: #d63384;
+            border: 2px solid #d63384;
+            padding: 10px 20px;
+            border-radius: 15px;
+            margin: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .popup-button:hover {
+            background: #d63384;
+            color: #fff;
+        }
+        .status-updated {
+            background: linear-gradient(135deg, #ff69b4, #ffc0cb);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .status-no-change {
+            color: #8b2c5c;
+        }
+        .last-checked {
+            text-align: center;
+            color: #d63384;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .change-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 8px;
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+        }
+        .change-badge.zero {
+            background: #ddd;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<audio id="notifSound" src="/static/door-bell-sound-99933.mp3" preload="auto"></audio>
+<h1>✨ Ticket Monitor Dashboard ✨</h1>
+
+<div class="sparkle" style="top: 10%; left: 10%;">💖</div>
+<div class="sparkle" style="top: 20%; right: 15%;">✨</div>
+<div class="sparkle" style="top: 70%; left: 5%;">🌸</div>
+<div class="sparkle" style="bottom: 10%; right: 10%;">💕</div>
+
+<div class="notification-overlay" id="notificationOverlay"></div>
+<div class="notification-popup" id="notificationPopup">
+    <h2>✨ New Changes Detected! ✨</h2>
+    <p>💖 Fresh ticket updates are available! 💖</p>
+    <div>
+        <button class="popup-button" onclick="viewJsonFromPopup()">📄 View JSON Data</button>
+        <button class="popup-button" onclick="closeNotification()">Close</button>
+    </div>
+</div>
+
+<div class="slideshow-container">
+    <div class="slide">
+        <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="https://images.ctfassets.net/sjxdiqjbm079/3WMcDT3PaFgjIinkfvmh1L/cf88d0afc6280931ee110ac47ec573a8/01_LES_MIS_TOUR_02_24_0522_PJZEDIT_v002.jpg?w=708&h=531&fm=webp&fit=fill" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\audrey-hepburn-in-breakfast-at-tiffanys.jpg" alt="Buscando a Audrey">
+    </div>
+    <div class="slide">
+        <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\cartel_movil4.webp" alt="Houdini">
+    </div>
+    <div class="slide">
+        <img src="bom-ticket-monitoring/static/foto.webp" alt="Houdini">
+    </div>
+    <div class="slide">
+        <img src="C:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\static\wicked-reparto-673ca639117ae.avif" alt="Houdini">
+    </div>
+</div>
+
+
+<div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
+
+<table id="changesTable">
+    <tr>
+        <th>Show/Website</th>
+        <th>URL</th>
+        <th>Status</th>
+        <th>Last Update</th>
+    </tr>
+    <tr>
+        <td colspan="4" style="text-align: center;">Loading ticket data...</td>
+    </tr>
+</table>
+
+<script>
+    let slideIndex = 0;
+    showSlides();
+
+    function showSlides() {
+        let slides = document.getElementsByClassName("slide");
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        slideIndex++;
+        if (slideIndex > slides.length) { slideIndex = 1; }
+        slides[slideIndex-1].style.display = "block";
+        setTimeout(showSlides, 3000);
+    }
+
+    function showNotification() {
+        document.getElementById('notificationOverlay').style.display = 'block';
+        document.getElementById('notificationPopup').style.display = 'block';
+        
+        // Play notification sound
+        playNotificationSound();
+    }
+    
+    function playNotificationSound() {
+      const audio = document.getElementById('notifSound');
+      if (audio) {
+          audio.currentTime = 0;
+          audio.play();
+      }
+  }
+
+    function closeNotification() {
+        document.getElementById('notificationOverlay').style.display = 'none';
+        document.getElementById('notificationPopup').style.display = 'none';
+    }
+
+    function viewJsonFromPopup() {
+        window.open('/api/changes.json', '_blank');
+        closeNotification();
+    }
+
+    async function updateTicketData() {
+        try {
+            const response = await fetch('/api/ticket-changes');
+            const data = await response.json();
+            
+            document.getElementById('lastChecked').textContent = 
+                'Last Checked: ' + new Date().toLocaleString();
+            
+            const table = document.getElementById('changesTable');
+            table.innerHTML = `
+                <tr>
+                    <th>Show/Website</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Last Update</th>
+                </tr>
+            `;
+            
+            let hasUpdates = false;
+            data.forEach(item => {
+                const row = table.insertRow();
+                const changeCount = item.change_count || 0;
+                const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
+                
+                row.innerHTML = `
+                    <td>${item.label}<span class="${badgeClass}">${changeCount}</span></td>
+                    <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
+                    <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
+                    <td>${new Date(item.timestamp).toLocaleString()}</td>
+                `;
+                
+                if (item.status.includes('Actualizado')) {
+                    hasUpdates = true;
+                    row.style.background = 'linear-gradient(135deg, #ffe4f1, #ffc0cb)';
+                }
+            });
+            
+            if (hasUpdates) {
+                showNotification();
+            }
+            
+        } catch (error) {
+            console.error('Error fetching ticket data:', error);
+            document.getElementById('lastChecked').textContent = 'Error loading data';
+        }
+    }
+
+    // Initial load and periodic updates
+    updateTicketData();
+    setInterval(updateTicketData, 5000); // Check every 5 seconds
+</script>
+
+</body>
+</html>
+"""
+
+@app.route('/')
+def dashboard():
+    return render_template_string(HTML_TEMPLATE)
+
+@app.route('/api/changes.json')
+def get_changes_json():
+    """Get detailed changes data as JSON"""
     global previous_states
     changes_list = []
     now = datetime.now(UTC).isoformat()
@@ -581,24 +427,116 @@ def changes():
         label = item["label"]
         url = item["url"]
 
-        # For test URL, always mark as updated
-        if "httpbin.org" in url:
-            status = "¡Actualizado! 🎉"
-            state = str(datetime.now())
-        else:
-            state = extract_normalized_date_info(url)
-            if state is None:
-                state = hash_url_content(url)
+        # Get current full content
+        current_content = ""
+        try:
+            response = requests.get(url, timeout=10)
+            soup = BeautifulSoup(response.content, "html.parser")
+            
+            # Remove scripts, styles, etc. but keep the full text
+            for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
+                tag.decompose()
+            
+            # Remove comments
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+            
+            current_content = soup.get_text(separator=" ", strip=True)
+        except Exception as e:
+            current_content = f"Error al obtener contenido: {str(e)}"
 
-            last_state = previous_states.get(url)
-            if last_state is None:
-                status = "Primer chequeo 👀"
-            elif last_state != state:
-                status = "¡Actualizado! 🎉"
-                send_telegram_text(url, "Cambio detectado en la web", now)
-                broadcast_change(url, status)  # <-- Add this line
+        state = extract_normalized_date_info(url)
+        if state is None:
+            state = hash_url_content(url)
+
+        last_state = previous_states.get(url)
+        last_content = previous_contents.get(url, "")
+        change_details = ""
+        differences = ""
+        
+        if last_state is None:
+            status = "Primer chequeo 👀"
+            change_details = "Primera vez que se monitorea este sitio web"
+            differences = "No hay contenido anterior para comparar"
+        elif last_state != state:
+            status = "¡Actualizado! 🎉"
+            change_details = "Se detectaron cambios en el contenido del sitio web"
+            if last_content and current_content != last_content:
+                differences = find_differences(last_content, current_content)
             else:
-                status = "Sin cambios ✨"
+                differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
+        else:
+            status = "Sin cambios ✨"
+            change_details = "El contenido permanece igual desde la última verificación"
+            differences = "Sin diferencias detectadas"
+
+        previous_states[url] = state
+        previous_contents[url] = current_content
+
+        changes_list.append({
+            "label": label,
+            "url": url,
+            "status": status,
+            "timestamp": now,
+            "hash_actual": state,
+            "hash_anterior": last_state,
+            "detalles_cambio": change_details,
+            "contenido_completo": current_content,
+            "contenido_anterior": last_content,
+            "diferencias_detectadas": differences,
+            "longitud_contenido": len(current_content),
+            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
+        })
+
+    # Filter only updated websites
+    updated_sites = [c for c in changes_list if "Actualizado" in c["status"]]
+    
+    # Create response with proper formatting
+    response_data = {
+        "resumen": {
+            "total_sitios_monitoreados": len(changes_list),
+            "sitios_actualizados": len(updated_sites),
+            "ultimo_chequeo": now,
+            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
+        },
+        "sitios_web_actualizados": updated_sites
+    }
+    
+    # Return pretty-printed JSON
+    response = app.response_class(
+        response=json.dumps(response_data, indent=2, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+@app.route('/api/ticket-changes')
+def get_ticket_changes():
+    """Get ticket changes for the dashboard"""
+    global previous_states
+    changes_list = []
+    now = datetime.now(UTC).isoformat()
+
+    for item in URLS:
+        label = item["label"]
+        url = item["url"]
+
+        state = extract_normalized_date_info(url)
+        if state is None:
+            state = hash_url_content(url)
+
+        last_state = previous_states.get(url)
+        if last_state is None:
+            status = "Primer chequeo 👀"
+            change_counts[url] = 0
+        elif last_state != state:
+            status = "¡Actualizado! 🎉"
+            change_counts[url] = change_counts.get(url, 0) + 1
+            broadcast_change(url, status)
+        else:
+            status = "Sin cambios ✨"
+            if url not in change_counts:
+                change_counts[url] = 0
 
         previous_states[url] = state
 
@@ -606,21 +544,22 @@ def changes():
             "label": label,
             "url": url,
             "status": status,
-            "timestamp": now
+            "timestamp": now,
+            "change_count": change_counts[url]
         })
 
     return jsonify(changes_list)
 
-@app.route("/urls")
-def urls():
-    with open("urls.json") as f:
-        data = json.load(f)
-    return jsonify(data)
-  
-@app.route("/ping")
-def ping():
-    return "pong", 200
+@app.route('/api/check-changes')
+def check_changes():
+    """Check if there are any new changes"""
+    try:
+        response = requests.get('http://localhost:5000/api/ticket-changes', timeout=5)
+        data = response.json()
+        has_new_changes = any(item['status'].includes('Actualizado') for item in data)
+        return {"new_changes": has_new_changes}
+    except:
+        return {"new_changes": False}
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
