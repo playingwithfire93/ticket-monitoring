@@ -641,6 +641,7 @@ HTML_TEMPLATE = """
       table.innerHTML = `
         <tr>
           <th>Show/Website</th>
+           <th>Cambios</th>
           <th>URL</th>
           <th>Status</th>
           <th>Last Update</th>
