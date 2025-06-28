@@ -403,6 +403,11 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
+    /* ...existing CSS... */
+* {
+  cursor: url(https://cur.cursors-4u.net/cursors/cur-3/cur221.ani), url(https://cur.cursors-4u.net/cursors/cur-3/cur221.png), auto !important;
+}
+/* ...existing CSS... */
     .json-overlay {
       position: fixed;
       top: 0;
