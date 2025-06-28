@@ -452,7 +452,70 @@ HTML_TEMPLATE = """
         <img src="static\AUDREY1.jpg" alt="Buscando a Audrey">
     </div>
     <div class="slide">
-        <img src="static\HOUDIUNI2.jpg" alt="Houdini">
+        <img src="static\HOUDIUNI1.jpg" alt="Houdini">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED1.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS1.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM1.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED2.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS2.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM2.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED3.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS3.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM3.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED4.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS4.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM4.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED5.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS5.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM5.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED6.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS6.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM6.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+        <img src="static\WICKED7.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="static\LESMIS7.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="static\BOM7.jpg" alt="Book of Mormon">
     </div>
 </div>
 
