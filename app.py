@@ -681,7 +681,9 @@ HTML_TEMPLATE = """
 @app.route('/')
 def dashboard():
     return render_template_string(HTML_TEMPLATE)
-
+@app.route('/changes')
+def changes_dummy():
+    return "Not implemented", 200
 @app.route('/api/changes.json')
 def get_changes_json():
     """Get detailed changes data as JSON"""
