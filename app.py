@@ -499,7 +499,7 @@ HTML_TEMPLATE = """
     <div class="json-code" id="jsonContent">Loading...</div>
   </div>
 </div>
-div class="highlighted-bg">
+<div class="highlighted-bg">
   <div class="slideshow-container">
     <div class="slide">
       <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked">
