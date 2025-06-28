@@ -646,7 +646,6 @@ HTML_TEMPLATE = """
         const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
         
         row.innerHTML = `
-          row.innerHTML = `
             <td>${item.label}</td>
             <td><span class="${badgeClass}">${changeCount}</span></td>
             <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
