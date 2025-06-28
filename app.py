@@ -448,6 +448,12 @@ HTML_TEMPLATE = """
     <div class="slide">
         <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
     </div>
+    <div class="slide"> 
+        <img src="static\AUDREY1.jpg" alt="Buscando a Audrey">
+    </div>
+    <div class="slide">
+        <img src="static\HOUDIUNI2.jpg" alt="Houdini">
+    </div>
 </div>
 
 <div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
