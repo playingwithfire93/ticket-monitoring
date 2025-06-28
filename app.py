@@ -421,7 +421,24 @@ HTML_TEMPLATE = """
       word-wrap: break-word;
       max-height: 100%;
       overflow: auto;
-    }
+    .highlighted-bg {
+  position: relative;
+  margin: 30px auto 0 auto;
+  max-width: 900px;
+  border-radius: 25px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
+  border: 4px solid #ff69b4;
+  background: linear-gradient(120deg, #ffe0f7 0%, #ffb6e6 50%, #ffe0f7 100%);
+  background-size: 200% 200%;
+  animation: highlightMove 8s ease-in-out infinite alternate;
+  padding-bottom: 10px;
+}
+
+@keyframes highlightMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
     .close-json-btn {
       background: white;
       color: #d63384;
@@ -482,86 +499,86 @@ HTML_TEMPLATE = """
     <div class="json-code" id="jsonContent">Loading...</div>
   </div>
 </div>
-
-<div class="slideshow-container">
-  <div class="slide">
-    <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="https://images.ctfassets.net/sjxdiqjbm079/3WMcDT3PaFgjIinkfvmh1L/cf88d0afc6280931ee110ac47ec573a8/01_LES_MIS_TOUR_02_24_0522_PJZEDIT_v002.jpg?w=708&h=531&fm=webp&fit=fill" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
-  </div>
-  <div class="slide"> 
-    <img src="/static/AUDREY1.jpg" alt="Buscando a Audrey">
-  </div>
-  <div class="slide">
-    <img src="/static/HOUDINI1.jpg" alt="Houdini">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED1.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS1.jpg" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM1.jpg" alt="Book of Mormon">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED2.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS2.jpg" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM2.jpg" alt="Book of Mormon">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED3.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS3.png" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM3.jpg" alt="Book of Mormon">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED4.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS4.jpg" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM4.jpg" alt="Book of Mormon">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED5.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS5.jpg" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM5.jpg" alt="Book of Mormon">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED6.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS6.jpg" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM6.jpg" alt="Book of Mormon">
-  </div>
-  <div class="slide">
-    <img src="/static/WICKED7.jpg" alt="Wicked">
-  </div>
-  <div class="slide">
-    <img src="/static/LESMIS7.jpg" alt="Los Miserables">
-  </div>
-  <div class="slide">
-    <img src="/static/BOM7.jpg" alt="Book of Mormon">
-  </div>
+div class="highlighted-bg">
+  <div class="slideshow-container">
+    <div class="slide">
+      <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="https://images.ctfassets.net/sjxdiqjbm079/3WMcDT3PaFgjIinkfvmh1L/cf88d0afc6280931ee110ac47ec573a8/01_LES_MIS_TOUR_02_24_0522_PJZEDIT_v002.jpg?w=708&h=531&fm=webp&fit=fill" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
+    </div>
+    <div class="slide"> 
+      <img src="/static/AUDREY1.jpg" alt="Buscando a Audrey">
+    </div>
+    <div class="slide">
+      <img src="/static/HOUDINI1.jpg" alt="Houdini">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED1.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS1.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM1.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED2.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS2.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM2.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED3.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS3.png" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM3.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED4.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS4.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM4.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED5.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS5.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM5.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED6.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS6.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM6.jpg" alt="Book of Mormon">
+    </div>
+    <div class="slide">
+      <img src="/static/WICKED7.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+      <img src="/static/LESMIS7.jpg" alt="Los Miserables">
+    </div>
+    <div class="slide">
+      <img src="/static/BOM7.jpg" alt="Book of Mormon">
+    </div>
 </div>
 
 <div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
