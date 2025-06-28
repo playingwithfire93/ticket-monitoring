@@ -1,3 +1,4 @@
+
 import hashlib
 import json
 from datetime import UTC, datetime
@@ -7,6 +8,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 from flask import Flask, jsonify, render_template_string
 from flask_socketio import SocketIO
+import threading
+import time
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -38,40 +41,53 @@ URLS = [
 
 def hash_url_content(url):
     try:
-        response = requests.get(url, timeout=3)
+        response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.content, "html.parser")
+
+        # Remove tags that usually include changing content
         for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
             tag.decompose()
+
+        # Remove comments
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
+
+        # Remove common dynamic elements by class/id
         dynamic_selectors = [
             ".date_info", ".timestamp", "#ad", ".ads", ".cookie-banner", "#cookies", ".tracker"
         ]
         for selector in dynamic_selectors:
             for tag in soup.select(selector):
                 tag.decompose()
+
+        # Normalize whitespace and strip
         content_text = soup.get_text(separator=" ", strip=True)
         normalized_text = " ".join(content_text.split())
+
         return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
     except Exception as e:
         return f"ERROR: {str(e)}"
 
 def extract_normalized_date_info(url):
+    """Get normalized text content from .date_info element."""
     try:
-        response = requests.get(url, timeout=3)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
     except requests.RequestException:
         return None
+
     soup = BeautifulSoup(response.text, 'html.parser')
     date_info = soup.select_one('.date_info')
     if not date_info:
         return None
+
     text = date_info.get_text(strip=True)
     return ' '.join(text.split()).lower()
 
 import difflib
 
 def find_differences(old_text, new_text):
+    """Generate a diff showing changes between old and new content."""
     diff = difflib.unified_diff(
         old_text.splitlines(), 
         new_text.splitlines(), 
@@ -83,6 +99,95 @@ def find_differences(old_text, new_text):
 
 def broadcast_change(url, data):
     socketio.emit('update', {'url': url, 'data': data})
+
+latest_changes = []
+
+def scrape_all_sites():
+    global previous_states, previous_contents, change_counts
+    changes_list = []
+    now = datetime.now(UTC).isoformat()
+    
+    for item in URLS:
+        label = item["label"]
+        url = item["url"]
+
+        # Get current full content
+        current_content = ""
+        try:
+            response = requests.get(url, timeout=10)
+            soup = BeautifulSoup(response.content, "html.parser")
+            
+            # Remove scripts, styles, etc. but keep the full text
+            for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
+                tag.decompose()
+            
+            # Remove comments
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+            
+            current_content = soup.get_text(separator=" ", strip=True)
+        except Exception as e:
+            current_content = f"Error al obtener contenido: {str(e)}"
+
+        state = extract_normalized_date_info(url)
+        if state is None:
+            state = hash_url_content(url)
+
+        last_state = previous_states.get(url)
+        last_content = previous_contents.get(url, "")
+        change_details = ""
+        differences = ""
+        
+        if last_state is None:
+            status = "Primer chequeo 👀"
+            change_details = "Primera vez que se monitorea este sitio web"
+            differences = "No hay contenido anterior para comparar"
+            change_counts[url] = 0
+        elif last_state != state:
+            status = "¡Actualizado! 🎉"
+            change_details = "Se detectaron cambios en el contenido del sitio web"
+            change_counts[url] = change_counts.get(url, 0) + 1
+            if last_content and current_content != last_content:
+                differences = find_differences(last_content, current_content)
+            else:
+                differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
+            broadcast_change(url, status)
+        else:
+            status = "Sin cambios ✨"
+            change_details = "El contenido permanece igual desde la última verificación"
+            differences = "Sin diferencias detectadas"
+            if url not in change_counts:
+                change_counts[url] = 0
+
+        previous_states[url] = state
+        previous_contents[url] = current_content
+
+        changes_list.append({
+            "label": label,
+            "url": url,
+            "status": status,
+            "timestamp": now,
+            "hash_actual": state,
+            "hash_anterior": last_state,
+            "detalles_cambio": change_details,
+            "contenido_completo": current_content,
+            "contenido_anterior": last_content,
+            "diferencias_detectadas": differences,
+            "longitud_contenido": len(current_content),
+            "change_count": change_counts[url],
+            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
+        })
+    
+    return changes_list
+
+def background_checker():
+    global latest_changes
+    while True:
+        latest_changes = scrape_all_sites()
+        time.sleep(30)  # Check every 30 seconds
+
+# Start background checker
+threading.Thread(target=background_checker, daemon=True).start()
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -289,28 +394,23 @@ HTML_TEMPLATE = """
             font-weight: bold;
         }
         .close-json-btn:hover {
-        background: #f0f0f0;
-    }
-    .json-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 1999;
-        display: none;
-    }
-    /* Custom cursor */
-    body {
-        cursor: url('data:image/x-icon;base64,AAACAAEAICAQAAAAAADoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAAq0wyALKw9wCFgugA////AHi6dQAGjwEABQUFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGZmZmZmZmAAAAAAAAAAAGZVVVVVVVVWYAAAAAAAAAZVVVVVVVVVVVYAAAAAAABlVVVVVVVVVVVVYAAAAAAAZVVVVVVVVVVVVWAAAAAAAGVVVVVVVVVVVVVgAAAAAAZVVVVVVVVVVVVVVgAAAAAGVVVVVVU1VVVVVVYAAAAABlVVVVVTI1VVVVVWAAAAAAZVVVVVMiI1VVVVVgAAAAAGVVVVVTIiNVVVVVYAAAAABlVVVVUyIjVVVVVWAAAAAAZVVVVVMiI1VVVVVgAAAAAGVVVVVTMzNVVVVVYAAAAAAGVXdVVVVVVVd1VgAAAAAABlcXdVVVVVVxd1YAAAAAAAZXdHVVVVVVd0dWAAAAAAAAZXdVZmZmZVd1YAAAAAAAAGVVVgAAAAZVVWAAAAAGAAAGZmAAAAAAZmYAAAAABmAAAAAAAAAAAAAAAAAAAAZmAAAAAAAAAAAAAAAAAAAGZmAAAAAAAAAAAAAAAAAAD/////////////////////////////////////////////////AAf//AAB//gAAP/wAAB/8AAAf/AAAH/gAAA/4AAAP+AAAD/gAAA/4AAAP+AAAD/gAAA/4AAAP/AAAH/wAAB/8AAAf/gAAP/4H8D/fD/h/z////8f////D////w=='), auto;
-    }
+            background: #f0f0f0;
+        }
+        .json-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1999;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-<h1>✨ Panel de Monitoreo de Entradas ✨</h1>
+<h1>✨ Ticket Monitor Dashboard ✨</h1>
 
 <div class="sparkle" style="top: 10%; left: 10%;">💖</div>
 <div class="sparkle" style="top: 20%; right: 15%;">✨</div>
@@ -319,39 +419,48 @@ HTML_TEMPLATE = """
 
 <div class="notification-overlay" id="notificationOverlay"></div>
 <div class="notification-popup" id="notificationPopup">
-    <h2>✨ ¡Nuevos cambios detectados! ✨</h2>
-    <p>💖 ¡Hay actualizaciones frescas de entradas! 💖</p>
+    <h2>✨ New Changes Detected! ✨</h2>
+    <p>💖 Fresh ticket updates are available! 💖</p>
     <div>
-        <button class="popup-button" onclick="viewJsonFromPopup()">📄 Ver datos JSON</button>
-        <button class="popup-button" onclick="closeNotification()">Cerrar</button>
+        <button class="popup-button" onclick="viewJsonFromPopup()">📄 View JSON Data</button>
+        <button class="popup-button" onclick="closeNotification()">Close</button>
     </div>
 </div>
 
 <div class="json-overlay" id="jsonOverlay" onclick="closeJsonPopup()"></div>
 <div class="json-popup" id="jsonPopup">
     <div class="json-popup-header">
-        <h3>📄 Datos de cambios (JSON)</h3>
-        <button class="close-json-btn" onclick="closeJsonPopup()">✕ Cerrar</button>
+        <h3>📄 JSON Changes Data</h3>
+        <button class="close-json-btn" onclick="closeJsonPopup()">✕ Close</button>
     </div>
     <div class="json-popup-content">
-        <div class="json-code" id="jsonContent">Cargando...</div>
+        <div class="json-code" id="jsonContent">Loading...</div>
     </div>
 </div>
 
-<div class="slideshow-container" id="slideshow"></div>
+<div class="slideshow-container">
+    <div class="slide">
+        <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked">
+    </div>
+    <div class="slide">
+        <img src="https://images.ctfassets.net/sjxdiqjbm079/3WMcDT3PaFgjIinkfvmh1L/cf88d0afc6280931ee110ac47ec573a8/01_LES_MIS_TOUR_02_24_0522_PJZEDIT_v002.jpg?w=708&h=531&fm=webp&fit=fill" alt="Los Miserables">
+    </div>
+    <div class="slide">
+        <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
+    </div>
+</div>
 
-<div class="last-checked" id="lastChecked">Última revisión: Cargando...</div>
+<div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
 
 <table id="changesTable">
     <tr>
-        <th>Obra/Sitio web</th>
-        <th>Cambios</th>
+        <th>Show/Website</th>
         <th>URL</th>
-        <th>Estado</th>
-        <th>Última actualización</th>
+        <th>Status</th>
+        <th>Last Update</th>
     </tr>
     <tr>
-        <td colspan="5" style="text-align: center;">Cargando datos de entradas...</td>
+        <td colspan="4" style="text-align: center;">Loading ticket data...</td>
     </tr>
 </table>
 
@@ -361,6 +470,8 @@ HTML_TEMPLATE = """
 
     function showSlides() {
         let slides = document.getElementsByClassName("slide");
+        if (slides.length === 0) return;
+        
         for (let i = 0; i < slides.length; i++) {
             slides[i].style.display = "none";
         }
@@ -379,33 +490,34 @@ HTML_TEMPLATE = """
     }
     
     function playNotificationSound() {
-        // Create audio context for a pleasant notification sound
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Create a pleasant notification melody
-        const playTone = (frequency, startTime, duration) => {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            const playTone = (frequency, startTime, duration) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, startTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration);
+            };
             
-            oscillator.frequency.setValueAtTime(frequency, startTime);
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0, startTime);
-            gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-            
-            oscillator.start(startTime);
-            oscillator.stop(startTime + duration);
-        };
-        
-        // Play a pleasant notification melody (C-E-G chord progression)
-        const now = audioContext.currentTime;
-        playTone(523.25, now, 0.2);        // C5
-        playTone(659.25, now + 0.1, 0.2);  // E5
-        playTone(783.99, now + 0.2, 0.3);  // G5
+            const now = audioContext.currentTime;
+            playTone(523.25, now, 0.2);        // C5
+            playTone(659.25, now + 0.1, 0.2);  // E5
+            playTone(783.99, now + 0.2, 0.3);  // G5
+        } catch (e) {
+            console.log('Audio not supported');
+        }
     }
 
     function closeNotification() {
@@ -421,14 +533,14 @@ HTML_TEMPLATE = """
     async function showJsonPopup() {
         document.getElementById('jsonOverlay').style.display = 'block';
         document.getElementById('jsonPopup').style.display = 'block';
-        document.getElementById('jsonContent').textContent = 'Cargando datos JSON...';
+        document.getElementById('jsonContent').textContent = 'Loading JSON data...';
         
         try {
             const response = await fetch('/api/changes.json');
             const jsonData = await response.text();
             document.getElementById('jsonContent').textContent = jsonData;
         } catch (error) {
-            document.getElementById('jsonContent').textContent = 'Error cargando datos JSON: ' + error.message;
+            document.getElementById('jsonContent').textContent = 'Error loading JSON data: ' + error.message;
         }
     }
     
@@ -436,47 +548,22 @@ HTML_TEMPLATE = """
         document.getElementById('jsonOverlay').style.display = 'none';
         document.getElementById('jsonPopup').style.display = 'none';
     }
-    const images = {{ images|tojson }};
-    const slideshow = document.getElementById('slideshow');
-    images.forEach(src => {
-        const div = document.createElement('div');
-        div.className = 'slide';
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = '';
-        div.appendChild(img);
-        slideshow.appendChild(div);
-    });
 
-    let slideIndex = 0;
-    showSlides();
-
-    function showSlides() {
-        let slides = document.getElementsByClassName("slide");
-        for (let i = 0; i < slides.length; i++) {
-            slides[i].style.display = "none";
-        }
-        slideIndex++;
-        if (slideIndex > slides.length) { slideIndex = 1; }
-        slides[slideIndex-1].style.display = "block";
-        setTimeout(showSlides, 3000);
-    }
     async function updateTicketData() {
         try {
             const response = await fetch('/api/ticket-changes');
             const data = await response.json();
             
             document.getElementById('lastChecked').textContent = 
-                'Última revisión: ' + new Date().toLocaleString();
+                'Last Checked: ' + new Date().toLocaleString();
             
             const table = document.getElementById('changesTable');
             table.innerHTML = `
                 <tr>
-                    <th>Obra/Sitio web</th>
-                    <th>Cambios</th>
+                    <th>Show/Website</th>
                     <th>URL</th>
-                    <th>Estado</th>
-                    <th>Última actualización</th>
+                    <th>Status</th>
+                    <th>Last Update</th>
                 </tr>
             `;
             
@@ -487,8 +574,7 @@ HTML_TEMPLATE = """
                 const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
                 
                 row.innerHTML = `
-                    <td>${item.label}</td>
-                    <td><span class="${badgeClass}">${changeCount}</span></td>
+                    <td>${item.label}<span class="${badgeClass}">${changeCount}</span></td>
                     <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
                     <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
                     <td>${new Date(item.timestamp).toLocaleString()}</td>
@@ -505,145 +591,67 @@ HTML_TEMPLATE = """
             }
             
         } catch (error) {
-            console.error('Error al obtener los datos de entradas:', error);
-            document.getElementById('lastChecked').textContent = 'Error cargando datos';
+            console.error('Error fetching ticket data:', error);
+            document.getElementById('lastChecked').textContent = 'Error loading data';
         }
     }
 
-
-    // Carga inicial y actualizaciones periódicas
+    // Initial load and periodic updates
     updateTicketData();
-    setInterval(updateTicketData, 5000); // Revisar cada 5 segundos
+    setInterval(updateTicketData, 5000); // Check every 5 seconds
 </script>
 
 </body>
 </html>
 """
 
-import threading
-import time
+@app.route('/')
+def dashboard():
+    return render_template_string(HTML_TEMPLATE)
 
-latest_changes = []
-
-def scrape_all_sites():
-    global previous_states, previous_contents, change_counts
-    changes_list = []
-    now = datetime.now(UTC).isoformat()
-    print("Ejecutando scrape_all_sites()")
-    for item in URLS:
-        label = item["label"]
-        url = item["url"]
-        current_content = ""
-        try:
-            response = requests.get(url, timeout=3)
-            soup = BeautifulSoup(response.content, "html.parser")
-            for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
-                tag.decompose()
-            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-                comment.extract()
-            current_content = soup.get_text(separator=" ", strip=True)
-        except Exception as e:
-            current_content = f"Error al obtener contenido: {str(e)}"
-        state = extract_normalized_date_info(url)
-        if state is None:
-            state = hash_url_content(url)
-        last_state = previous_states.get(url)
-        last_content = previous_contents.get(url, "")
-        change_details = ""
-        differences = ""
-        if last_state is None:
-            status = "Primer chequeo 👀"
-            change_details = "Primera vez que se monitorea este sitio web"
-            differences = "No hay contenido anterior para comparar"
-            change_counts[url] = 0
-        elif last_state != state:
-            status = "¡Actualizado! 🎉"
-            change_details = "Se detectaron cambios en el contenido del sitio web"
-            change_counts[url] = change_counts.get(url, 0) + 1
-            if last_content and current_content != last_content:
-                differences = find_differences(last_content, current_content)
-            else:
-                differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
-            broadcast_change(url, status)
-        else:
-            status = "Sin cambios ✨"
-            change_details = "El contenido permanece igual desde la última verificación"
-            differences = "Sin diferencias detectadas"
-            if url not in change_counts:
-                change_counts[url] = 0
-        previous_states[url] = state
-        previous_contents[url] = current_content
-        changes_list.append({
-            "label": label,
-            "url": url,
-            "status": status,
-            "timestamp": now,
-            "hash_actual": state,
-            "hash_anterior": last_state,
-            "detalles_cambio": change_details,
-            "contenido_completo": current_content,
-            "contenido_anterior": last_content,
-            "diferencias_detectadas": differences,
-            "longitud_contenido": len(current_content),
-            "change_count": change_counts[url],
-            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
-        })
-    print("Scraping terminado, sitios:", len(changes_list))
-    return changes_list
-
-def background_checker():
+@app.route('/api/changes.json')
+def get_changes_json():
+    """Get detailed changes data as JSON"""
     global latest_changes
-    while True:
-        latest_changes = scrape_all_sites()
-        time.sleep(300)  # cada 5 minutos
-
-# Inicializa latest_changes al arrancar
-latest_changes = scrape_all_sites()
-threading.Thread(target=background_checker, daemon=True).start()
+    
+    # Filter only updated websites
+    updated_sites = [c for c in latest_changes if "Actualizado" in c.get("status", "")]
+    
+    now = datetime.now(UTC).isoformat()
+    
+    # Create response with proper formatting
+    response_data = {
+        "resumen": {
+            "total_sitios_monitoreados": len(latest_changes),
+            "sitios_actualizados": len(updated_sites),
+            "ultimo_chequeo": now,
+            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
+        },
+        "sitios_web_actualizados": updated_sites
+    }
+    
+    # Return pretty-printed JSON
+    response = app.response_class(
+        response=json.dumps(response_data, indent=2, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @app.route('/api/ticket-changes')
 def get_ticket_changes():
-    if not latest_changes:
-        # Datos de prueba para Render/demo
-        return jsonify([
-            {"label": "Prueba", "url": "https://ejemplo.com", "status": "Sin cambios", "timestamp": "", "change_count": 0}
-        ])
+    """Get ticket changes for the dashboard"""
+    global latest_changes
     return jsonify(latest_changes)
-
-@app.route('/api/ticket-changes-test')
-def get_ticket_changes_test():
-    return jsonify([
-        {"label": "Prueba", "url": "https://ejemplo.com", "status": "Sin cambios", "timestamp": "", "change_count": 0}
-    ])
 
 @app.route('/api/check-changes')
 def check_changes():
+    """Check if there are any new changes"""
     try:
-        response = requests.get('http://localhost:5000/api/ticket-changes', timeout=5)
-        data = response.json()
-        has_new_changes = any('Actualizado' in item['status'] for item in data)
+        has_new_changes = any(item.get('status', '').find('Actualizado') != -1 for item in latest_changes)
         return {"new_changes": has_new_changes}
     except:
         return {"new_changes": False}
-
-import os
-import random
-
-def get_static_images():
-    static_folder = os.path.join(app.root_path, 'static')
-    exts = ('.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.avif')
-    if not os.path.exists(static_folder):
-        print("No existe la carpeta static:", static_folder)
-        return []
-    files = [f for f in os.listdir(static_folder) if f.lower().endswith(exts)]
-    print("Archivos encontrados en static:", files)
-    random.shuffle(files)
-    return [f"/static/{f}" for f in files]
-
-@app.route('/')
-def dashboard():
-    images = get_static_images()
-    return render_template_string(HTML_TEMPLATE, images=images)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
