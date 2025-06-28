@@ -255,8 +255,21 @@ HTML_TEMPLATE = """
   overflow: hidden;
   box-shadow: 0 8px 25px rgba(214, 51, 132, 0.3);
   border: 3px solid #ff69b4;
-  /* Remove or comment out the background property if present */
-  background: transparent;
+  background: linear-gradient(
+    120deg,
+    #ffe0f7 0%,
+    #ffb6e6 25%,
+    #ff69b4 50%,
+    #ffc0cb 75%,
+    #ffe0f7 100%
+  );
+  background-size: 400% 400%;
+  animation: sliderMove 8s linear infinite alternate;
+}
+
+@keyframes sliderMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
     .slide {
       display: none;
