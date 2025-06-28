@@ -473,7 +473,11 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
-    /* Start https://www.cursors-4u.com */ * {cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;} /* End https://www.cursors-4u.com */
+    {
+  cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), 
+          url(https://cur.cursors-4u.net/special/spe-3/spe302.png), 
+          auto !important;
+}
     .json-overlay {
       position: fixed;
       top: 0;
@@ -486,6 +490,15 @@ HTML_TEMPLATE = """
     }
   </style>
 </head>
+<!-- Add this inside your <head> or at the top of your HTML -->
+<style type="text/css">
+* {
+  cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;
+}
+</style>
+<a href="https://www.cursors-4u.com/cursor/2011/02/18/cute-bow-tie-hearts-blinking-blue-and-pink-pointer.html" target="_blank" title="Cute Bow Tie Hearts Blinking Blue and Pink Pointer">
+  <img src="https://cur.cursors-4u.net/cursor.png" border="0" alt="Cute Bow Tie Hearts Blinking Blue and Pink Pointer" style="position:absolute; top: 0px; right: 0px;" />
+</a>
 <body>
 
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
