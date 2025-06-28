@@ -452,7 +452,7 @@ HTML_TEMPLATE = """
     <img src="/static/AUDREY1.jpg" alt="Buscando a Audrey">
   </div>
   <div class="slide">
-    <img src="/static/HOUDIUNI1.jpg" alt="Houdini">
+    <img src="/static/HOUDINI1.jpg" alt="Houdini">
   </div>
   <div class="slide">
     <img src="/static/WICKED1.jpg" alt="Wicked">
