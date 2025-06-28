@@ -532,7 +532,7 @@ HTML_TEMPLATE = """
     <th>Last Update</th>
   </tr>
   <tr>
-    <td colspan="4" style="text-align: center;">Loading ticket data...</td>
+    <td colspan="5" style="text-align: center;">Loading ticket data...</td>
   </tr>
 </table>
 
