@@ -473,10 +473,10 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
-    {
-  cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), 
-          url(https://cur.cursors-4u.net/special/spe-3/spe302.png), 
-          auto !important;
+    * {
+    cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), 
+           url(https://cur.cursors-4u.net/special/spe-3/spe302.png), 
+           auto !important;
 }
     .json-overlay {
       position: fixed;
