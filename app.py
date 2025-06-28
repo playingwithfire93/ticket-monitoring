@@ -353,17 +353,7 @@ HTML_TEMPLATE = """
     </div>
 </div>
 
-<div class="slideshow-container">
-    <div class="slide">
-        <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked">
-    </div>
-    <div class="slide">
-        <img src="https://images.ctfassets.net/sjxdiqjbm079/3WMcDT3PaFgjIinkfvmh1L/cf88d0afc6280931ee110ac47ec573a8/01_LES_MIS_TOUR_02_24_0522_PJZEDIT_v002.jpg?w=708&h=531&fm=webp&fit=fill" alt="Los Miserables">
-    </div>
-    <div class="slide">
-        <img src="https://www.princeofwalestheatre.co.uk/wp-content/uploads/2024/02/BOM-hi-res-Turn-it-off-Nov-2023-9135-hi-res.webp" alt="Book of Mormon">
-    </div>
-</div>
+<div class="slideshow-container" id="slideshow"></div>
 
 <div class="last-checked" id="lastChecked">Última revisión: Cargando...</div>
 
@@ -461,7 +451,31 @@ HTML_TEMPLATE = """
         document.getElementById('jsonOverlay').style.display = 'none';
         document.getElementById('jsonPopup').style.display = 'none';
     }
+    const images = {{ images|tojson }};
+    const slideshow = document.getElementById('slideshow');
+    images.forEach(src => {
+        const div = document.createElement('div');
+        div.className = 'slide';
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '';
+        div.appendChild(img);
+        slideshow.appendChild(div);
+    });
 
+    let slideIndex = 0;
+    showSlides();
+
+    function showSlides() {
+        let slides = document.getElementsByClassName("slide");
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        slideIndex++;
+        if (slideIndex > slides.length) { slideIndex = 1; }
+        slides[slideIndex-1].style.display = "block";
+        setTimeout(showSlides, 3000);
+    }
     async function updateTicketData() {
         try {
             const response = await fetch('/api/ticket-changes');
@@ -718,6 +732,24 @@ def check_changes():
         return {"new_changes": has_new_changes}
     except:
         return {"new_changes": False}
+
+import os
+import random
+
+def get_static_images():
+    static_folder = os.path.join(app.root_path, 'static')
+    # Only include common image extensions
+    exts = ('.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.avif')
+    files = [f for f in os.listdir(static_folder) if f.lower().endswith(exts)]
+    # Shuffle the list for random order
+    random.shuffle(files)
+    # Return as URLs for the static folder
+    return [f"/static/{f}" for f in files]
+
+@app.route('/')
+def dashboard():
+    images = get_static_images()
+    return render_template_string(HTML_TEMPLATE, images=images)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
