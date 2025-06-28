@@ -263,13 +263,13 @@ HTML_TEMPLATE = """
       width: 100%;
     }
     .slide img {
-      width: 100%;
-      height: 400px;
-      object-fit: contain;   /* <--- was 'cover', now 'contain' */
-      background: #fff;      /* or any color you like */
-      display: block;
-      margin: 0 auto;
-    }
+  width: 100%;
+  height: 400px;
+  object-fit: contain;
+  /* background: #fff; */   /* Remove or comment out this line */
+  display: block;
+  margin: 0 auto;
+}
     table {
       width: 90%;
       margin: 20px auto;
