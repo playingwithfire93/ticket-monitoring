@@ -128,10 +128,15 @@ def scrape_all_sites():
             current_content = soup.get_text(separator=" ", strip=True)
         except Exception as e:
             current_content = f"Error al obtener contenido: {str(e)}"
-
-        state = extract_normalized_date_info(url)
-        if state is None:
-            state = hash_url_content(url)
+        if "buscandoaaudrey.com" in url:
+            state = hash_audrey_content(url)
+        else:
+            state = extract_normalized_date_info(url)
+            if state is None:
+                state = hash_url_content(url)
+            state = extract_normalized_date_info(url)
+            if state is None:
+                state = hash_url_content(url)
 
         last_state = previous_states.get(url)
         last_content = previous_contents.get(url, "")
@@ -677,7 +682,29 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
+def hash_audrey_content(url):
+    """Solo chequea el contenido relevante de Buscando a Audrey"""
+    try:
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.content, "html.parser")
 
+        # Elimina scripts, estilos, banners, etc.
+        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
+            tag.decompose()
+        # Elimina banners o elementos dinámicos conocidos (ajusta el selector según la web)
+        for tag in soup.select(".banner, .dynamic, .cookie-banner, .ads, .date, .timestamp"):
+            tag.decompose()
+
+        # Aquí puedes seleccionar solo una parte relevante, por ejemplo:
+        # main_content = soup.select_one("main")  # o el selector adecuado
+        # content_text = main_content.get_text(separator=" ", strip=True) if main_content else soup.get_text(separator=" ", strip=True)
+
+        content_text = soup.get_text(separator=" ", strip=True)
+        normalized_text = " ".join(content_text.split())
+        return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
+    except Exception as e:
+        return f"ERROR: {str(e)}"
+      
 @app.route('/')
 def dashboard():
     return render_template_string(HTML_TEMPLATE)
