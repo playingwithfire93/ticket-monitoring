@@ -624,36 +624,75 @@ import time
 latest_changes = []
 
 def scrape_all_sites():
-    # Copia aquí la lógica de tu función get_ticket_changes, pero que devuelva la lista
-    # No uses jsonify aquí, solo devuelve la lista de dicts
-    global previous_states, change_counts
+    global previous_states, previous_contents, change_counts
     changes_list = []
     now = datetime.now(UTC).isoformat()
     for item in URLS:
         label = item["label"]
         url = item["url"]
+
+        # Obtener el contenido actual completo
+        current_content = ""
+        try:
+            response = requests.get(url, timeout=10)
+            soup = BeautifulSoup(response.content, "html.parser")
+            for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
+                tag.decompose()
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+            current_content = soup.get_text(separator=" ", strip=True)
+        except Exception as e:
+            current_content = f"Error al obtener contenido: {str(e)}"
+
+        # Obtener el hash del estado actual
         state = extract_normalized_date_info(url)
         if state is None:
             state = hash_url_content(url)
+
         last_state = previous_states.get(url)
+        last_content = previous_contents.get(url, "")
+        change_details = ""
+        differences = ""
+
         if last_state is None:
             status = "Primer chequeo 👀"
+            change_details = "Primera vez que se monitorea este sitio web"
+            differences = "No hay contenido anterior para comparar"
             change_counts[url] = 0
         elif last_state != state:
             status = "¡Actualizado! 🎉"
+            change_details = "Se detectaron cambios en el contenido del sitio web"
             change_counts[url] = change_counts.get(url, 0) + 1
+            if last_content and current_content != last_content:
+                differences = find_differences(last_content, current_content)
+            else:
+                differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
             broadcast_change(url, status)
         else:
             status = "Sin cambios ✨"
+            change_details = "El contenido permanece igual desde la última verificación"
+            differences = "Sin diferencias detectadas"
             if url not in change_counts:
                 change_counts[url] = 0
+
+        # Actualizar los estados y contenidos después de comparar
         previous_states[url] = state
+        previous_contents[url] = current_content
+
         changes_list.append({
             "label": label,
             "url": url,
             "status": status,
             "timestamp": now,
-            "change_count": change_counts[url]
+            "hash_actual": state,
+            "hash_anterior": last_state,
+            "detalles_cambio": change_details,
+            "contenido_completo": current_content,
+            "contenido_anterior": last_content,
+            "diferencias_detectadas": differences,
+            "longitud_contenido": len(current_content),
+            "change_count": change_counts[url],
+            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
         })
     return changes_list
 
