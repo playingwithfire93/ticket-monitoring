@@ -227,8 +227,10 @@ HTML_TEMPLATE = """
     .slide img {
       width: 100%;
       height: 400px;
-      object-fit: cover;
+      object-fit: contain;   /* <--- was 'cover', now 'contain' */
+      background: #fff;      /* or any color you like */
       display: block;
+      margin: 0 auto;
     }
     table {
       width: 90%;
@@ -476,7 +478,7 @@ HTML_TEMPLATE = """
     <img src="/static/WICKED3.jpg" alt="Wicked">
   </div>
   <div class="slide">
-    <img src="/static/LESMIS3.jpg" alt="Los Miserables">
+    <img src="/static/LESMIS3.png" alt="Los Miserables">
   </div>
   <div class="slide">
     <img src="/static/BOM3.jpg" alt="Book of Mormon">
@@ -524,6 +526,7 @@ HTML_TEMPLATE = """
 <table id="changesTable">
   <tr>
     <th>Show/Website</th>
+    <th>Cambios</th>
     <th>URL</th>
     <th>Status</th>
     <th>Last Update</th>
@@ -643,10 +646,12 @@ HTML_TEMPLATE = """
         const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
         
         row.innerHTML = `
-          <td>${item.label}<span class="${badgeClass}">${changeCount}</span></td>
-          <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
-          <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
-          <td>${new Date(item.timestamp).toLocaleString()}</td>
+          row.innerHTML = `
+            <td>${item.label}</td>
+            <td><span class="${badgeClass}">${changeCount}</span></td>
+            <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
+            <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
+            <td>${new Date(item.timestamp).toLocaleString()}</td>
         `;
         
         if (item.status.includes('Actualizado')) {
