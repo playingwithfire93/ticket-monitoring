@@ -473,11 +473,7 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
-    /* ...existing CSS... */
-* {
-  cursor: url(https://cur.cursors-4u.net/cursors/cur-3/cur221.ani), url(https://cur.cursors-4u.net/cursors/cur-3/cur221.png), auto !important;
-}
-/* ...existing CSS... */
+    /* Start https://www.cursors-4u.com */ * {cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;} /* End https://www.cursors-4u.com */
     .json-overlay {
       position: fixed;
       top: 0;
