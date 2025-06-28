@@ -203,10 +203,41 @@ HTML_TEMPLATE = """
   <style>
     body {
       font-family: 'Georgia', serif;
-      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      /* Remove static background */
+      /* background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%); */
+      overflow-x: hidden;
+    }
+    .animated-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -2;
+      background: linear-gradient(120deg, #ffb6e6 0%, #fecfef 50%, #ffb6e6 100%);
+      background-size: 200% 200%;
+      animation: bgMove 10s ease-in-out infinite alternate;
+    }
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+    .floating-sparkle {
+      position: absolute;
+      font-size: 2em;
+      pointer-events: none;
+      opacity: 0.7;
+      animation: floatSparkle 8s linear infinite;
+    }
+    .floating-sparkle.s1 { left: 10vw; top: 20vh; animation-delay: 0s; }
+    .floating-sparkle.s2 { left: 80vw; top: 30vh; animation-delay: 2s; }
+    .floating-sparkle.s3 { left: 50vw; top: 70vh; animation-delay: 4s; }
+    .floating-sparkle.s4 { left: 30vw; top: 80vh; animation-delay: 1s; }
+    .floating-sparkle.s5 { left: 70vw; top: 10vh; animation-delay: 3s; }
+    @keyframes floatSparkle {
+      0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.7; }
+      50% { transform: translateY(-40px) scale(1.2) rotate(10deg); opacity: 1; }
+      100% { transform: translateY(0) scale(1) rotate(-10deg); opacity: 0.7; }
     }
     h1 {
       text-align: center;
@@ -424,10 +455,12 @@ HTML_TEMPLATE = """
 
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
 
-<div class="sparkle" style="top: 10%; left: 10%;">💖</div>
-<div class="sparkle" style="top: 20%; right: 15%;">✨</div>
-<div class="sparkle" style="top: 70%; left: 5%;">🌸</div>
-<div class="sparkle" style="bottom: 10%; right: 10%;">💕</div>
+<div class="animated-bg"></div>
+<div class="floating-sparkle s1">✨</div>
+<div class="floating-sparkle s2">💖</div>
+<div class="floating-sparkle s3">🌸</div>
+<div class="floating-sparkle s4">💕</div>
+<div class="floating-sparkle s5">✨</div>
 
 <div class="notification-overlay" id="notificationOverlay"></div>
 <div class="notification-popup" id="notificationPopup">
@@ -532,6 +565,8 @@ HTML_TEMPLATE = """
 </div>
 
 <div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
+
+
 
 <table id="changesTable">
   <tr>
