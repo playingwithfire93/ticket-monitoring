@@ -1,4 +1,3 @@
-
 import hashlib
 import json
 from datetime import UTC, datetime
@@ -39,54 +38,40 @@ URLS = [
 
 def hash_url_content(url):
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=3)
         soup = BeautifulSoup(response.content, "html.parser")
-
-        # Remove tags that usually include changing content
         for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
             tag.decompose()
-
-        # Remove comments
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
-
-        # Remove common dynamic elements by class/id
         dynamic_selectors = [
             ".date_info", ".timestamp", "#ad", ".ads", ".cookie-banner", "#cookies", ".tracker"
         ]
         for selector in dynamic_selectors:
             for tag in soup.select(selector):
                 tag.decompose()
-
-        # Normalize whitespace and strip
         content_text = soup.get_text(separator=" ", strip=True)
         normalized_text = " ".join(content_text.split())
-
         return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
     except Exception as e:
         return f"ERROR: {str(e)}"
 
 def extract_normalized_date_info(url):
-    """Get normalized text content from .date_info element."""
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=3)
         response.raise_for_status()
     except requests.RequestException:
         return None
-
     soup = BeautifulSoup(response.text, 'html.parser')
     date_info = soup.select_one('.date_info')
     if not date_info:
         return None
-
     text = date_info.get_text(strip=True)
     return ' '.join(text.split()).lower()
 
 import difflib
 
-
 def find_differences(old_text, new_text):
-    """Generate a diff showing changes between old and new content."""
     diff = difflib.unified_diff(
         old_text.splitlines(), 
         new_text.splitlines(), 
@@ -535,99 +520,6 @@ HTML_TEMPLATE = """
 </html>
 """
 
-@app.route('/api/changes.json')
-def get_changes_json():
-    """Get detailed changes data as JSON"""
-    global previous_states
-    changes_list = []
-    now = datetime.now(UTC).isoformat()
-
-    for item in URLS:
-        label = item["label"]
-        url = item["url"]
-
-        # Get current full content
-        current_content = ""
-        try:
-            response = requests.get(url, timeout=10)
-            soup = BeautifulSoup(response.content, "html.parser")
-            
-            # Remove scripts, styles, etc. but keep the full text
-            for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
-                tag.decompose()
-            
-            # Remove comments
-            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-                comment.extract()
-            
-            current_content = soup.get_text(separator=" ", strip=True)
-        except Exception as e:
-            current_content = f"Error al obtener contenido: {str(e)}"
-
-        state = extract_normalized_date_info(url)
-        if state is None:
-            state = hash_url_content(url)
-
-        last_state = previous_states.get(url)
-        last_content = previous_contents.get(url, "")
-        change_details = ""
-        differences = ""
-        
-        if last_state is None:
-            status = "Primer chequeo 👀"
-            change_details = "Primera vez que se monitorea este sitio web"
-            differences = "No hay contenido anterior para comparar"
-        elif last_state != state:
-            status = "¡Actualizado! 🎉"
-            change_details = "Se detectaron cambios en el contenido del sitio web"
-            if last_content and current_content != last_content:
-                differences = find_differences(last_content, current_content)
-            else:
-                differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
-        else:
-            status = "Sin cambios ✨"
-            change_details = "El contenido permanece igual desde la última verificación"
-            differences = "Sin diferencias detectadas"
-
-        previous_states[url] = state
-        previous_contents[url] = current_content
-
-        changes_list.append({
-            "label": label,
-            "url": url,
-            "status": status,
-            "timestamp": now,
-            "hash_actual": state,
-            "hash_anterior": last_state,
-            "detalles_cambio": change_details,
-            "contenido_completo": current_content,
-            "contenido_anterior": last_content,
-            "diferencias_detectadas": differences,
-            "longitud_contenido": len(current_content),
-            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
-        })
-
-    # Filter only updated websites
-    updated_sites = [c for c in changes_list if "Actualizado" in c["status"]]
-    
-    # Create response with proper formatting
-    response_data = {
-        "resumen": {
-            "total_sitios_monitoreados": len(changes_list),
-            "sitios_actualizados": len(updated_sites),
-            "ultimo_chequeo": now,
-            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
-        },
-        "sitios_web_actualizados": updated_sites
-    }
-    
-    # Return pretty-printed JSON
-    response = app.response_class(
-        response=json.dumps(response_data, indent=2, ensure_ascii=False),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
 import threading
 import time
 
@@ -637,14 +529,13 @@ def scrape_all_sites():
     global previous_states, previous_contents, change_counts
     changes_list = []
     now = datetime.now(UTC).isoformat()
+    print("Ejecutando scrape_all_sites()")
     for item in URLS:
         label = item["label"]
         url = item["url"]
-
-        # Obtener el contenido actual completo
         current_content = ""
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=3)
             soup = BeautifulSoup(response.content, "html.parser")
             for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
                 tag.decompose()
@@ -653,17 +544,13 @@ def scrape_all_sites():
             current_content = soup.get_text(separator=" ", strip=True)
         except Exception as e:
             current_content = f"Error al obtener contenido: {str(e)}"
-
-        # Obtener el hash del estado actual
         state = extract_normalized_date_info(url)
         if state is None:
             state = hash_url_content(url)
-
         last_state = previous_states.get(url)
         last_content = previous_contents.get(url, "")
         change_details = ""
         differences = ""
-
         if last_state is None:
             status = "Primer chequeo 👀"
             change_details = "Primera vez que se monitorea este sitio web"
@@ -684,11 +571,8 @@ def scrape_all_sites():
             differences = "Sin diferencias detectadas"
             if url not in change_counts:
                 change_counts[url] = 0
-
-        # Actualizar los estados y contenidos después de comparar
         previous_states[url] = state
         previous_contents[url] = current_content
-
         changes_list.append({
             "label": label,
             "url": url,
@@ -704,6 +588,7 @@ def scrape_all_sites():
             "change_count": change_counts[url],
             "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
         })
+    print("Scraping terminado, sitios:", len(changes_list))
     return changes_list
 
 def background_checker():
@@ -712,19 +597,26 @@ def background_checker():
         latest_changes = scrape_all_sites()
         time.sleep(300)  # cada 5 minutos
 
+# Inicializa latest_changes al arrancar
+latest_changes = scrape_all_sites()
 threading.Thread(target=background_checker, daemon=True).start()
 
 @app.route('/api/ticket-changes')
 def get_ticket_changes():
     return jsonify(latest_changes)
-  
+
+@app.route('/api/ticket-changes-test')
+def get_ticket_changes_test():
+    return jsonify([
+        {"label": "Prueba", "url": "https://ejemplo.com", "status": "Sin cambios", "timestamp": "", "change_count": 0}
+    ])
+
 @app.route('/api/check-changes')
 def check_changes():
-    """Check if there are any new changes"""
     try:
         response = requests.get('http://localhost:5000/api/ticket-changes', timeout=5)
         data = response.json()
-        has_new_changes = any(item['status'].includes('Actualizado') for item in data)
+        has_new_changes = any('Actualizado' in item['status'] for item in data)
         return {"new_changes": has_new_changes}
     except:
         return {"new_changes": False}
@@ -734,12 +626,13 @@ import random
 
 def get_static_images():
     static_folder = os.path.join(app.root_path, 'static')
-    # Only include common image extensions
     exts = ('.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.avif')
+    if not os.path.exists(static_folder):
+        print("No existe la carpeta static:", static_folder)
+        return []
     files = [f for f in os.listdir(static_folder) if f.lower().endswith(exts)]
-    # Shuffle the list for random order
+    print("Archivos encontrados en static:", files)
     random.shuffle(files)
-    # Return as URLs for the static folder
     return [f"/static/{f}" for f in files]
 
 @app.route('/')
