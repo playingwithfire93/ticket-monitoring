@@ -248,14 +248,16 @@ HTML_TEMPLATE = """
       font-weight: bold;
     }
     .slideshow-container {
-      max-width: 800px;
-      margin: 20px auto;
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.3);
-      border: 3px solid #ff69b4;
-    }
+  max-width: 800px;
+  margin: 20px auto;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(214, 51, 132, 0.3);
+  border: 3px solid #ff69b4;
+  /* Remove or comment out the background property if present */
+  background: transparent;
+}
     .slide {
       display: none;
       width: 100%;
@@ -422,18 +424,18 @@ HTML_TEMPLATE = """
       max-height: 100%;
       overflow: auto;
     .highlighted-bg {
-  position: relative;
-  margin: 30px auto 0 auto;
-  max-width: 900px;
-  border-radius: 25px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
-  border: 4px solid #ff69b4;
-  background: linear-gradient(120deg, #ffe0f7 0%, #ffb6e6 50%, #ffe0f7 100%);
-  background-size: 200% 200%;
-  animation: highlightMove 8s ease-in-out infinite alternate;
-  padding-bottom: 10px;
-}
+      position: relative;
+      margin: 30px auto 0 auto;
+      max-width: 900px;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
+      border: 4px solid #ff69b4;
+      background: linear-gradient(120deg, #ffe0f7 0%, #ffb6e6 50%, #ffe0f7 100%);
+      background-size: 200% 200%;
+      animation: highlightMove 8s ease-in-out infinite alternate;
+      padding: 30px 0 20px 0; /* Add top/bottom padding for effect */
+    }
 
 @keyframes highlightMove {
   0% { background-position: 0% 50%; }
