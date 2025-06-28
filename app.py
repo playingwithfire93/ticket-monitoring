@@ -603,6 +603,11 @@ threading.Thread(target=background_checker, daemon=True).start()
 
 @app.route('/api/ticket-changes')
 def get_ticket_changes():
+    if not latest_changes:
+        # Datos de prueba para Render/demo
+        return jsonify([
+            {"label": "Prueba", "url": "https://ejemplo.com", "status": "Sin cambios", "timestamp": "", "change_count": 0}
+        ])
     return jsonify(latest_changes)
 
 @app.route('/api/ticket-changes-test')
