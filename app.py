@@ -646,11 +646,11 @@ HTML_TEMPLATE = """
         const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
         
         row.innerHTML = `
-            <td>${item.label}</td>
-            <td><span class="${badgeClass}">${changeCount}</span></td>
-            <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
-            <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
-            <td>${new Date(item.timestamp).toLocaleString()}</td>
+          <td>${item.label}</td>
+          <td><span class="${badgeClass}">${changeCount}</span></td>
+          <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
+          <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
+          <td>${new Date(item.timestamp).toLocaleString()}</td>
         `;
         
         if (item.status.includes('Actualizado')) {
