@@ -10,6 +10,7 @@ from flask import Flask, jsonify, render_template_string
 from flask_socketio import SocketIO
 import threading
 import time
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -27,13 +28,13 @@ new_changes_detected = True
 from twilio.rest import Client
 
 def send_whatsapp_message(body, to):
-    account_sid = 'AC2a68fd967c9b8f9a0f896ed8c87fc273'
-    auth_token = 'e8e8b53a93b9adf00a67360a8ed9d008'
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     client = Client(account_sid, auth_token)
     message = client.messages.create(
         body=body,
-        from_='whatsapp:+14155238886',  # Twilio sandbox WhatsApp number
-        to=f'whatsapp:{to}'              # Your WhatsApp number, e.g. whatsapp:+346XXXXXXXX
+        from_='whatsapp:+14155238886',
+        to=f'whatsapp:{to}'
     )
     return message.sid
 # Real ticket monitoring URLs
