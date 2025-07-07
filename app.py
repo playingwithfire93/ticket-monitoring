@@ -24,8 +24,21 @@ change_counts = {}
 # Track if there are new changes for notification
 new_changes_detected = True
 
+from twilio.rest import Client
+
+def send_whatsapp_message(body, to):
+    account_sid = 'YOUR_TWILIO_ACCOUNT_SID'
+    auth_token = 'YOUR_TWILIO_AUTH_TOKEN'
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+        body=body,
+        from_='whatsapp:+14155238886',  # Twilio sandbox WhatsApp number
+        to=f'whatsapp:{to}'              # Your WhatsApp number, e.g. whatsapp:+346XXXXXXXX
+    )
+    return message.sid
 # Real ticket monitoring URLs
 URLS = [
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -157,6 +170,14 @@ def scrape_all_sites():
             else:
                 differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
             broadcast_change(url, status)
+            # Send WhatsApp notification
+            try:
+                send_whatsapp_message(
+                    f"¡Actualización detectada en {label}!\nURL: {url}\nDetalles: {change_details}",
+                    '+34602502302'  # Replace with your WhatsApp number
+                )
+            except Exception as e:
+                print("WhatsApp notification failed:", e)
         else:
             status = "Sin cambios ✨"
             change_details = "El contenido permanece igual desde la última verificación"
