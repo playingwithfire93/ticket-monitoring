@@ -43,7 +43,7 @@ def send_whatsapp_message(body, to):
 
 # Real ticket monitoring URLs
 URLS = [
-    {"label": "ddf", "url": "https://httpbin.org/get"},
+    #{"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
