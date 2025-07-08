@@ -870,7 +870,7 @@ def check_changes():
 
 if __name__ == '__main__':
      # Prueba de envío de WhatsApp
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
     
    
     # Luego puedes lanzar la app normalmente
