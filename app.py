@@ -15,9 +15,6 @@ import os
 from twilio.rest import Client
 
 
-
-app = Flask(__name__)
-socketio = SocketIO(app)
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -117,7 +114,8 @@ def find_differences(old_text, new_text):
         lineterm=""
     )
     return "\n".join(diff)
-
+app = Flask(__name__)
+socketio = SocketIO(app)
 def broadcast_change(url, data):
     socketio.emit('update', {'url': url, 'data': data})
 
@@ -220,8 +218,14 @@ def background_checker():
         latest_changes = scrape_all_sites()
         time.sleep(30)  # Check every 30 seconds
 
-# Start background checker
-threading.Thread(target=background_checker, daemon=True).start()
+# Remove or comment out this line:
+# threading.Thread(target=background_checker, daemon=True).start()
+
+# Instead, use this after initializing socketio:
+def start_background_task():
+    socketio.start_background_task(background_checker)
+
+start_background_task()
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
