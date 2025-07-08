@@ -397,7 +397,7 @@ HTML_TEMPLATE = """
       margin: 20px 0;
     }
     .change-badge {
-      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      background: linear-gradient(135deg, #ff69b4, #d63384); /* Igual que th */
       color: white;
       border-radius: 12px;
       padding: 2px 8px;
@@ -408,6 +408,7 @@ HTML_TEMPLATE = """
       min-width: 20px;
       text-align: center;
       box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
     .change-badge.zero {
       background: #ddd;
