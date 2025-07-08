@@ -32,7 +32,7 @@ def send_whatsapp_message(body, to):
     # Usa tu content_sid de plantilla (ajusta según tu plantilla real)
     message = client.messages.create(
         from_='whatsapp:+14155238886',
-        content_sid='HXb5b62575e6e4ff6129ad7c8efe1f983e',  # <-- tu content_sid de plantilla
+        content_sid='HX97c4078b9f77fddcd09107a980dde09a',  # <-- tu content_sid de plantilla
         content_variables=json.dumps({
             "1": "¡Actualización detectada!",
             "2": body[:30]  # Puedes personalizar los valores según tu plantilla
@@ -43,7 +43,7 @@ def send_whatsapp_message(body, to):
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
