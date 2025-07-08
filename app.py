@@ -14,6 +14,8 @@ import os
 
 app = Flask(__name__)
 socketio = SocketIO(app)
+from dotenv import load_dotenv
+load_dotenv()
 
 # Track previous states for change detection
 previous_states = {}
