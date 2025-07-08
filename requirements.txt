@@ -9,3 +9,4 @@ beautifulsoup4
 python-telegram-bot>=13.15
 flask_socketio
 twilio>=6.0.0
+eventlet
