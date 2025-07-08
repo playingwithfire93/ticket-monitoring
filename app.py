@@ -166,9 +166,10 @@ def scrape_all_sites():
             broadcast_change(url, status)
             try:
                 send_whatsapp_message(
-                    f"¡{label}!\nURL: {url}\nDetalles: {change_details}",
-                    '+34602502302'  # Replace with your WhatsApp number
-                )
+                  label,           # nombre del show
+                  url,             # enlace
+                  '+34602502302'   # tu número WhatsApp
+              )
             except Exception as e:
                 print("WhatsApp notification failed:", e)
         else:
