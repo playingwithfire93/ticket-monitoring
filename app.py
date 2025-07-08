@@ -11,6 +11,7 @@ from flask_socketio import SocketIO
 import threading
 import time
 import os
+from twilio.rest import Client
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -27,11 +28,12 @@ change_counts = {}
 # Track if there are new changes for notification
 new_changes_detected = True
 
-from twilio.rest import Client
 
 def send_whatsapp_message(body, to):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    print("SID:", account_sid)
+    print("TOKEN:", auth_token[:6], "****")
     client = Client(account_sid, auth_token)
     message = client.messages.create(
         body=body,
@@ -867,4 +869,14 @@ def check_changes():
         return {"new_changes": False}
 
 if __name__ == '__main__':
+     # Prueba de envío de WhatsApp
+    sid = send_whatsapp_message(
+        "¡Prueba de WhatsApp desde Python!",
+        "+34602502302"
+    )
+    print("SID de mensaje:", sid)
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
+   
+    # Luego puedes lanzar la app normalmente
+  
