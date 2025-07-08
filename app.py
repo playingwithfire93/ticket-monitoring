@@ -527,9 +527,9 @@ HTML_TEMPLATE = """
 <div class="floating-sparkle s5">✨</div>
 
 <!-- Flex container for slideshow and Spotify -->
-<div class="highlighted-bg" style="display: flex; justify-content: center; align-items: center; gap: 32px; margin-bottom: 30px; max-width: 1200px;">
-  <div style="flex: 1 1 0; min-width: 0;">
-    <div class="slideshow-container">
+<div class="highlighted-bg" style="display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px; max-width: 1100px;">
+  <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: flex-end;">
+    <div class="slideshow-container" style="width: 420px; height: 352px;">
         <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked1">
         </div>
         <div class="slide">
@@ -609,8 +609,8 @@ HTML_TEMPLATE = """
         </div>
     </div>
   </div>
-  <div style="flex: 0 0 340px; min-width: 300px;">
-    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/7w9wB3KwgtClfngWeFLBQX?utm_source=generator&theme=0" width="70%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+ <div style="flex: 0 0 340px; min-width: 300px; display: flex; align-items: center;">
+    <iframe style="border-radius:12px; box-shadow:0 4px 16px #d6338440;" src="https://open.spotify.com/embed/playlist/7w9wB3KwgtClfngWeFLBQX?utm_source=generator&theme=0" width="70%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
   </div>
 </div>
 
