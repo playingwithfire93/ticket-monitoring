@@ -1,4 +1,5 @@
-
+import eventlet
+eventlet.monkey_patch()
 import hashlib
 import json
 from datetime import UTC, datetime
@@ -13,8 +14,7 @@ import time
 import os
 from twilio.rest import Client
 
-import eventlet
-eventlet.monkey_patch()
+
 
 app = Flask(__name__)
 socketio = SocketIO(app)
