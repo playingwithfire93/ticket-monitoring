@@ -40,7 +40,7 @@ def send_whatsapp_message(label, url, to):
 
 # Real ticket monitoring URLs
 URLS = [
-    {"label": "ddf", "url": "https://httpbin.org/get"},
+    #{"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -166,8 +166,7 @@ def scrape_all_sites():
             broadcast_change(url, status)
             try:
                 send_whatsapp_message(
-                    label,
-                    url,
+                    f"¡{label}!\nURL: {url}\nDetalles: {change_details}",
                     '+34602502302'  # Replace with your WhatsApp number
                 )
             except Exception as e:
