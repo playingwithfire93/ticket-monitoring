@@ -526,6 +526,20 @@ HTML_TEMPLATE = """
 <div class="floating-sparkle s4">💕</div>
 <div class="floating-sparkle s5">✨</div>
 
+<!-- Flex container for slideshow and Spotify -->
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 32px; margin-bottom: 30px;">
+  <div style="flex: 1; min-width: 0;">
+    <div class="highlighted-bg">
+      <div class="slideshow-container">
+        <!-- ...slides here... -->
+      </div>
+    </div>
+  </div>
+  <div style="flex: 0 0 360px; min-width: 300px;">
+    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/7w9wB3KwgtClfngWeFLBQX?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+  </div>
+</div>
+
 <div class="notification-overlay" id="notificationOverlay"></div>
 <div class="notification-popup" id="notificationPopup">
   <h2>✨ New Changes Detected! ✨</h2>
