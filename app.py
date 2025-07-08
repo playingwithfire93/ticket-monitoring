@@ -29,9 +29,14 @@ def send_whatsapp_message(body, to):
     print("SID:", account_sid)
     print("TOKEN:", auth_token[:6], "****")
     client = Client(account_sid, auth_token)
+    # Usa tu content_sid de plantilla (ajusta según tu plantilla real)
     message = client.messages.create(
-        body=body,
         from_='whatsapp:+14155238886',
+        content_sid='HXb5b62575e6e4ff6129ad7c8efe1f983e',  # <-- tu content_sid de plantilla
+        content_variables=json.dumps({
+            "1": "¡Actualización detectada!",
+            "2": body[:30]  # Puedes personalizar los valores según tu plantilla
+        }),
         to=f'whatsapp:{to}'
     )
     return message.sid
