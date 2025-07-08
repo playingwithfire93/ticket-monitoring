@@ -870,11 +870,6 @@ def check_changes():
 
 if __name__ == '__main__':
      # Prueba de envío de WhatsApp
-    sid = send_whatsapp_message(
-        "¡Prueba de WhatsApp desde Python!",
-        "+34602502302"
-    )
-    print("SID de mensaje:", sid)
     app.run(host='0.0.0.0', port=5000, debug=True)
     
    
