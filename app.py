@@ -23,19 +23,16 @@ previous_contents = {}
 change_counts = {}
 new_changes_detected = True
 
-def send_whatsapp_message(body, to):
+def send_whatsapp_message(label, url, to):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-    print("SID:", account_sid)
-    print("TOKEN:", auth_token[:6], "****")
     client = Client(account_sid, auth_token)
-    # Usa tu content_sid de plantilla (ajusta según tu plantilla real)
     message = client.messages.create(
         from_='whatsapp:+14155238886',
-        content_sid='HX97c4078b9f77fddcd09107a980dde09a',  # <-- tu content_sid de plantilla
+        content_sid='HX97c4078b9f77fddcd09107a980dde09a',  # reemplaza por el content_sid de tu plantilla aprobada
         content_variables=json.dumps({
-            "1": "¡Actualización detectada!",
-            "2": body[:30]  # Puedes personalizar los valores según tu plantilla
+            "1": label,  # Ejemplo: "Wicked"
+            "2": url     # Ejemplo: "https://wickedelmusical.com/"
         }),
         to=f'whatsapp:{to}'
     )
