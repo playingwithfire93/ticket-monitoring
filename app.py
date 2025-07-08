@@ -13,6 +13,9 @@ import time
 import os
 from twilio.rest import Client
 
+import eventlet
+eventlet.monkey_patch()
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 from dotenv import load_dotenv
