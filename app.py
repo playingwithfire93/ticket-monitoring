@@ -530,6 +530,7 @@ HTML_TEMPLATE = """
 <div class="highlighted-bg" style="display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px; max-width: 1100px;">
   <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: flex-end;">
     <div class="slideshow-container" style="width: 420px; height: 352px;">
+      <div class="slide">
         <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked1">
         </div>
         <div class="slide">
