@@ -166,7 +166,8 @@ def scrape_all_sites():
             broadcast_change(url, status)
             try:
                 send_whatsapp_message(
-                    f"¡Actualización detectada en {label}!\nURL: {url}\nDetalles: {change_details}",
+                    label,
+                    url,
                     '+34602502302'  # Replace with your WhatsApp number
                 )
             except Exception as e:
