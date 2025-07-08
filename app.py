@@ -1,33 +1,27 @@
 import eventlet
 eventlet.monkey_patch()
+
 import hashlib
 import json
 from datetime import UTC, datetime
-
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from flask import Flask, jsonify, render_template_string
 from flask_socketio import SocketIO
-import threading
 import time
 import os
 from twilio.rest import Client
-
-
 from dotenv import load_dotenv
+import difflib
+
 load_dotenv()
 
 # Track previous states for change detection
 previous_states = {}
 previous_contents = {}
-
-# Track change counts for each website
 change_counts = {}
-
-# Track if there are new changes for notification
 new_changes_detected = True
-
 
 def send_whatsapp_message(body, to):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -41,6 +35,7 @@ def send_whatsapp_message(body, to):
         to=f'whatsapp:{to}'
     )
     return message.sid
+
 # Real ticket monitoring URLs
 URLS = [
     {"label": "ddf", "url": "https://httpbin.org/get"},
@@ -61,51 +56,36 @@ def hash_url_content(url):
     try:
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.content, "html.parser")
-
-        # Remove tags that usually include changing content
         for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
             tag.decompose()
-
-        # Remove comments
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
-
-        # Remove common dynamic elements by class/id
         dynamic_selectors = [
             ".date_info", ".timestamp", "#ad", ".ads", ".cookie-banner", "#cookies", ".tracker"
         ]
         for selector in dynamic_selectors:
             for tag in soup.select(selector):
                 tag.decompose()
-
-        # Normalize whitespace and strip
         content_text = soup.get_text(separator=" ", strip=True)
         normalized_text = " ".join(content_text.split())
-
         return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
     except Exception as e:
         return f"ERROR: {str(e)}"
 
 def extract_normalized_date_info(url):
-    """Get normalized text content from .date_info element."""
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
     except requests.RequestException:
         return None
-
     soup = BeautifulSoup(response.text, 'html.parser')
     date_info = soup.select_one('.date_info')
     if not date_info:
         return None
-
     text = date_info.get_text(strip=True)
     return ' '.join(text.split()).lower()
 
-import difflib
-
 def find_differences(old_text, new_text):
-    """Generate a diff showing changes between old and new content."""
     diff = difflib.unified_diff(
         old_text.splitlines(), 
         new_text.splitlines(), 
@@ -114,8 +94,24 @@ def find_differences(old_text, new_text):
         lineterm=""
     )
     return "\n".join(diff)
+
+def hash_audrey_content(url):
+    try:
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.content, "html.parser")
+        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
+            tag.decompose()
+        for tag in soup.select(".banner, .dynamic, .cookie-banner, .ads, .date, .timestamp"):
+            tag.decompose()
+        content_text = soup.get_text(separator=" ", strip=True)
+        normalized_text = " ".join(content_text.split())
+        return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
+    except Exception as e:
+        return f"ERROR: {str(e)}"
+
 app = Flask(__name__)
 socketio = SocketIO(app)
+
 def broadcast_change(url, data):
     socketio.emit('update', {'url': url, 'data': data})
 
@@ -125,25 +121,17 @@ def scrape_all_sites():
     global previous_states, previous_contents, change_counts
     changes_list = []
     now = datetime.now(UTC).isoformat()
-    
     for item in URLS:
         label = item["label"]
         url = item["url"]
-
-        # Get current full content
         current_content = ""
         try:
             response = requests.get(url, timeout=10)
             soup = BeautifulSoup(response.content, "html.parser")
-            
-            # Remove scripts, styles, etc. but keep the full text
             for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
                 tag.decompose()
-            
-            # Remove comments
             for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
                 comment.extract()
-            
             current_content = soup.get_text(separator=" ", strip=True)
         except Exception as e:
             current_content = f"Error al obtener contenido: {str(e)}"
@@ -156,12 +144,10 @@ def scrape_all_sites():
             state = extract_normalized_date_info(url)
             if state is None:
                 state = hash_url_content(url)
-
         last_state = previous_states.get(url)
         last_content = previous_contents.get(url, "")
         change_details = ""
         differences = ""
-        
         if last_state is None:
             status = "Primer chequeo 👀"
             change_details = "Primera vez que se monitorea este sitio web"
@@ -176,7 +162,6 @@ def scrape_all_sites():
             else:
                 differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
             broadcast_change(url, status)
-            # Send WhatsApp notification
             try:
                 send_whatsapp_message(
                     f"¡Actualización detectada en {label}!\nURL: {url}\nDetalles: {change_details}",
@@ -190,10 +175,8 @@ def scrape_all_sites():
             differences = "Sin diferencias detectadas"
             if url not in change_counts:
                 change_counts[url] = 0
-
         previous_states[url] = state
         previous_contents[url] = current_content
-
         changes_list.append({
             "label": label,
             "url": url,
@@ -209,23 +192,20 @@ def scrape_all_sites():
             "change_count": change_counts[url],
             "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
         })
-    
+    print("latest_changes updated:", changes_list)
     return changes_list
 
 def background_checker():
     global latest_changes
     while True:
-        latest_changes = scrape_all_sites()
-        time.sleep(30)  # Check every 30 seconds
+        try:
+            latest_changes = scrape_all_sites()
+        except Exception as e:
+            print("Error in background_checker:", e)
+        time.sleep(30)
 
-# Remove or comment out this line:
-# threading.Thread(target=background_checker, daemon=True).start()
-
-# Instead, use this after initializing socketio:
-def start_background_task():
-    socketio.start_background_task(background_checker)
-
-start_background_task()
+# Start background checker using SocketIO's method
+socketio.start_background_task(background_checker)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -802,46 +782,19 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
-def hash_audrey_content(url):
-    """Solo chequea el contenido relevante de Buscando a Audrey"""
-    try:
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.content, "html.parser")
-
-        # Elimina scripts, estilos, banners, etc.
-        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
-            tag.decompose()
-        # Elimina banners o elementos dinámicos conocidos (ajusta el selector según la web)
-        for tag in soup.select(".banner, .dynamic, .cookie-banner, .ads, .date, .timestamp"):
-            tag.decompose()
-
-        # Aquí puedes seleccionar solo una parte relevante, por ejemplo:
-        # main_content = soup.select_one("main")  # o el selector adecuado
-        # content_text = main_content.get_text(separator=" ", strip=True) if main_content else soup.get_text(separator=" ", strip=True)
-
-        content_text = soup.get_text(separator=" ", strip=True)
-        normalized_text = " ".join(content_text.split())
-        return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
-    except Exception as e:
-        return f"ERROR: {str(e)}"
-      
 @app.route('/')
 def dashboard():
     return render_template_string(HTML_TEMPLATE)
+
 @app.route('/changes')
 def changes_dummy():
     return "Not implemented", 200
+
 @app.route('/api/changes.json')
 def get_changes_json():
-    """Get detailed changes data as JSON"""
     global latest_changes
-    
-    # Filter only updated websites
     updated_sites = [c for c in latest_changes if "Actualizado" in c.get("status", "")]
-    
     now = datetime.now(UTC).isoformat()
-    
-    # Create response with proper formatting
     response_data = {
         "resumen": {
             "total_sitios_monitoreados": len(latest_changes),
@@ -851,8 +804,6 @@ def get_changes_json():
         },
         "sitios_web_actualizados": updated_sites
     }
-    
-    # Return pretty-printed JSON
     response = app.response_class(
         response=json.dumps(response_data, indent=2, ensure_ascii=False),
         status=200,
@@ -862,13 +813,11 @@ def get_changes_json():
 
 @app.route('/api/ticket-changes')
 def get_ticket_changes():
-    """Get ticket changes for the dashboard"""
     global latest_changes
     return jsonify(latest_changes)
 
 @app.route('/api/check-changes')
 def check_changes():
-    """Check if there are any new changes"""
     try:
         has_new_changes = any(item.get('status', '').find('Actualizado') != -1 for item in latest_changes)
         return {"new_changes": has_new_changes}
@@ -876,9 +825,4 @@ def check_changes():
         return {"new_changes": False}
 
 if __name__ == '__main__':
-     # Prueba de envío de WhatsApp
-    app.run(host='0.0.0.0', port=5000, debug=False)
-    
-   
-    # Luego puedes lanzar la app normalmente
-  
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
