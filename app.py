@@ -29,7 +29,7 @@ def send_whatsapp_message(label, url, to):
     client = Client(account_sid, auth_token)
     message = client.messages.create(
         from_='whatsapp:+14155238886',
-        content_sid='HX97c4078b9f77fddcd09107a980dde09a',  # reemplaza por el content_sid de tu plantilla aprobada
+        content_sid='HXb5b62575e6e4ff6129ad7c8efe1f983e',  # reemplaza por el content_sid de tu plantilla aprobada
         content_variables=json.dumps({
             "1": label,  # Ejemplo: "Wicked"
             "2": url     # Ejemplo: "https://wickedelmusical.com/"
@@ -40,7 +40,7 @@ def send_whatsapp_message(label, url, to):
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
