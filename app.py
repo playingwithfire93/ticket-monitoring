@@ -529,8 +529,7 @@ HTML_TEMPLATE = """
 <!-- Flex container for slideshow and Spotify -->
 <div class="highlighted-bg" style="display: flex; justify-content: center; align-items: center; gap: 32px; margin-bottom: 30px; min-height: 380px;">
   <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;">
-    <div class="slideshow-container" style="height: 352px; display: flex; align-items: center;">
-      <div class="slide">
+    <div class="slideshow-container">
         <img src="https://paginasdigital.es/wp-content/uploads/2024/12/wicked-portada.jpg" alt="Wicked1">
         </div>
         <div class="slide">
