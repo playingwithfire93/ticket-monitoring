@@ -38,6 +38,19 @@ def send_whatsapp_message(label, url, to):
     )
     return message.sid
 
+def send_telegram_message(text):
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Pon tu token en .env
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")  # Pon tu chat_id en .env
+    if not token or not chat_id:
+        print("Telegram token or chat_id not set")
+        return
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    try:
+        requests.post(url, data=payload, timeout=5)
+    except Exception as e:
+        print("Telegram notification failed:", e)
+        
 # Real ticket monitoring URLs
 URLS = [
     #{"label": "ddf", "url": "https://httpbin.org/get"},
@@ -170,6 +183,9 @@ def scrape_all_sites():
                   url,             # enlace
                   '+34602502302'   # tu número WhatsApp
               )
+                send_telegram_message(
+            f"🎟 <b>{label}</b> ha cambiado!\n🔗 <a href='{url}'>{url}</a>"
+        )
             except Exception as e:
                 print("WhatsApp notification failed:", e)
         else:
@@ -519,6 +535,10 @@ HTML_TEMPLATE = """
 <body>
 
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
+<!-- Botón para unirse al canal/grupo de Telegram -->
+<script async src="https://telegram.org/js/telegram-widget.js?7"
+        data-telegram-post="TheBookOfMormonTicketsBot/1"
+        data-width="100%"></script>
 
 <div class="animated-bg"></div>
 <div class="floating-sparkle s1">✨</div>
