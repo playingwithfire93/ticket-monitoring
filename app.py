@@ -537,7 +537,7 @@ HTML_TEMPLATE = """
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
 <!-- Botón para unirse al canal/grupo de Telegram -->
 <script async src="https://telegram.org/js/telegram-widget.js?7"
-        data-telegram-post="TheBookOfMormonTicketsBot/1"
+        data-telegram-post="TheBookOfMormonTicketsbot/1"
         data-width="100%"></script>
 
 <div class="animated-bg"></div>
