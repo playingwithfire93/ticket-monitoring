@@ -536,9 +536,17 @@ HTML_TEMPLATE = """
 
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
 <!-- Botón para unirse al canal/grupo de Telegram -->
-<script async src="https://telegram.org/js/telegram-widget.js?7"
-        data-telegram-post="TheBookOfMormonTicketsBot/1"
-        data-width="100%"></script>
+<!-- Telegram Join Popup -->
+<div id="telegram-popup-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:9999;">
+  <div style="background:white;max-width:340px;margin:12vh auto 0 auto;padding:32px 24px 24px 24px;border-radius:22px;box-shadow:0 8px 32px #229ED980;text-align:center;position:relative;">
+    <img src="https://telegram.org/img/t_logo.svg" alt="Telegram" style="width:48px;margin-bottom:10px;">
+    <h2 style="color:#229ED9;margin:0 0 10px 0;font-size:1.4em;">¿Quieres recibir alertas?</h2>
+    <p style="color:#444;margin-bottom:18px;">Únete a nuestro canal de Telegram para enterarte de los cambios al instante.</p>
+    <a href="https://t.me/TU_CANAL_O_GRUPO" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#229ED9,#60c3ff);color:white;font-weight:bold;border-radius:16px;padding:10px 24px;text-decoration:none;font-size:1.1em;box-shadow:0 2px 8px #229ED930;">Unirme a Telegram</a>
+    <br>
+    <button onclick="document.getElementById('telegram-popup-overlay').style.display='none';" style="margin-top:18px;background:none;border:none;color:#229ED9;font-weight:bold;font-size:1em;cursor:pointer;">No, gracias</button>
+  </div>
+</div>
 
 <div class="animated-bg"></div>
 <div class="floating-sparkle s1">✨</div>
@@ -691,7 +699,12 @@ HTML_TEMPLATE = """
     slides[slideIndex-1].style.display = "block";
     setTimeout(showSlides, 3000);
   }
-
+  window.addEventListener('DOMContentLoaded', function() {
+  if (!localStorage.getItem('telegram_popup_shown')) {
+    document.getElementById('telegram-popup-overlay').style.display = 'block';
+    localStorage.setItem('telegram_popup_shown', 'yes');
+  }
+});
   function showNotification() {
     document.getElementById('notificationOverlay').style.display = 'block';
     document.getElementById('notificationPopup').style.display = 'block';
