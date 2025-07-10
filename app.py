@@ -238,10 +238,9 @@ HTML_TEMPLATE = """
       margin: 0;
       padding: 0;
       min-height: 100vh;
-      /* Remove static background */
-      /* background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%); */
       overflow-x: hidden;
     }
+
     .animated-bg {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -250,10 +249,12 @@ HTML_TEMPLATE = """
       background-size: 200% 200%;
       animation: bgMove 10s ease-in-out infinite alternate;
     }
+
     @keyframes bgMove {
       0% { background-position: 0% 50%; }
       100% { background-position: 100% 50%; }
     }
+
     .floating-sparkle {
       position: absolute;
       font-size: 2em;
@@ -266,11 +267,13 @@ HTML_TEMPLATE = """
     .floating-sparkle.s3 { left: 50vw; top: 70vh; animation-delay: 4s; }
     .floating-sparkle.s4 { left: 30vw; top: 80vh; animation-delay: 1s; }
     .floating-sparkle.s5 { left: 70vw; top: 10vh; animation-delay: 3s; }
+
     @keyframes floatSparkle {
       0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.7; }
       50% { transform: translateY(-40px) scale(1.2) rotate(10deg); opacity: 1; }
       100% { transform: translateY(0) scale(1) rotate(-10deg); opacity: 0.7; }
     }
+
     h1 {
       text-align: center;
       color: #d63384;
@@ -279,8 +282,9 @@ HTML_TEMPLATE = """
       margin: 20px 0;
       font-weight: bold;
     }
+
     .slideshow-container {
-      max-width: 1100px; /* was 800px */
+      max-width: 1100px;
       margin: 30px auto;
       position: relative;
       border-radius: 28px;
@@ -299,22 +303,24 @@ HTML_TEMPLATE = """
       animation: sliderMove 8s linear infinite alternate;
     }
 
-@keyframes sliderMove {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
+    @keyframes sliderMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
     .slide {
       display: none;
       width: 100%;
     }
-    /* Make the images taller too */
-.slide img {
-  width: 100%;
-  height: 520px; /* was 400px */
-  object-fit: contain;
-  display: block;
-  margin: 0 auto;
-}
+
+    .slide img {
+      width: 100%;
+      height: 520px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
     table {
       width: 90%;
       margin: 20px auto;
@@ -325,77 +331,30 @@ HTML_TEMPLATE = """
       box-shadow: 0 8px 25px rgba(214, 51, 132, 0.2);
       border: 2px solid #ff69b4;
     }
+
     th, td {
       padding: 15px;
       border-bottom: 1px solid #ffb3d9;
       text-align: left;
       font-weight: 500;
     }
+
     th {
       background: linear-gradient(135deg, #ff69b4, #d63384);
       color: #fff;
-      font-weight: bold;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
+
     tr:hover {
       background: #ffe6f2;
       transform: scale(1.02);
       transition: all 0.3s ease;
     }
+
     td {
       color: #8b2c5c;
     }
-    .sparkle {
-      position: absolute;
-      color: #ff69b4;
-      animation: sparkle 2s infinite;
-    }
-    @keyframes sparkle {
-      0%, 100% { opacity: 0; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.2); }
-    }
-    .notification-popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(135deg, #ff69b4, #ffc0cb);
-      border: 3px solid #d63384;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(214, 51, 132, 0.4);
-      z-index: 1000;
-      text-align: center;
-      color: #fff;
-      display: none;
-      max-width: 400px;
-    }
-    .notification-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 999;
-      display: none;
-    }
-    .popup-button {
-      background: #fff;
-      color: #d63384;
-      border: 2px solid #d63384;
-      padding: 10px 20px;
-      border-radius: 15px;
-      margin: 10px;
-      cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
-      display: inline-block;
-    }
-    .popup-button:hover {
-      background: #d63384;
-      color: #fff;
-    }
+
     .status-updated {
       background: linear-gradient(135deg, #ff69b4, #ffc0cb);
       color: #fff;
@@ -403,17 +362,20 @@ HTML_TEMPLATE = """
       border-radius: 15px;
       font-weight: bold;
     }
+
     .status-no-change {
       color: #8b2c5c;
     }
+
     .last-checked {
       text-align: center;
       color: #d63384;
       font-weight: bold;
       margin: 20px 0;
     }
+
     .change-badge {
-      background: linear-gradient(135deg, #ff69b4, #d63384); /* Igual que th */
+      background: linear-gradient(135deg, #ff69b4, #d63384);
       color: white;
       border-radius: 12px;
       padding: 2px 8px;
@@ -426,131 +388,54 @@ HTML_TEMPLATE = """
       box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
       text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
+
     .change-badge.zero {
       background: #ddd;
       color: #666;
     }
-    .json-popup {
-      position: fixed;
-      top: 5%;
-      left: 5%;
-      width: 90%;
-      height: 90%;
-      background: white;
-      border: 3px solid #d63384;
-      border-radius: 20px;
-      z-index: 2000;
-      display: none;
-      overflow: hidden;
-    }
-    .json-popup-header {
-      background: linear-gradient(135deg, #ff69b4, #d63384);
-      color: white;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .json-popup-content {
-      height: calc(100% - 80px);
-      overflow: auto;
-      padding: 20px;
-      background: #f8f9fa;
-    }
-    .json-code {
-      background: #2d3748;
-      color: #e2e8f0;
-      padding: 20px;
-      border-radius: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      max-height: 100%;
-      overflow: auto;
-    .highlighted-bg {
-  position: relative;
-  margin: 30px auto 0 auto;
-  max-width: 900px;
-  border-radius: 25px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
-  border: 4px solid #ff69b4;
-  background: linear-gradient(
-    120deg,
-    #ffe0f7 0%,
-    #ffb6e6 25%,
-    #ff69b4 50%,
-    #ffc0cb 75%,
-    #ffe0f7 100%
-  );
-  background-size: 400% 400%;
-  animation: highlightMove 6s linear infinite alternate;
-  padding: 30px 0 20px 0;
-}
 
-@keyframes highlightMove {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-    .close-json-btn {
-      background: white;
-      color: #d63384;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: bold;
+    .highlighted-bg {
+      position: relative;
+      margin: 30px auto 0 auto;
+      max-width: 900px;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
+      border: 4px solid #ff69b4;
+      background: linear-gradient(
+        120deg,
+        #ffe0f7 0%,
+        #ffb6e6 25%,
+        #ff69b4 50%,
+        #ffc0cb 75%,
+        #ffe0f7 100%
+      );
+      background-size: 400% 400%;
+      animation: highlightMove 6s linear infinite alternate;
+      padding: 30px 0 20px 0;
     }
-    .close-json-btn:hover {
-      background: #f0f0f0;
+
+    @keyframes highlightMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
+
     * {
-    cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), 
-           url(https://cur.cursors-4u.net/special/spe-3/spe302.png), 
-           auto !important;
-}
-    .json-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 1999;
-      display: none;
+      cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani),
+             url(https://cur.cursors-4u.net/special/spe-3/spe302.png),
+             auto !important;
     }
   </style>
 </head>
-<!-- Add this inside your <head> or at the top of your HTML -->
-<style type="text/css">
-* {
-  cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;
-}
-</style>
-<a href="https://www.cursors-4u.com/cursor/2011/02/18/cute-bow-tie-hearts-blinking-blue-and-pink-pointer.html" target="_blank" title="Cute Bow Tie Hearts Blinking Blue and Pink Pointer">
-  <img src="https://cur.cursors-4u.net/cursor.png" border="0" alt="Cute Bow Tie Hearts Blinking Blue and Pink Pointer" style="position:absolute; top: 0px; right: 0px;" />
-</a>
 <body>
-<div id="telegram-popup-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:9999;">
-  <div style="background:linear-gradient(135deg,#ff69b4,#d63384);max-width:340px;margin:12vh auto 0 auto;padding:32px 24px 24px 24px;border-radius:22px;box-shadow:0 8px 32px #d6338440;text-align:center;position:relative;">
-    <img src="https://telegram.org/img/t_logo.svg" alt="Telegram" style="width:48px;margin-bottom:10px;">
-    <h2 style="color:#fff;margin:0 0 10px 0;font-size:1.4em;text-shadow:1px 1px 2px #d63384;">¿Quieres recibir alertas?</h2>
-    <p style="color:#fff;margin-bottom:18px;font-weight:bold;text-shadow:1px 1px 2px #d63384;">Únete a nuestro canal de Telegram para enterarte de los cambios al instante.</p>
-    <a href="https://t.me/TheBookOfMormonTicketsBot" target="_blank"
-      style="display:inline-block;background:#fff;color:#d63384;font-weight:bold;border-radius:16px;padding:10px 24px;text-decoration:none;font-size:1.1em;box-shadow:0 2px 8px #d6338440;border:2px solid #ff69b4;transition:background 0.2s;">
-      Unirme a Telegram
-    </a>
-    <br>
-    <button onclick="document.getElementById('telegram-popup-overlay').style.display='none';"
-      style="margin-top:18px;background:none;border:none;color:#fff;font-weight:bold;font-size:1em;cursor:pointer;text-shadow:1px 1px 2px #d63384;">
-      No, gracias
-    </button>
-  </div>
-</div>
-<h1>✨ Ticket Monitor Dashboard ✨</h1>
-<!-- Telegram Join Popup with matching table header colors -->
+  <div class="animated-bg"></div>
+  <div class="floating-sparkle s1">✨</div>
+  <div class="floating-sparkle s2">✨</div>
+  <div class="floating-sparkle s3">✨</div>
+  <div class="floating-sparkle s4">✨</div>
+  <div class="floating-sparkle s5">✨</div>
+
+  <h1>Ticket Monitor Dashboard</h1>
 
 
 <div class="animated-bg"></div>
