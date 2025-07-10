@@ -535,16 +535,21 @@ HTML_TEMPLATE = """
 <body>
 
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
-<!-- Botón para unirse al canal/grupo de Telegram -->
-<!-- Telegram Join Popup -->
+<!-- Telegram Join Popup with matching table header colors -->
 <div id="telegram-popup-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:9999;">
-  <div style="background:white;max-width:340px;margin:12vh auto 0 auto;padding:32px 24px 24px 24px;border-radius:22px;box-shadow:0 8px 32px #229ED980;text-align:center;position:relative;">
+  <div style="background:linear-gradient(135deg,#ff69b4,#d63384);max-width:340px;margin:12vh auto 0 auto;padding:32px 24px 24px 24px;border-radius:22px;box-shadow:0 8px 32px #d6338440;text-align:center;position:relative;">
     <img src="https://telegram.org/img/t_logo.svg" alt="Telegram" style="width:48px;margin-bottom:10px;">
-    <h2 style="color:#229ED9;margin:0 0 10px 0;font-size:1.4em;">¿Quieres recibir alertas?</h2>
-    <p style="color:#444;margin-bottom:18px;">Únete a nuestro canal de Telegram para enterarte de los cambios al instante.</p>
-    <a href="https://t.me/TU_CANAL_O_GRUPO" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#229ED9,#60c3ff);color:white;font-weight:bold;border-radius:16px;padding:10px 24px;text-decoration:none;font-size:1.1em;box-shadow:0 2px 8px #229ED930;">Unirme a Telegram</a>
+    <h2 style="color:#fff;margin:0 0 10px 0;font-size:1.4em;text-shadow:1px 1px 2px #d63384;">¿Quieres recibir alertas?</h2>
+    <p style="color:#fff;margin-bottom:18px;font-weight:bold;text-shadow:1px 1px 2px #d63384;">Únete a nuestro canal de Telegram para enterarte de los cambios al instante.</p>
+    <a href="https://t.me/TheBookOfMormonTicketsBot" target="_blank"
+      style="display:inline-block;background:#fff;color:#d63384;font-weight:bold;border-radius:16px;padding:10px 24px;text-decoration:none;font-size:1.1em;box-shadow:0 2px 8px #d6338440;border:2px solid #ff69b4;transition:background 0.2s;">
+      Unirme a Telegram
+    </a>
     <br>
-    <button onclick="document.getElementById('telegram-popup-overlay').style.display='none';" style="margin-top:18px;background:none;border:none;color:#229ED9;font-weight:bold;font-size:1em;cursor:pointer;">No, gracias</button>
+    <button onclick="document.getElementById('telegram-popup-overlay').style.display='none';"
+      style="margin-top:18px;background:none;border:none;color:#fff;font-weight:bold;font-size:1em;cursor:pointer;text-shadow:1px 1px 2px #d63384;">
+      No, gracias
+    </button>
   </div>
 </div>
 
