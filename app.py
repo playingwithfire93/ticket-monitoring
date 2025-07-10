@@ -506,7 +506,9 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
-    
+    body, a, button {
+  cursor: url('https://cur.cursors-4u.net/cursors/cur-9/cur818.cur'), auto;
+}
     .json-overlay {
       position: fixed;
       top: 0;
