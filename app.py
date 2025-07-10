@@ -242,6 +242,9 @@ HTML_TEMPLATE = """
       /* background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%); */
       overflow-x: hidden;
     }
+    body, a, button, input, textarea {
+      cursor: url('https://cur.cursors-4u.net/cursors/cur-9/cur818.cur'), auto;
+    }
     .animated-bg {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -506,9 +509,7 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
-    body, a, button {
-  cursor: url('https://cur.cursors-4u.net/cursors/cur-9/cur818.cur'), auto;
-}
+    
     .json-overlay {
       position: fixed;
       top: 0;
