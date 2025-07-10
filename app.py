@@ -533,9 +533,6 @@ HTML_TEMPLATE = """
   <img src="https://cur.cursors-4u.net/cursor.png" border="0" alt="Cute Bow Tie Hearts Blinking Blue and Pink Pointer" style="position:absolute; top: 0px; right: 0px;" />
 </a>
 <body>
-
-<h1>✨ Ticket Monitor Dashboard ✨</h1>
-<!-- Telegram Join Popup with matching table header colors -->
 <div id="telegram-popup-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:9999;">
   <div style="background:linear-gradient(135deg,#ff69b4,#d63384);max-width:340px;margin:12vh auto 0 auto;padding:32px 24px 24px 24px;border-radius:22px;box-shadow:0 8px 32px #d6338440;text-align:center;position:relative;">
     <img src="https://telegram.org/img/t_logo.svg" alt="Telegram" style="width:48px;margin-bottom:10px;">
@@ -552,6 +549,9 @@ HTML_TEMPLATE = """
     </button>
   </div>
 </div>
+<h1>✨ Ticket Monitor Dashboard ✨</h1>
+<!-- Telegram Join Popup with matching table header colors -->
+
 
 <div class="animated-bg"></div>
 <div class="floating-sparkle s1">✨</div>
