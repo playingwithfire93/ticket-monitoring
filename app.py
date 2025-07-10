@@ -243,7 +243,7 @@ HTML_TEMPLATE = """
       overflow-x: hidden;
     }
     body, a, button, input, textarea {
-      cursor: url('https://cur.cursors-4u.net/cursors/cur-9/cur818.cur'), auto;
+      cursor: url('https://www.cursors-4u.com/cursor/2011/02/18/cute-bow-tie-hearts-blinking-blue-and-pink-pointer.html" target="_blank" title="Cute Bow Tie Hearts Blinking Blue and Pink Pointer'), auto;
     }
     .animated-bg {
       position: fixed;
