@@ -47,7 +47,8 @@ def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
     try:
-        requests.post(url, data=payload, timeout=5)
+        r = requests.post(url, data=payload, timeout=5)
+        print("Telegram response:", r.status_code, r.text)  # <-- Añade esto
     except Exception as e:
         print("Telegram notification failed:", e)
         
