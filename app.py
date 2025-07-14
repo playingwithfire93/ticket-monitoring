@@ -521,6 +521,8 @@ HTML_TEMPLATE = """
     }
   </style>
 </head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5032121715924684"
+     crossorigin="anonymous"></script>
 <!-- Add this inside your <head> or at the top of your HTML -->
 
 <a href="https://www.cursors-4u.com/cursor/2011/02/18/cute-bow-tie-hearts-blinking-blue-and-pink-pointer.html" target="_blank" title="Cute Bow Tie Hearts Blinking Blue and Pink Pointer">
