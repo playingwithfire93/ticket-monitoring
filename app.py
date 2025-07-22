@@ -234,7 +234,7 @@ HTML_TEMPLATE = """
   <title>Ticket Monitor Dashboard</title>
   <style>
     body {
-      font-family: 'Georgia', serif;
+      font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       margin: 0;
       padding: 0;
       min-height: 100vh;
@@ -521,7 +521,7 @@ HTML_TEMPLATE = """
       color: #333; /* Changed from light text */
       padding: 20px;
       border-radius: 10px;
-      font-family: 'Georgia', serif; /* Changed from monospace */
+      font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Changed from monospace */
       font-size: 14px; /* Increased font size */
       line-height: 1.6; /* Better line spacing */
       white-space: normal; /* Allow text wrapping */
@@ -925,7 +925,7 @@ async function showChangeDetails(label) {
     
     // Create SIMPLE user-friendly content - NO technical stuff
     const friendlyContent = `
-      <div style="font-family: Georgia, serif; line-height: 1.6; color: #333;">
+            <div style="font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #d63384; border-bottom: 2px solid #ff69b4; padding-bottom: 10px;">
           📋 Cambios en: ${item.label}
         </h2>
