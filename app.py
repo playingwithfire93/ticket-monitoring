@@ -204,6 +204,10 @@ def background_checker():
       print("Error in background_checker:", e)
     time.sleep(30)
 
+@app.route('/')
+def dashboard():
+  return render_template_string(HTML_TEMPLATE)
+
 socketio.start_background_task(background_checker)
 
 # Add this HTML_TEMPLATE before the routes
@@ -761,15 +765,11 @@ HTML_TEMPLATE = """
 </html>
 """
 
-@app.route('/')
-def dashboard():
-    return render_template_string(HTML_TEMPLATE)
+
 
 # HTML_TEMPLATE omitted for brevity, keep your original HTML_TEMPLATE here
 
-@app.route('/')
-def dashboard():
-  return render_template_string(HTML_TEMPLATE)
+
 
 @app.route('/changes')
 def changes_dummy():
