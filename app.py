@@ -132,7 +132,24 @@ def broadcast_change(url, data):
     socketio.emit('update', {'url': url, 'data': data})
 
 latest_changes = []
-
+def get_simple_content(url):
+    """Simplified content extraction like BoMtickets.py"""
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, "html.parser")
+        
+        # Only remove truly dynamic/irrelevant content
+        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link"]):
+            tag.decompose()
+            
+        # Get clean text
+        content_text = soup.get_text(separator=" ", strip=True)
+        normalized_text = " ".join(content_text.split())
+        return normalized_text
+    except Exception as e:
+        print(f"Error fetching {url}: {str(e)}")
+        return f"ERROR: {str(e)}"
 
 def scrape_all_sites():
     global previous_contents, change_counts
