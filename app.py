@@ -318,17 +318,17 @@ HTML_TEMPLATE = """
   margin: 0 auto;
 }
     table {
-      width: 98%; /* Slightly wider to accommodate the URL column */
+      width: 98%;
       margin: 30px auto;
       border-collapse: collapse;
-      table-layout: fixed; /* This ensures consistent column widths */
+      table-layout: fixed; /* This is crucial for consistent column widths */
       background: linear-gradient(
         45deg,
-        rgba(255, 182, 193, 0.9) 0%,   /* Light pink */
-        rgba(255, 240, 245, 0.95) 25%, /* Misty rose */
-        rgba(255, 228, 240, 0.95) 50%, /* Lavender blush */
-        rgba(255, 192, 203, 0.9) 75%,  /* Pink */
-        rgba(255, 218, 235, 0.95) 100% /* Cotton candy pink */
+        rgba(255, 182, 193, 0.9) 0%,   
+        rgba(255, 240, 245, 0.95) 25%, 
+        rgba(255, 228, 240, 0.95) 50%, 
+        rgba(255, 192, 203, 0.9) 75%,  
+        rgba(255, 218, 235, 0.95) 100% 
       );
       background-size: 400% 400%;
       animation: tableGradient 12s ease-in-out infinite alternate;
@@ -434,41 +434,45 @@ HTML_TEMPLATE = """
       font-weight: 800;
       color: #d63384;
       text-shadow: 1px 1px 2px rgba(255, 182, 193, 0.8);
-      width: 250px; /* Shorter title column */
-      max-width: 300px;
+      width: 180px; /* Match header */
+      max-width: 180px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    /* Changes column - shorter */
+    
+    /* Changes column - match header width */
     td:nth-child(2) {
       text-align: center;
-      width: 100px; /* Shorter changes column */
+      width: 100px; /* Match header */
       max-width: 100px;
     }
+    
+    /* URL column - match header width */
     td:nth-child(3) {
       text-align: left;
-      max-width: 350px; /* Limit URL width */
+      width: 350px; /* Match header */
+      max-width: 350px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     
-    /* Status column centered */
+    /* Status column - match header width */
     td:nth-child(4) {
       text-align: center;
-      width: 160px; /* Fixed width for status column */
+      width: 160px; /* Match header */
       max-width: 160px;
-      vertical-align: middle; /* Ensure vertical centering */
+      vertical-align: middle;
     }
     
-    /* Last Update column */
+    /* Last Update column - match header width */
     td:nth-child(5) {
       text-align: center;
       font-size: 0.9em;
       color: #b83dba;
       font-weight: 600;
-      width: 140px;
+      width: 140px; /* Match header */
       max-width: 140px;
     }
     tr:hover {
@@ -484,7 +488,7 @@ HTML_TEMPLATE = """
       font-weight: 600;
       font-size: 1em;
       vertical-align: middle;
-      text-align: center;
+      /* Remove text-align: center - let column-specific rules handle this */
       position: relative;
       background: rgba(255, 255, 255, 0.1);
       transition: all 0.3s ease;
@@ -558,21 +562,21 @@ HTML_TEMPLATE = """
         #ff1493 50%, 
         #d63384 100%);
       color: #fff;
-      padding: 12px 20px; /* Same padding as no-change */
-      border-radius: 25px; /* Same border radius */
-      font-weight: 800; /* Same font weight */
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: 800;
       box-shadow: 
         0 6px 20px rgba(255, 105, 180, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      display: inline-flex; /* Change to inline-flex for better centering */
+      display: inline-flex;
       align-items: center;
-      justify-content: center; /* Perfect centering */
+      justify-content: center;
       gap: 8px;
-      min-width: 130px; /* Same min-width as no-change */
-      max-width: 130px; /* Add max-width to match */
-      height: 45px; /* Fixed height for consistency */
+      min-width: 130px;
+      max-width: 130px;
+      height: 45px;
       text-align: center;
-      font-size: 0.95em; /* Same font size */
+      font-size: 0.95em;
       letter-spacing: 1px;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
       position: relative;
@@ -598,21 +602,21 @@ HTML_TEMPLATE = """
     .status-no-change {
       color: #8b2c5c;
       font-style: italic;
-      padding: 12px 20px; /* Same padding as updated */
+      padding: 12px 20px;
       background: linear-gradient(135deg, 
         rgba(255, 240, 245, 0.8), 
         rgba(255, 228, 240, 0.9));
-      border-radius: 25px; /* Same border radius */
+      border-radius: 25px;
       border: 2px solid rgba(255, 182, 193, 0.6);
-      min-width: 130px; /* Same min-width as updated */
-      max-width: 130px; /* Add max-width to match */
-      height: 45px; /* Same fixed height */
+      min-width: 130px;
+      max-width: 130px;
+      height: 45px;
       text-align: center;
-      font-weight: 800; /* Same font weight as updated */
-      font-size: 0.95em; /* Same font size */
-      display: inline-flex; /* Change to inline-flex for better centering */
-      align-items: center; /* Vertical centering */
-      justify-content: center; /* Horizontal centering */
+      font-weight: 800;
+      font-size: 0.95em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       box-shadow: 0 3px 10px rgba(255, 182, 193, 0.3);
     }
     /* Enhanced header with gradient border */
