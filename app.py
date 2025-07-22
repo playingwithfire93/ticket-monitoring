@@ -54,7 +54,7 @@ def send_telegram_message(text):
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -321,11 +321,25 @@ HTML_TEMPLATE = """
       width: 95%;
       margin: 30px auto;
       border-collapse: collapse;
-      background: rgba(255, 255, 255, 0.95);
+      background: linear-gradient(
+        45deg,
+        rgba(255, 240, 245, 0.95) 0%,
+        rgba(255, 228, 240, 0.95) 25%,
+        rgba(255, 218, 235, 0.95) 50%,
+        rgba(255, 228, 240, 0.95) 75%,
+        rgba(255, 240, 245, 0.95) 100%
+      );
+      background-size: 400% 400%;
+      animation: tableGradient 8s ease-in-out infinite alternate;
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 15px 35px rgba(214, 51, 132, 0.25);
       border: 3px solid #ff69b4;
+    }
+    
+    @keyframes tableGradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
     th, td {
       padding: 15px;
