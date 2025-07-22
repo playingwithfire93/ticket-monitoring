@@ -317,20 +317,20 @@ HTML_TEMPLATE = """
       width: 98%;
       margin: 30px auto;
       border-collapse: collapse;
-      table-layout: fixed;
+      table-layout: auto; /* Changed from 'fixed' to 'auto' to allow content-based sizing */
       background: linear-gradient(
         45deg,
-        rgba(255, 182, 193, 0.9) 0%,
-        rgba(255, 240, 245, 0.95) 25%,
-        rgba(255, 228, 240, 0.95) 50%,
-        rgba(255, 192, 203, 0.9) 75%,
-        rgba(255, 218, 235, 0.95) 100%
+        rgba(255, 182, 193, 0.9) 0%,   
+        rgba(255, 240, 245, 0.95) 25%, 
+        rgba(255, 228, 240, 0.95) 50%, 
+        rgba(255, 192, 203, 0.9) 75%,  
+        rgba(255, 218, 235, 0.95) 100% 
       );
       background-size: 400% 400%;
       animation: tableGradient 12s ease-in-out infinite alternate;
       border-radius: 25px;
       overflow: hidden;
-      box-shadow:
+      box-shadow: 
         0 15px 35px rgba(255, 105, 180, 0.4),
         0 5px 15px rgba(255, 182, 193, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -400,7 +400,7 @@ HTML_TEMPLATE = """
     th:nth-child(2) {
       text-align: center;
       width: 50px;
-      max-width: 50px;
+      max-width: none;
     }
     th:nth-child(3) {
       text-align: left;
@@ -435,9 +435,12 @@ HTML_TEMPLATE = """
     }
     td:nth-child(2) {
       text-align: center;
-      width: 50px;
-      max-width: 50px;
+      width: auto; /* Let it size to content */
+      min-width: 80px; /* Minimum width to match header */
+      max-width: none; /* Remove max-width restriction */
+      white-space: nowrap; /* Prevent wrapping */
     }
+    
     td:nth-child(3) {
       text-align: left;
       width: 350px;
@@ -446,12 +449,14 @@ HTML_TEMPLATE = """
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    
     td:nth-child(4) {
       text-align: center;
       width: 160px;
       max-width: 160px;
       vertical-align: middle;
     }
+    
     td:nth-child(5) {
       text-align: center;
       font-size: 0.9em;
@@ -621,43 +626,45 @@ HTML_TEMPLATE = """
     }
     .change-badge {
       background: linear-gradient(135deg,
-        #ff6b35 0%,
-        #ff8c42 50%,
-        #f7931e 100%);
+        #ff69b4 0%,     /* Hot pink */
+        #ff1493 50%,    /* Deep pink */
+        #d63384 100%);  /* Bootstrap pink */
       color: white;
-      border-radius: 20px;
-      padding: 10px 8px;
+      border-radius: 18px;
+      padding: 8px 12px;
       font-size: 0.9em;
       font-weight: 800;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 30px;
-      height: 40px;
+      min-width: 40px;
+      height: 36px;
       box-shadow:
-        0 6px 20px rgba(255, 107, 53, 0.5),
+        0 6px 20px rgba(255, 105, 180, 0.6),    /* Updated shadow color */
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
       text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
       transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       cursor: pointer;
       position: relative;
       overflow: hidden;
+      white-space: nowrap;
     }
+    
     .change-badge.zero {
       background: linear-gradient(135deg, #e9ecef, #dee2e6);
       color: #6c757d;
       cursor: default;
+      min-width: 40px;
+      height: 36px;
     }
+    
     .change-badge:hover {
       transform: scale(1.1) rotate(2deg);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+      box-shadow: 0 6px 20px rgba(255, 105, 180, 0.8);  /* Updated hover shadow */
     }
+    
     .change-badge.zero:hover {
       transform: none;
-    }
-    .change-badge::before {
-      content: '💫';
-      margin-right: 5px;
     }
     .json-popup {
       position: fixed;
