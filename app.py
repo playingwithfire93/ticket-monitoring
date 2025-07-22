@@ -361,7 +361,6 @@ HTML_TEMPLATE = """
     }
     th, td {
       padding: 15px;
-      border-bottom: 1px solid #ffb3d9;
       text-align: left;
       font-weight: 500;
     }
@@ -381,7 +380,6 @@ HTML_TEMPLATE = """
       font-size: 1.15em;
       position: relative;
       text-align: center;
-      border-bottom: 3px solid rgba(255, 255, 255, 0.3);
     }
     th::after {
       content: '✨';
@@ -441,13 +439,14 @@ HTML_TEMPLATE = """
       white-space: nowrap; /* Prevent wrapping */
     }
     
-    td:nth-child(3) {
-      text-align: left;
-      width: 350px;
-      max-width: 350px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    td:nth-child(2) {
+      text-align: center;
+      width: auto;
+      min-width: 80px;
+      max-width: none;
       white-space: nowrap;
+      vertical-align: middle; /* Add this for perfect vertical centering */
+      display: table-cell; /* Ensure it behaves as table cell */
     }
     
     td:nth-child(4) {
@@ -473,7 +472,6 @@ HTML_TEMPLATE = """
     }
     td {
       padding: 20px 18px;
-      border-bottom: 2px solid rgba(255, 182, 193, 0.6);
       color: #8b2c5c;
       font-weight: 600;
       font-size: 1em;
