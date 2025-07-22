@@ -408,8 +408,8 @@ HTML_TEMPLATE = """
       font-weight: 800;
       color: #d63384;
       text-shadow: 1px 1px 2px rgba(255, 182, 193, 0.8);
-      width: 180px; /* Shorter title column */
-      max-width: 180px;
+      width: 250px; /* Shorter title column */
+      max-width: 300px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
