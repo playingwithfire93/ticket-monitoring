@@ -660,7 +660,7 @@ HTML_TEMPLATE = """
   <p>💖 Fresh ticket updates are available! 💖</p>
   <div>
     <button class="popup-button" onclick="viewJsonFromPopup()">📄 Ver cambios 👀</button>
-    <button class="popup-button" onclick="closeNotification()">Close</button>
+    <button class="popup-button" onclick="closeNotification()">Cerrar</button>
   </div>
 </div>
 
