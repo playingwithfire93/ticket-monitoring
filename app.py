@@ -405,11 +405,24 @@ HTML_TEMPLATE = """
     th:nth-child(5)::before { content: "⏰ "; }
     td:nth-child(1) {
       text-align: left;
-      font-weight: 700; /* Make show names bolder */
+      font-weight: 800;
+      color: #d63384;
+      text-shadow: 1px 1px 2px rgba(255, 182, 193, 0.8);
+      width: 180px; /* Shorter title column */
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* Changes column - shorter */
+    td:nth-child(2) {
+      text-align: center;
+      width: 100px; /* Shorter changes column */
+      max-width: 100px;
     }
     td:nth-child(3) {
       text-align: left;
-      max-width: 200px; /* Limit URL width */
+      max-width: 350px; /* Limit URL width */
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
