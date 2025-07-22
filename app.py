@@ -317,14 +317,14 @@ HTML_TEMPLATE = """
   margin: 0 auto;
 }
     table {
-      width: 90%;
-      margin: 20px auto;
+      width: 95%;
+      margin: 30px auto;
       border-collapse: collapse;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.2);
-      border: 2px solid #ff69b4;
+      box-shadow: 0 15px 35px rgba(214, 51, 132, 0.25);
+      border: 3px solid #ff69b4;
     }
     th, td {
       padding: 15px;
