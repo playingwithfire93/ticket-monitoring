@@ -235,6 +235,7 @@ HTML_TEMPLATE = """
   <style>
     body {
       font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      font-weight: 600;
       margin: 0;
       padding: 0;
       min-height: 100vh;
@@ -278,7 +279,7 @@ HTML_TEMPLATE = """
       font-size: 2.5em;
       text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
       margin: 20px 0;
-      font-weight: bold;
+      font-weight: 900;
     }
     .slideshow-container {
       max-width: 1100px; /* was 800px */
@@ -335,7 +336,7 @@ HTML_TEMPLATE = """
     th {
       background: linear-gradient(135deg, #ff69b4, #d63384, #8b2c5c);
       color: #fff;
-      font-weight: bold;
+      font-weight: 900;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
       padding: 20px 15px;
       font-size: 1.1em;
@@ -356,6 +357,7 @@ HTML_TEMPLATE = """
       padding: 18px 15px;
       border-bottom: 2px solid #ffe0f0;
       color: #8b2c5c;
+      font-weight: 600;
       font-size: 1.05em;
       vertical-align: middle;
     }
@@ -627,7 +629,9 @@ HTML_TEMPLATE = """
     </button>
   </div>
 </div>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
+
 <!-- Telegram Join Popup with matching table header colors -->
 
 
@@ -1006,13 +1010,22 @@ async function showChangeDetails(label) {
         const changeCount = item.change_count || 0;
         const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
         
+        // Add site-specific CSS classes for emojis
+        let siteClass = '';
+        const labelLower = item.label.toLowerCase();
+        if (labelLower.includes('wicked')) siteClass = 'site-wicked';
+        else if (labelLower.includes('miserables')) siteClass = 'site-miserables';
+        else if (labelLower.includes('mormon') || labelLower.includes('book')) siteClass = 'site-mormon';
+        else if (labelLower.includes('audrey')) siteClass = 'site-audrey';
+        else if (labelLower.includes('houdini')) siteClass = 'site-houdini';
+        
         // Make changes badge clickable if > 0
         const changesBadge = changeCount > 0 
           ? `<span class="${badgeClass}" onclick="showChangeDetails('${item.label}')" style="cursor: pointer;" title="Click to see changes">${changeCount}</span>`
           : `<span class="${badgeClass}">${changeCount}</span>`;
 
         row.innerHTML = `
-          <td>${item.label}</td>
+          <td><span class="${siteClass}">${item.label}</span></td>
           <td>${changesBadge}</td>
           <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
           <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
