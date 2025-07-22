@@ -206,6 +206,565 @@ def background_checker():
 
 socketio.start_background_task(background_checker)
 
+# Add this HTML_TEMPLATE before the routes
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Ticket Monitor Dashboard</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef, #fecfef, #ff9a9e);
+            min-height: 100vh;
+            color: #2c2c2c;
+        }
+        
+        .container {
+            max-width: 95%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(214, 51, 132, 0.3);
+            border: 3px solid #ff69b4;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #d63384;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #8b2c5c;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 150px;
+            margin: 10px;
+            box-shadow: 0 8px 25px rgba(214, 51, 132, 0.4);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+        }
+        
+        .stat-card p {
+            margin: 0;
+            font-size: 1.1em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(214, 51, 132, 0.2);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ffb6c1;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        tr:hover {
+            background-color: #ffe4f1;
+            transform: scale(1.01);
+            transition: all 0.3s ease;
+        }
+        
+        .status-updated {
+            color: #d63384;
+            font-weight: bold;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .status-no-change {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .change-badge {
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 8px;
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+        
+        .change-badge:hover {
+            transform: scale(1.1);
+        }
+        
+        .change-badge.zero {
+            background: #ddd;
+            color: #666;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #8b2c5c;
+            font-style: italic;
+        }
+        
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .notification-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 3px solid #ff1493;
+        }
+        
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: white;
+            color: #d63384;
+        }
+        
+        .json-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 2000;
+        }
+        
+        .json-popup {
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background: white;
+            border-radius: 15px;
+            display: none;
+            z-index: 2001;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .json-popup-header {
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .json-popup-header h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        
+        .close-json-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .close-json-btn:hover {
+            background: white;
+            color: #d63384;
+        }
+        
+        .json-code {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: normal;
+            word-wrap: break-word;
+            max-height: 100%;
+            overflow: auto;
+            border: 1px solid #dee2e6;
+        }
+        
+        .slideshow-container {
+            position: relative;
+            max-width: 100%;
+            margin: 20px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3);
+        }
+        
+        .slide {
+            display: none;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #ff69b4, #d63384);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Ticket Monitor Dashboard</h1>
+        <p class="subtitle">Monitoring Broadway & West End Shows in Real-Time</p>
+        
+        <!-- Slideshow -->
+        <div class="slideshow-container">
+            <div class="slide active">🎟️ Stay Updated with Live Ticket Monitoring</div>
+            <div class="slide">🎭 Never Miss Out on Your Favorite Shows</div>
+            <div class="slide">⚡ Real-Time Notifications for Changes</div>
+            <div class="slide">🎵 Wicked • Les Mis • Book of Mormon & More!</div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="totalSites">-</h3>
+                <p>Sites Monitored</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="activeSites">-</h3>
+                <p>Active Changes</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="lastChecked">-</h3>
+                <p>Last Updated</p>
+            </div>
+        </div>
+        
+        <!-- Changes Table -->
+        <table id="changesTable">
+            <tr>
+                <th>Show/Website</th>
+                <th>Cambios</th>
+                <th>URL</th>
+                <th>Status</th>
+                <th>Last Update</th>
+            </tr>
+        </table>
+        
+        <div class="footer">
+            <p>🎵 Powered by Broadway Magic ✨ | Last check: <span id="footerTime">Loading...</span></p>
+        </div>
+    </div>
+    
+    <!-- Notification Overlay -->
+    <div id="notificationOverlay" class="notification-overlay" onclick="closeNotification()"></div>
+    <div id="notificationPopup" class="notification-popup">
+        <h2>🚨 NEW CHANGES DETECTED!</h2>
+        <p>Some monitored sites have been updated!</p>
+        <p>Check the table above for details.</p>
+        <button class="close-btn" onclick="closeNotification()">Awesome! 🎉</button>
+    </div>
+    
+    <!-- JSON Details Overlay -->
+    <div id="jsonOverlay" class="json-overlay" onclick="closeJsonPopup()"></div>
+    <div id="jsonPopup" class="json-popup">
+        <div class="json-popup-header">
+            <h3>📊 Detalles del Cambio</h3>
+            <button class="close-json-btn" onclick="closeJsonPopup()">✕ Cerrar</button>
+        </div>
+        <div id="jsonContent" class="json-code"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        // Slideshow functionality
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+        
+        setInterval(nextSlide, 3000);
+        
+        function playNotificationSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+        
+        function showNotification() {
+            document.getElementById('notificationOverlay').style.display = 'block';
+            document.getElementById('notificationPopup').style.display = 'block';
+            playNotificationSound();
+        }
+        
+        function closeNotification() {
+            document.getElementById('notificationOverlay').style.display = 'none';
+            document.getElementById('notificationPopup').style.display = 'none';
+        }
+        
+        function closeJsonPopup() {
+            document.getElementById('jsonOverlay').style.display = 'none';
+            document.getElementById('jsonPopup').style.display = 'none';
+        }
+        
+        async function showChangeDetails(label) {
+            try {
+                const response = await fetch('/api/ticket-changes');
+                const data = await response.json();
+                
+                const item = data.find(d => d.label === label);
+                if (!item) {
+                    alert('No se encontraron datos de cambios para ' + label);
+                    return;
+                }
+                
+                const friendlyContent = `
+                    <div style="font-family: Georgia, serif; line-height: 1.6; color: #333;">
+                        <h2 style="color: #d63384; border-bottom: 2px solid #ff69b4; padding-bottom: 10px;">
+                            📋 Cambios en: ${item.label}
+                        </h2>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <h3 style="color: #d63384; margin-top: 0;">🌐 Página</h3>
+                            <p><strong>Sitio:</strong> ${item.label}</p>
+                            <p><strong>Enlace:</strong> <a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></p>
+                            <p><strong>Última revisión:</strong> ${item.fecha_legible}</p>
+                        </div>
+
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <h3 style="color: #856404; margin-top: 0;">📝 ¿Qué ha cambiado?</h3>
+                            <p style="font-size: 16px; line-height: 1.8;">
+                                ${item.status.includes('Actualizado') ? 
+                                    '✅ <strong>¡La página se ha actualizado!</strong><br>Esto significa que hay nuevas noticias, entradas disponibles, cambios de precios, nuevas fechas, o información actualizada.' : 
+                                    '😊 <strong>No hay cambios</strong><br>La página sigue igual que la última vez que la revisamos.'
+                                }
+                            </p>
+                        </div>
+
+                        ${item.change_count > 0 ? `
+                        <div style="background: #d1ecf1; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <h3 style="color: #0c5460; margin-top: 0;">🔢 Historial</h3>
+                            <p>Esta página ha cambiado <strong>${item.change_count} ${item.change_count === 1 ? 'vez' : 'veces'}</strong> desde que la monitoreamos.</p>
+                        </div>
+                        ` : ''}
+
+                        <div style="background: #e2e3e5; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                            <h3 style="color: #383d41; margin-top: 0;">💡 ¿Qué hacer ahora?</h3>
+                            ${item.status.includes('Actualizado') ? 
+                                '<p>🎯 <strong>¡Visita la página ahora!</strong></p><p>Puede haber:</p><ul><li>🎟️ Nuevas entradas disponibles</li><li>💰 Cambios en los precios</li><li>📅 Nuevas fechas de funciones</li><li>👥 Cambios en el elenco</li><li>📢 Noticias importantes</li></ul>' :
+                                '<p>😌 <strong>Todo tranquilo por ahora</strong></p><p>Te avisaremos en cuanto haya novedades.</p>'
+                            }
+                        </div>
+
+                        <div style="text-align: center; margin-top: 25px;">
+                            <a href="${item.url}" target="_blank" 
+                               style="background: linear-gradient(135deg, #ff69b4, #d63384); color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(214, 51, 132, 0.3); font-size: 16px;">
+                                🔗 Ver ${item.label}
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('jsonOverlay').style.display = 'block';
+                document.getElementById('jsonPopup').style.display = 'block';
+                document.getElementById('jsonContent').innerHTML = friendlyContent;
+                
+            } catch (error) {
+                alert('Error cargando los detalles: ' + error.message);
+            }
+        }
+        
+        async function updateTicketData() {
+            try {
+                const response = await fetch('/api/ticket-changes');
+                const data = await response.json();
+                
+                document.getElementById('totalSites').textContent = data.length;
+                document.getElementById('activeSites').textContent = 
+                    data.filter(item => item.status.includes('Actualizado')).length;
+                document.getElementById('lastChecked').textContent = 
+                    'Last Checked: ' + new Date().toLocaleString();
+                document.getElementById('footerTime').textContent = 
+                    new Date().toLocaleString();
+
+                const table = document.getElementById('changesTable');
+                table.innerHTML = `
+                    <tr>
+                        <th>Show/Website</th>
+                        <th>Cambios</th>
+                        <th>URL</th>
+                        <th>Status</th>
+                        <th>Last Update</th>
+                    </tr>
+                `;
+
+                let hasUpdates = false;
+                data.forEach(item => {
+                    const row = table.insertRow();
+                    const changeCount = item.change_count || 0;
+                    const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
+                    
+                    const changesBadge = changeCount > 0 
+                        ? `<span class="${badgeClass}" onclick="showChangeDetails('${item.label}')" style="cursor: pointer;" title="Click to see changes">${changeCount}</span>`
+                        : `<span class="${badgeClass}">${changeCount}</span>`;
+
+                    row.innerHTML = `
+                        <td>${item.label}</td>
+                        <td>${changesBadge}</td>
+                        <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
+                        <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
+                        <td>${new Date(item.timestamp).toLocaleString()}</td>
+                    `;
+                    
+                    if (item.status.includes('Actualizado')) {
+                        hasUpdates = true;
+                        row.style.background = 'linear-gradient(135deg, #ffe4f1, #ffc0cb)';
+                    }
+                });
+
+                if (hasUpdates) {
+                    showNotification();
+                }
+
+            } catch (error) {
+                console.error('Error fetching ticket data:', error);
+                document.getElementById('lastChecked').textContent = 'Error loading data';
+            }
+        }
+        
+        // Update every 30 seconds
+        setInterval(updateTicketData, 30000);
+        
+        // Initial load
+        updateTicketData();
+        
+        // Socket.IO listeners
+        socket.on('update', function(data) {
+            console.log('Received update:', data);
+            updateTicketData();
+        });
+    </script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def dashboard():
+    return render_template_string(HTML_TEMPLATE)
+
 # HTML_TEMPLATE omitted for brevity, keep your original HTML_TEMPLATE here
 
 @app.route('/')
