@@ -133,7 +133,7 @@ def broadcast_change(url, data):
 
 latest_changes = []
 def get_simple_content(url):
-    """Simplified content extraction like BoMtickets.py"""
+    
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
