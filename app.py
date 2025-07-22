@@ -690,6 +690,61 @@ HTML_TEMPLATE = """
   </tr>
   <td colspan="5" style="text-align: center;">Loading ticket data...</td>
 </table>
+<div style="max-width: 600px; margin: 40px auto; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 8px 25px rgba(214, 51, 132, 0.2); border: 2px solid #ff69b4;">
+  <h2 style="color: #d63384; text-align: center; margin-bottom: 20px;">💡 ¿Tienes una sugerencia?</h2>
+  <p style="text-align: center; color: #8b2c5c; margin-bottom: 25px;">¡Sugiere un nuevo sitio web para monitorear!</p>
+  
+  <form id="suggestionForm" style="display: flex; flex-direction: column; gap: 15px;">
+    <input type="text" id="siteName" placeholder="Nombre del sitio (ej: Hamilton El Musical)" 
+           style="padding: 12px; border: 2px solid #ff69b4; border-radius: 10px; font-size: 16px;">
+    
+    <input type="url" id="siteUrl" placeholder="URL del sitio (ej: https://hamilton.com)" 
+           style="padding: 12px; border: 2px solid #ff69b4; border-radius: 10px; font-size: 16px;">
+    
+    <textarea id="reason" placeholder="¿Por qué deberíamos monitorear este sitio? (opcional)" 
+              style="padding: 12px; border: 2px solid #ff69b4; border-radius: 10px; font-size: 16px; min-height: 80px; resize: vertical;"></textarea>
+    
+    <button type="submit" style="background: linear-gradient(135deg, #ff69b4, #d63384); color: white; padding: 15px; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; transition: transform 0.2s;">
+      📤 Enviar Sugerencia
+    </button>
+  </form>
+  
+  <div id="suggestionResult" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
+</div>
+
+<script>
+document.getElementById('suggestionForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const siteName = document.getElementById('siteName').value;
+  const siteUrl = document.getElementById('siteUrl').value;
+  const reason = document.getElementById('reason').value;
+  
+  if (!siteName || !siteUrl) {
+    document.getElementById('suggestionResult').innerHTML = '<span style="color: #d63384;">Por favor completa todos los campos obligatorios</span>';
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/suggest-site', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ siteName, siteUrl, reason })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      document.getElementById('suggestionResult').innerHTML = '<span style="color: #28a745;">✅ ¡Sugerencia enviada! La revisaremos pronto.</span>';
+      document.getElementById('suggestionForm').reset();
+    } else {
+      document.getElementById('suggestionResult').innerHTML = '<span style="color: #d63384;">❌ Error: ' + result.error + '</span>';
+    }
+  } catch (error) {
+    document.getElementById('suggestionResult').innerHTML = '<span style="color: #d63384;">❌ Error al enviar la sugerencia</span>';
+  }
+});
+</script>
 
 <script>
   let slideIndex = 0;
@@ -917,6 +972,91 @@ def dashboard():
 @app.route('/changes')
 def changes_dummy():
     return "Not implemented", 200
+
+import json
+from datetime import datetime
+
+# Add this new route
+@app.route('/api/suggest-site', methods=['POST'])
+def suggest_site():
+    try:
+        data = request.get_json()
+        site_name = data.get('siteName', '').strip()
+        site_url = data.get('siteUrl', '').strip()
+        reason = data.get('reason', '').strip()
+        
+        if not site_name or not site_url:
+            return jsonify({"error": "Nombre y URL son obligatorios"}), 400
+        
+        # Validate URL format
+        if not site_url.startswith(('http://', 'https://')):
+            return jsonify({"error": "URL debe empezar con http:// o https://"}), 400
+        
+        suggestion = {
+            "siteName": site_name,
+            "siteUrl": site_url,
+            "reason": reason,
+            "timestamp": datetime.now(UTC).isoformat(),
+            "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
+        }
+        
+        # Save to file (you can also send via Telegram/WhatsApp)
+        try:
+            with open('suggestions.json', 'r') as f:
+                suggestions = json.load(f)
+        except FileNotFoundError:
+            suggestions = []
+        
+        suggestions.append(suggestion)
+        
+        with open('suggestions.json', 'w') as f:
+            json.dump(suggestions, f, indent=2, ensure_ascii=False)
+        
+        # Send notification to admin via Telegram
+        admin_message = f"""
+🆕 <b>Nueva Sugerencia de Sitio Web</b>
+
+📝 <b>Nombre:</b> {site_name}
+🔗 <b>URL:</b> {site_url}
+💭 <b>Razón:</b> {reason or 'No especificada'}
+📅 <b>Fecha:</b> {suggestion['fecha_legible']}
+
+<a href="{site_url}">Ver sitio sugerido</a>
+        """.strip()
+        
+        send_telegram_message(admin_message)
+        
+        return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
+        
+    except Exception as e:
+        print(f"Error in suggest_site: {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+      @app.route('/admin/suggestions')
+def view_suggestions():
+    try:
+        with open('suggestions.json', 'r') as f:
+            suggestions = json.load(f)
+        
+        html = """
+        <html><head><title>Sugerencias de Sitios</title></head><body>
+        <h1>Sugerencias Recibidas</h1>
+        """
+        
+        for suggestion in reversed(suggestions):  # Most recent first
+            html += f"""
+            <div style="border: 1px solid #ccc; margin: 10px; padding: 15px; border-radius: 5px;">
+                <h3>{suggestion['siteName']}</h3>
+                <p><strong>URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank">{suggestion['siteUrl']}</a></p>
+                <p><strong>Razón:</strong> {suggestion['reason'] or 'No especificada'}</p>
+                <p><strong>Fecha:</strong> {suggestion['fecha_legible']}</p>
+            </div>
+            """
+        
+        html += "</body></html>"
+        return html
+        
+    except FileNotFoundError:
+        return "<h1>No hay sugerencias aún</h1>"
 
 @app.route('/api/changes.json')
 def get_changes_json():
