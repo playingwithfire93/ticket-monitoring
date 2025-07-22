@@ -54,7 +54,7 @@ def send_telegram_message(text):
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -318,9 +318,10 @@ HTML_TEMPLATE = """
   margin: 0 auto;
 }
     table {
-      width: 95%;
+      width: 98%; /* Slightly wider to accommodate the URL column */
       margin: 30px auto;
       border-collapse: collapse;
+      table-layout: fixed; /* This ensures consistent column widths */
       background: linear-gradient(
         45deg,
         rgba(255, 182, 193, 0.9) 0%,   /* Light pink */
@@ -331,12 +332,12 @@ HTML_TEMPLATE = """
       );
       background-size: 400% 400%;
       animation: tableGradient 12s ease-in-out infinite alternate;
-      border-radius: 25px; /* More rounded for cuteness */
+      border-radius: 25px;
       overflow: hidden;
       box-shadow: 
         0 15px 35px rgba(255, 105, 180, 0.4),
         0 5px 15px rgba(255, 182, 193, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6); /* Inner glow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
       border: 4px solid transparent;
       background-clip: padding-box;
       position: relative;
@@ -397,6 +398,31 @@ HTML_TEMPLATE = """
     }
     th:nth-child(1) {
       text-align: left;
+      width: 180px;
+      max-width: 180px;
+    }
+    th:nth-child(2) {
+      text-align: center;
+      width: 100px;
+      max-width: 100px;
+    }
+    
+    th:nth-child(3) {
+      text-align: left;
+      width: 350px;
+      max-width: 350px;
+    }
+    
+    th:nth-child(4) {
+      text-align: center;
+      width: 160px;
+      max-width: 160px;
+    }
+    
+    th:nth-child(5) {
+      text-align: center;
+      width: 140px;
+      max-width: 140px;
     }
     th:nth-child(1)::before { content: "🎭 "; }
     th:nth-child(2)::before { content: "📊 "; }
@@ -431,15 +457,19 @@ HTML_TEMPLATE = """
     /* Status column centered */
     td:nth-child(4) {
       text-align: center;
-      width: 150px; /* Fixed width for status column */
+      width: 160px; /* Fixed width for status column */
+      max-width: 160px;
+      vertical-align: middle; /* Ensure vertical centering */
     }
     
     /* Last Update column */
     td:nth-child(5) {
       text-align: center;
       font-size: 0.9em;
-      color: #6c757d;
-      font-weight: 500;
+      color: #b83dba;
+      font-weight: 600;
+      width: 140px;
+      max-width: 140px;
     }
     tr:hover {
       background: linear-gradient(135deg, #ffe4f1, #fff0f5, #ffe4f1);
@@ -528,19 +558,21 @@ HTML_TEMPLATE = """
         #ff1493 50%, 
         #d63384 100%);
       color: #fff;
-      padding: 12px 20px;
-      border-radius: 25px; /* More rounded */
-      font-weight: 800;
+      padding: 12px 20px; /* Same padding as no-change */
+      border-radius: 25px; /* Same border radius */
+      font-weight: 800; /* Same font weight */
       box-shadow: 
         0 6px 20px rgba(255, 105, 180, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      display: inline-flex;
+      display: inline-flex; /* Change to inline-flex for better centering */
       align-items: center;
+      justify-content: center; /* Perfect centering */
       gap: 8px;
-      min-width: 130px;
-      justify-content: center;
+      min-width: 130px; /* Same min-width as no-change */
+      max-width: 130px; /* Add max-width to match */
+      height: 45px; /* Fixed height for consistency */
       text-align: center;
-      font-size: 0.95em;
+      font-size: 0.95em; /* Same font size */
       letter-spacing: 1px;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
       position: relative;
@@ -566,17 +598,21 @@ HTML_TEMPLATE = """
     .status-no-change {
       color: #8b2c5c;
       font-style: italic;
-      padding: 12px 20px;
+      padding: 12px 20px; /* Same padding as updated */
       background: linear-gradient(135deg, 
         rgba(255, 240, 245, 0.8), 
         rgba(255, 228, 240, 0.9));
-      border-radius: 25px;
+      border-radius: 25px; /* Same border radius */
       border: 2px solid rgba(255, 182, 193, 0.6);
-      min-width: 130px;
+      min-width: 130px; /* Same min-width as updated */
+      max-width: 130px; /* Add max-width to match */
+      height: 45px; /* Same fixed height */
       text-align: center;
-      font-weight: 700;
-      font-size: 0.95em;
-      display: inline-block;
+      font-weight: 800; /* Same font weight as updated */
+      font-size: 0.95em; /* Same font size */
+      display: inline-flex; /* Change to inline-flex for better centering */
+      align-items: center; /* Vertical centering */
+      justify-content: center; /* Horizontal centering */
       box-shadow: 0 3px 10px rgba(255, 182, 193, 0.3);
     }
     /* Enhanced header with gradient border */
