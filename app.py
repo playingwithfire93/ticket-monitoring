@@ -335,6 +335,7 @@ HTML_TEMPLATE = """
       overflow: hidden;
       box-shadow: 0 15px 35px rgba(214, 51, 132, 0.25);
       border: 3px solid #ff69b4;
+      font-size: 0.95em; /* Slightly smaller font for better fit */
     }
     
     @keyframes tableGradient {
@@ -355,25 +356,55 @@ HTML_TEMPLATE = """
       padding: 20px 15px;
       font-size: 1.1em;
       position: relative;
+      text-align: center; /* Center align headers */
+    }
+    th:nth-child(1) {
+      text-align: left;
     }
     th:nth-child(1)::before { content: "🎭 "; }
     th:nth-child(2)::before { content: "📊 "; }
     th:nth-child(3)::before { content: "🔗 "; }
     th:nth-child(4)::before { content: "📋 "; }
     th:nth-child(5)::before { content: "⏰ "; }
+    td:nth-child(1) {
+      text-align: left;
+      font-weight: 700; /* Make show names bolder */
+    }
+    td:nth-child(3) {
+      text-align: left;
+      max-width: 200px; /* Limit URL width */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     
+    /* Status column centered */
+    td:nth-child(4) {
+      text-align: center;
+      width: 150px; /* Fixed width for status column */
+    }
+    
+    /* Last Update column */
+    td:nth-child(5) {
+      text-align: center;
+      font-size: 0.9em;
+      color: #6c757d;
+      font-weight: 500;
+    }
     tr:hover {
-      background: #ffe6f2;
-      transform: scale(1.02);
+      background: linear-gradient(135deg, #ffe4f1, #fff0f5, #ffe4f1);
+      transform: scale(1.01); /* Less dramatic scale */
       transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(214, 51, 132, 0.2);
     }
     td {
       padding: 18px 15px;
       border-bottom: 2px solid #ffe0f0;
       color: #8b2c5c;
       font-weight: 600;
-      font-size: 1.05em;
+      font-size: 1em; /* Adjusted font size */
       vertical-align: middle;
+      text-align: center; /* Center align all content */
     }
     /* Enhanced row hover effects */
     tr:hover {
@@ -436,13 +467,18 @@ HTML_TEMPLATE = """
     .status-updated {
       background: linear-gradient(135deg, #28a745, #20c997);
       color: #fff;
-      padding: 8px 16px;
-      border-radius: 25px;
+      padding: 10px 18px; /* Increased padding for better rectangle */
+      border-radius: 8px; /* More rectangular, less rounded */
       font-weight: bold;
       box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
+      min-width: 120px; /* Fixed minimum width for consistency */
+      justify-content: center; /* Center the content */
+      text-align: center;
+      font-size: 0.95em;
+      letter-spacing: 0.5px; /* Slightly spaced letters */
     }
     
     .status-updated::before { content: "🎉"; }
@@ -450,10 +486,15 @@ HTML_TEMPLATE = """
     .status-no-change {
       color: #6c757d;
       font-style: italic;
-      padding: 8px 16px;
+      padding: 10px 18px; /* Match the updated status padding */
       background: #f8f9fa;
-      border-radius: 20px;
+      border-radius: 8px; /* Match the updated status border radius */
       border: 2px solid #dee2e6;
+      min-width: 120px; /* Match the updated status width */
+      text-align: center;
+      font-weight: 600; /* Make it bolder */
+      font-size: 0.95em;
+      display: inline-block;
     }
     /* Enhanced header with gradient border */
     .last-checked {
@@ -477,30 +518,29 @@ HTML_TEMPLATE = """
     .change-badge {
       background: linear-gradient(135deg, #ff6b35, #f7931e);
       color: white;
-      border-radius: 20px;
-      padding: 6px 12px;
+      border-radius: 12px; /* More rectangular */
+      padding: 8px 14px; /* Better padding */
       font-size: 0.9em;
       font-weight: bold;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 30px;
-      height: 30px;
+      min-width: 40px; /* Fixed minimum width */
+      height: 35px; /* Fixed height */
       box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
       text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
       transition: all 0.3s ease;
       cursor: pointer;
     }
-
-    .change-badge:hover {
-      transform: scale(1.15) rotate(5deg);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
-    }
-
-    .change-badge.zero {
+  .change-badge.zero {
       background: linear-gradient(135deg, #e9ecef, #dee2e6);
       color: #6c757d;
       cursor: default;
+    }
+  
+    .change-badge:hover {
+      transform: scale(1.1) rotate(2deg); /* Less dramatic hover */
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
     }
     .change-badge.zero:hover {
       transform: none;
