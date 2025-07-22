@@ -979,6 +979,7 @@ from datetime import datetime
 # Add this new route
 @app.route('/api/suggest-site', methods=['POST'])
 def suggest_site():
+    from flask import request
     try:
         data = request.get_json()
         site_name = data.get('siteName', '').strip()
