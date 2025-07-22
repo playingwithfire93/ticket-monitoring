@@ -54,7 +54,7 @@ def send_telegram_message(text):
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -465,37 +465,39 @@ HTML_TEMPLATE = """
       background: #f8f9fa;
     }
     .json-code {
-      background: #2d3748;
-      color: #e2e8f0;
+      background: white; /* Changed from dark background */
+      color: #333; /* Changed from light text */
       padding: 20px;
       border-radius: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      line-height: 1.4;
-      white-space: pre-wrap;
+      font-family: 'Georgia', serif; /* Changed from monospace */
+      font-size: 14px; /* Increased font size */
+      line-height: 1.6; /* Better line spacing */
+      white-space: normal; /* Allow text wrapping */
       word-wrap: break-word;
       max-height: 100%;
       overflow: auto;
+      border: 1px solid #dee2e6;
+    }
     .highlighted-bg {
-  position: relative;
-  margin: 30px auto 0 auto;
-  max-width: 900px;
-  border-radius: 25px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
-  border: 4px solid #ff69b4;
-  background: linear-gradient(
-    120deg,
-    #ffe0f7 0%,
-    #ffb6e6 25%,
-    #ff69b4 50%,
-    #ffc0cb 75%,
-    #ffe0f7 100%
-  );
-  background-size: 400% 400%;
-  animation: highlightMove 6s linear infinite alternate;
-  padding: 30px 0 20px 0;
-}
+      position: relative;
+      margin: 30px auto 0 auto;
+      max-width: 900px;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.15);
+      border: 4px solid #ff69b4;
+      background: linear-gradient(
+        120deg,
+        #ffe0f7 0%,
+        #ffb6e6 25%,
+        #ff69b4 50%,
+        #ffc0cb 75%,
+        #ffe0f7 100%
+      );
+      background-size: 400% 400%;
+      animation: highlightMove 6s linear infinite alternate;
+      padding: 30px 0 20px 0;
+    }
 
 @keyframes highlightMove {
   0% { background-position: 0% 50%; }
@@ -665,8 +667,8 @@ HTML_TEMPLATE = """
 <div class="json-overlay" id="jsonOverlay" onclick="closeJsonPopup()"></div>
 <div class="json-popup" id="jsonPopup">
   <div class="json-popup-header">
-    <h3>📄 JSON Changes Data</h3>
-    <button class="close-json-btn" onclick="closeJsonPopup()">✕ Close</button>
+    <h3>📊 Detalles del Cambio</h3>
+    <button class="close-json-btn" onclick="closeJsonPopup()">✕ Cerrar</button>
   </div>
   <div class="json-popup-content">
     <div class="json-code" id="jsonContent">Loading...</div>
@@ -786,34 +788,64 @@ HTML_TEMPLATE = """
     // Find the specific item
     const item = data.find(d => d.label === label);
     if (!item) {
-      alert('No change data found for ' + label);
+      alert('No se encontraron datos de cambios para ' + label);
       return;
     }
     
-    // Format the detailed JSON like your BoMtickets.py
-    const detailedData = {
-      "sitio": item.label,
-      "url": item.url,
-      "estado": item.status,
-      "timestamp": item.timestamp,
-      "fecha_legible": item.fecha_legible,
-      "hash_actual": item.hash_actual,
-      "hash_anterior": item.hash_anterior,
-      "detalles_cambio": item.detalles_cambio,
-      "diferencias_detectadas": item.diferencias_detectadas,
-      "longitud_contenido": item.longitud_contenido,
-      "numero_cambios": item.change_count,
-      "contenido_anterior": item.contenido_anterior.substring(0, 1000) + "...",
-      "contenido_actual": item.contenido_completo.substring(0, 1000) + "..."
-    };
+    // Create user-friendly HTML content instead of JSON
+    const friendlyContent = `
+      <div style="font-family: Georgia, serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #d63384; border-bottom: 2px solid #ff69b4; padding-bottom: 10px;">
+          📊 Reporte de Cambios: ${item.label}
+        </h2>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 15px 0;">
+          <h3 style="color: #d63384; margin-top: 0;">🌐 Información General</h3>
+          <p><strong>Sitio web:</strong> <a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></p>
+          <p><strong>Estado actual:</strong> <span style="background: ${item.status.includes('Actualizado') ? '#d4edda' : '#f8d7da'}; padding: 5px 10px; border-radius: 5px;">${item.status}</span></p>
+          <p><strong>Última actualización:</strong> ${item.fecha_legible}</p>
+          <p><strong>Total de cambios detectados:</strong> <span style="background: #ff69b4; color: white; padding: 2px 8px; border-radius: 15px; font-weight: bold;">${item.change_count}</span></p>
+        </div>
+
+        <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin: 15px 0;">
+          <h3 style="color: #856404; margin-top: 0;">🔍 ¿Qué cambió?</h3>
+          <p style="font-size: 16px;">${item.detalles_cambio}</p>
+          <p><strong>Tamaño del contenido:</strong> ${item.longitud_contenido.toLocaleString()} caracteres</p>
+        </div>
+
+        ${item.change_count > 0 ? `
+        <div style="background: #d1ecf1; padding: 20px; border-radius: 10px; margin: 15px 0;">
+          <h3 style="color: #0c5460; margin-top: 0;">📝 Resumen de diferencias</h3>
+          <p style="font-style: italic;">${item.diferencias_detectadas.length > 200 ? 
+            'Se detectaron múltiples cambios en el contenido de la página. Esto puede incluir nuevas entradas disponibles, cambios de precios, actualizaciones de fechas, o modificaciones en la información del espectáculo.' : 
+            item.diferencias_detectadas}</p>
+        </div>
+        ` : ''}
+
+        <div style="background: #e2e3e5; padding: 20px; border-radius: 10px; margin: 15px 0;">
+          <h3 style="color: #383d41; margin-top: 0;">💡 ¿Qué significa esto?</h3>
+          ${item.status.includes('Actualizado') ? 
+            '<p>✅ <strong>¡Hay novedades!</strong> La página web ha cambiado desde la última vez que la revisamos. Esto podría significar:</p><ul><li>🎟️ Nuevas entradas disponibles</li><li>💰 Cambios en los precios</li><li>📅 Nuevas fechas de funciones</li><li>👥 Actualizaciones del elenco</li><li>📢 Nuevos anuncios</li></ul><p><strong>Recomendación:</strong> ¡Visita la página ahora para ver las novedades!</p>' :
+            '<p>😊 <strong>Sin cambios</strong> - La página se mantiene igual que en la última revisión. Te notificaremos cuando haya novedades.</p>'
+          }
+        </div>
+
+        <div style="text-align: center; margin-top: 25px;">
+          <a href="${item.url}" target="_blank" 
+             style="background: linear-gradient(135deg, #ff69b4, #d63384); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(214, 51, 132, 0.3);">
+            🔗 Visitar ${item.label}
+          </a>
+        </div>
+      </div>
+    `;
     
-    // Show in popup
+    // Show in popup with HTML content
     document.getElementById('jsonOverlay').style.display = 'block';
     document.getElementById('jsonPopup').style.display = 'block';
-    document.getElementById('jsonContent').textContent = JSON.stringify(detailedData, null, 2);
+    document.getElementById('jsonContent').innerHTML = friendlyContent;
     
   } catch (error) {
-    alert('Error loading change details: ' + error.message);
+    alert('Error cargando los detalles: ' + error.message);
   }
 }
   async function updateTicketData() {
