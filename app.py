@@ -51,7 +51,7 @@ def send_telegram_message(text):
         print("Telegram response:", r.status_code, r.text)  # <-- Añade esto
     except Exception as e:
         print("Telegram notification failed:", e)
-        
+
 # Real ticket monitoring URLs
 URLS = [
     #{"label": "ddf", "url": "https://httpbin.org/get"},
@@ -103,10 +103,10 @@ def extract_normalized_date_info(url):
 
 def find_differences(old_text, new_text):
     diff = difflib.unified_diff(
-        old_text.splitlines(), 
-        new_text.splitlines(), 
-        fromfile='anterior', 
-        tofile='actual', 
+        old_text.splitlines(),
+        new_text.splitlines(),
+        fromfile='anterior',
+        tofile='actual',
         lineterm=""
     )
     return "\n".join(diff)
@@ -133,77 +133,58 @@ def broadcast_change(url, data):
 
 latest_changes = []
 
+
 def scrape_all_sites():
-    global previous_states, previous_contents, change_counts
+    global previous_contents, change_counts
     changes_list = []
     now = datetime.now(UTC).isoformat()
+    
     for item in URLS:
         label = item["label"]
         url = item["url"]
-        current_content = ""
-        try:
-            response = requests.get(url, timeout=10)
-            soup = BeautifulSoup(response.content, "html.parser")
-            for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
-                tag.decompose()
-            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-                comment.extract()
-            current_content = soup.get_text(separator=" ", strip=True)
-        except Exception as e:
-            current_content = f"Error al obtener contenido: {str(e)}"
-        if "buscandoaaudrey.com" in url:
-            state = hash_audrey_content(url)
-        else:
-            state = extract_normalized_date_info(url)
-            if state is None:
-                state = hash_url_content(url)
-            state = extract_normalized_date_info(url)
-            if state is None:
-                state = hash_url_content(url)
-        last_state = previous_states.get(url)
+        
+        # Get current content using simplified method
+        current_content = get_simple_content(url)
+        
+        # Get previous content
         last_content = previous_contents.get(url, "")
-        change_details = ""
-        differences = ""
-        if last_state is None:
+        
+        # Determine status
+        if not last_content:  # First check
             status = "Primer chequeo 👀"
             change_details = "Primera vez que se monitorea este sitio web"
             differences = "No hay contenido anterior para comparar"
             change_counts[url] = 0
-        elif last_state != state:
+        elif current_content != last_content and len(current_content) > 100:
             status = "¡Actualizado! 🎉"
             change_details = "Se detectaron cambios en el contenido del sitio web"
             change_counts[url] = change_counts.get(url, 0) + 1
-            if last_content and current_content != last_content:
-                differences = find_differences(last_content, current_content)
-            else:
-                differences = "Contenido modificado pero no se pudieron detectar diferencias específicas"
-            broadcast_change(url, status)
+            differences = find_differences(last_content, current_content)
+            
+            # Send notifications
             try:
-                send_whatsapp_message(
-                  label,           # nombre del show
-                  url,             # enlace
-                  '+34602502302'   # tu número WhatsApp
-              )
-                send_telegram_message(
-            f"🎟 <b>{label}</b> ha cambiado!\n🔗 <a href='{url}'>{url}</a>"
-        )
+                send_whatsapp_message(label, url, '+34602502302')
+                send_telegram_message(f"🎟 <b>{label}</b> ha cambiado!\n🔗 <a href='{url}'>{url}</a>")
             except Exception as e:
-                print("WhatsApp notification failed:", e)
+                print("Notification failed:", e)
         else:
             status = "Sin cambios ✨"
             change_details = "El contenido permanece igual desde la última verificación"
             differences = "Sin diferencias detectadas"
             if url not in change_counts:
                 change_counts[url] = 0
-        previous_states[url] = state
+        
+        # Update previous content
         previous_contents[url] = current_content
+        
+        # Add to changes list
         changes_list.append({
             "label": label,
             "url": url,
             "status": status,
             "timestamp": now,
-            "hash_actual": state,
-            "hash_anterior": last_state,
+            "hash_actual": hashlib.md5(current_content.encode("utf-8")).hexdigest(),
+            "hash_anterior": hashlib.md5(last_content.encode("utf-8")).hexdigest() if last_content else None,
             "detalles_cambio": change_details,
             "contenido_completo": current_content,
             "contenido_anterior": last_content,
@@ -212,7 +193,8 @@ def scrape_all_sites():
             "change_count": change_counts[url],
             "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
         })
-    print("latest_changes updated:", changes_list)
+    
+    print("latest_changes updated:", len(changes_list), "sites")
     return changes_list
 
 def background_checker():
@@ -415,7 +397,7 @@ HTML_TEMPLATE = """
       margin: 20px 0;
     }
     .change-badge {
-      background: linear-gradient(135deg, #ff69b4, #d63384); /* Igual que th */
+      background: linear-gradient(135deg, #ff69b4, #d63384);
       color: white;
       border-radius: 12px;
       padding: 2px 8px;
@@ -427,7 +409,13 @@ HTML_TEMPLATE = """
       text-align: center;
       box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
       text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
     }
+
+    .change-badge:hover {
+      transform: scale(1.1);
+    }
+
     .change-badge.zero {
       background: #ddd;
       color: #666;
@@ -508,7 +496,7 @@ HTML_TEMPLATE = """
     .close-json-btn:hover {
       background: #f0f0f0;
     }
-    
+
     .json-overlay {
       position: fixed;
       top: 0;
@@ -691,7 +679,7 @@ HTML_TEMPLATE = """
   function showSlides() {
     let slides = document.getElementsByClassName("slide");
     if (slides.length === 0) return;
-    
+
     for (let i = 0; i < slides.length; i++) {
       slides[i].style.display = "none";
     }
@@ -709,33 +697,33 @@ HTML_TEMPLATE = """
   function showNotification() {
     document.getElementById('notificationOverlay').style.display = 'block';
     document.getElementById('notificationPopup').style.display = 'block';
-    
+
     // Play notification sound
     playNotificationSound();
   }
-  
+
   function playNotificationSound() {
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
+
       const playTone = (frequency, startTime, duration) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         oscillator.frequency.setValueAtTime(frequency, startTime);
         oscillator.type = 'sine';
-        
+
         gainNode.gain.setValueAtTime(0, startTime);
         gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-        
+
         oscillator.start(startTime);
         oscillator.stop(startTime + duration);
       };
-      
+
       const now = audioContext.currentTime;
       playTone(523.25, now, 0.2);        // C5
       playTone(659.25, now + 0.1, 0.2);  // E5
@@ -754,12 +742,12 @@ HTML_TEMPLATE = """
     showJsonPopup();
     closeNotification();
   }
-  
+
   async function showJsonPopup() {
     document.getElementById('jsonOverlay').style.display = 'block';
     document.getElementById('jsonPopup').style.display = 'block';
     document.getElementById('jsonContent').textContent = 'Loading JSON data...';
-    
+
     try {
       const response = await fetch('/api/changes.json');
       const jsonData = await response.text();
@@ -768,20 +756,57 @@ HTML_TEMPLATE = """
       document.getElementById('jsonContent').textContent = 'Error loading JSON data: ' + error.message;
     }
   }
-  
+
   function closeJsonPopup() {
     document.getElementById('jsonOverlay').style.display = 'none';
     document.getElementById('jsonPopup').style.display = 'none';
   }
-
+  async function showChangeDetails(label) {
+  try {
+    const response = await fetch('/api/ticket-changes');
+    const data = await response.json();
+    
+    // Find the specific item
+    const item = data.find(d => d.label === label);
+    if (!item) {
+      alert('No change data found for ' + label);
+      return;
+    }
+    
+    // Format the detailed JSON like your BoMtickets.py
+    const detailedData = {
+      "sitio": item.label,
+      "url": item.url,
+      "estado": item.status,
+      "timestamp": item.timestamp,
+      "fecha_legible": item.fecha_legible,
+      "hash_actual": item.hash_actual,
+      "hash_anterior": item.hash_anterior,
+      "detalles_cambio": item.detalles_cambio,
+      "diferencias_detectadas": item.diferencias_detectadas,
+      "longitud_contenido": item.longitud_contenido,
+      "numero_cambios": item.change_count,
+      "contenido_anterior": item.contenido_anterior.substring(0, 1000) + "...",
+      "contenido_actual": item.contenido_completo.substring(0, 1000) + "..."
+    };
+    
+    // Show in popup
+    document.getElementById('jsonOverlay').style.display = 'block';
+    document.getElementById('jsonPopup').style.display = 'block';
+    document.getElementById('jsonContent').textContent = JSON.stringify(detailedData, null, 2);
+    
+  } catch (error) {
+    alert('Error loading change details: ' + error.message);
+  }
+}
   async function updateTicketData() {
     try {
       const response = await fetch('/api/ticket-changes');
       const data = await response.json();
-      
-      document.getElementById('lastChecked').textContent = 
+
+      document.getElementById('lastChecked').textContent =
         'Last Checked: ' + new Date().toLocaleString();
-      
+
       const table = document.getElementById('changesTable');
       table.innerHTML = `
         <tr>
@@ -792,16 +817,21 @@ HTML_TEMPLATE = """
           <th>Last Update</th>
         </tr>
       `;
-      
+
       let hasUpdates = false;
       data.forEach(item => {
         const row = table.insertRow();
         const changeCount = item.change_count || 0;
         const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
         
+        // Make changes badge clickable if > 0
+        const changesBadge = changeCount > 0 
+          ? `<span class="${badgeClass}" onclick="showChangeDetails('${item.label}')" style="cursor: pointer;" title="Click to see changes">${changeCount}</span>`
+          : `<span class="${badgeClass}">${changeCount}</span>`;
+
         row.innerHTML = `
           <td>${item.label}</td>
-          <td><span class="${badgeClass}">${changeCount}</span></td>
+          <td>${changesBadge}</td>
           <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
           <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
           <td>${new Date(item.timestamp).toLocaleString()}</td>
@@ -812,11 +842,11 @@ HTML_TEMPLATE = """
           row.style.background = 'linear-gradient(135deg, #ffe4f1, #ffc0cb)';
         }
       });
-      
+
       if (hasUpdates) {
         showNotification();
       }
-      
+
     } catch (error) {
       console.error('Error fetching ticket data:', error);
       document.getElementById('lastChecked').textContent = 'Error loading data';
