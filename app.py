@@ -54,7 +54,7 @@ def send_telegram_message(text):
 
 # Real ticket monitoring URLs
 URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
+    {"label": "ddf", "url": "https://httpbin.org/get"},
     {"label": "Wicked", "url": "https://wickedelmusical.com/"},
     {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
     {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
@@ -323,21 +323,41 @@ HTML_TEMPLATE = """
       border-collapse: collapse;
       background: linear-gradient(
         45deg,
-        rgba(255, 240, 245, 0.95) 0%,
-        rgba(255, 228, 240, 0.95) 25%,
-        rgba(255, 218, 235, 0.95) 50%,
-        rgba(255, 228, 240, 0.95) 75%,
-        rgba(255, 240, 245, 0.95) 100%
+        rgba(255, 182, 193, 0.9) 0%,   /* Light pink */
+        rgba(255, 240, 245, 0.95) 25%, /* Misty rose */
+        rgba(255, 228, 240, 0.95) 50%, /* Lavender blush */
+        rgba(255, 192, 203, 0.9) 75%,  /* Pink */
+        rgba(255, 218, 235, 0.95) 100% /* Cotton candy pink */
       );
       background-size: 400% 400%;
-      animation: tableGradient 8s ease-in-out infinite alternate;
-      border-radius: 20px;
+      animation: tableGradient 12s ease-in-out infinite alternate;
+      border-radius: 25px; /* More rounded for cuteness */
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(214, 51, 132, 0.25);
-      border: 3px solid #ff69b4;
-      font-size: 0.95em; /* Slightly smaller font for better fit */
+      box-shadow: 
+        0 15px 35px rgba(255, 105, 180, 0.4),
+        0 5px 15px rgba(255, 182, 193, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6); /* Inner glow */
+      border: 4px solid transparent;
+      background-clip: padding-box;
+      position: relative;
     }
-    
+    table::before {
+      content: '';
+      position: absolute;
+      top: -4px; left: -4px; right: -4px; bottom: -4px;
+      background: linear-gradient(45deg, 
+        #ff69b4, #ff1493, #ff69b4, #ffc0cb, 
+        #ffb6e6, #ff69b4, #d63384, #ff69b4);
+      background-size: 400% 400%;
+      border-radius: 25px;
+      z-index: -1;
+      animation: sparklyBorder 8s linear infinite;
+    }
+    @keyframes sparklyBorder {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
     @keyframes tableGradient {
       0% { background-position: 0% 50%; }
       100% { background-position: 100% 50%; }
@@ -349,14 +369,31 @@ HTML_TEMPLATE = """
       font-weight: 500;
     }
     th {
-      background: linear-gradient(135deg, #ff69b4, #d63384, #8b2c5c);
+      background: linear-gradient(135deg, 
+        #ff69b4 0%, 
+        #ff1493 25%, 
+        #d63384 50%, 
+        #b83dba 75%, 
+        #8b2c5c 100%);
       color: #fff;
       font-weight: 900;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-      padding: 20px 15px;
-      font-size: 1.1em;
+      text-shadow: 
+        2px 2px 4px rgba(0,0,0,0.3),
+        0 0 10px rgba(255, 255, 255, 0.5); /* Glowy effect */
+      padding: 25px 20px;
+      font-size: 1.15em;
       position: relative;
-      text-align: center; /* Center align headers */
+      text-align: center;
+      border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    th::after {
+      content: '✨';
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 0.8em;
+      animation: sparkle 2s infinite;
+      opacity: 0.8;
     }
     th:nth-child(1) {
       text-align: left;
@@ -398,20 +435,28 @@ HTML_TEMPLATE = """
       box-shadow: 0 6px 20px rgba(214, 51, 132, 0.2);
     }
     td {
-      padding: 18px 15px;
-      border-bottom: 2px solid #ffe0f0;
+      padding: 20px 18px;
+      border-bottom: 2px solid rgba(255, 182, 193, 0.6);
       color: #8b2c5c;
       font-weight: 600;
-      font-size: 1em; /* Adjusted font size */
+      font-size: 1em;
       vertical-align: middle;
-      text-align: center; /* Center align all content */
+      text-align: center;
+      position: relative;
+      background: rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
     }
     /* Enhanced row hover effects */
     tr:hover {
-      background: linear-gradient(135deg, #ffe4f1, #fff0f5, #ffe4f1);
-      transform: scale(1.02);
-      transition: all 0.4s ease;
-      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.2);
+      background: linear-gradient(135deg, 
+        rgba(255, 182, 193, 0.3), 
+        rgba(255, 240, 245, 0.4), 
+        rgba(255, 218, 235, 0.3));
+      transform: scale(1.02) translateY(-2px);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      box-shadow: 
+        0 10px 30px rgba(255, 105, 180, 0.3),
+        0 5px 15px rgba(255, 182, 193, 0.4);
     }
     .sparkle {
       position: absolute;
@@ -465,36 +510,61 @@ HTML_TEMPLATE = """
       color: #fff;
     }
     .status-updated {
-      background: linear-gradient(135deg, #28a745, #20c997);
+      background: linear-gradient(135deg, 
+        #ff69b4 0%, 
+        #ff1493 50%, 
+        #d63384 100%);
       color: #fff;
-      padding: 10px 18px; /* Increased padding for better rectangle */
-      border-radius: 8px; /* More rectangular, less rounded */
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+      padding: 12px 20px;
+      border-radius: 25px; /* More rounded */
+      font-weight: 800;
+      box-shadow: 
+        0 6px 20px rgba(255, 105, 180, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-width: 120px; /* Fixed minimum width for consistency */
-      justify-content: center; /* Center the content */
+      min-width: 130px;
+      justify-content: center;
       text-align: center;
       font-size: 0.95em;
-      letter-spacing: 0.5px; /* Slightly spaced letters */
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
     }
     
     .status-updated::before { content: "🎉"; }
-    
+    .status-updated::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
     .status-no-change {
-      color: #6c757d;
+      color: #8b2c5c;
       font-style: italic;
-      padding: 10px 18px; /* Match the updated status padding */
-      background: #f8f9fa;
-      border-radius: 8px; /* Match the updated status border radius */
-      border: 2px solid #dee2e6;
-      min-width: 120px; /* Match the updated status width */
+      padding: 12px 20px;
+      background: linear-gradient(135deg, 
+        rgba(255, 240, 245, 0.8), 
+        rgba(255, 228, 240, 0.9));
+      border-radius: 25px;
+      border: 2px solid rgba(255, 182, 193, 0.6);
+      min-width: 130px;
       text-align: center;
-      font-weight: 600; /* Make it bolder */
+      font-weight: 700;
       font-size: 0.95em;
       display: inline-block;
+      box-shadow: 0 3px 10px rgba(255, 182, 193, 0.3);
     }
     /* Enhanced header with gradient border */
     .last-checked {
@@ -515,22 +585,29 @@ HTML_TEMPLATE = """
       background-size: 200% 100%;
       animation: loading 1.5s infinite;
     }
-    .change-badge {
-      background: linear-gradient(135deg, #ff6b35, #f7931e);
+    ..change-badge {
+      background: linear-gradient(135deg, 
+        #ff6b35 0%, 
+        #ff8c42 50%, 
+        #f7931e 100%);
       color: white;
-      border-radius: 12px; /* More rectangular */
-      padding: 8px 14px; /* Better padding */
+      border-radius: 20px; /* More rounded */
+      padding: 10px 16px;
       font-size: 0.9em;
-      font-weight: bold;
+      font-weight: 800;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 40px; /* Fixed minimum width */
-      height: 35px; /* Fixed height */
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
+      min-width: 45px;
+      height: 40px;
+      box-shadow: 
+        0 6px 20px rgba(255, 107, 53, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
   .change-badge.zero {
       background: linear-gradient(135deg, #e9ecef, #dee2e6);
@@ -544,6 +621,10 @@ HTML_TEMPLATE = """
     }
     .change-badge.zero:hover {
       transform: none;
+    }
+    .change-badge::before {
+      content: '💫';
+      margin-right: 5px;
     }
     .json-popup {
       position: fixed;
