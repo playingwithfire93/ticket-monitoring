@@ -239,11 +239,9 @@ HTML_TEMPLATE = """
       margin: 0;
       padding: 0;
       min-height: 100vh;
-      /* Remove static background */
-      /* background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%); */
       overflow-x: hidden;
     }
-/* Start https://www.cursors-4u.com */ * {cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;} /* End https://www.cursors-4u.com */
+    * {cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;}
     .animated-bg {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -282,7 +280,7 @@ HTML_TEMPLATE = """
       font-weight: 900;
     }
     .slideshow-container {
-      max-width: 1100px; /* was 800px */
+      max-width: 1100px;
       margin: 30px auto;
       position: relative;
       border-radius: 28px;
@@ -300,41 +298,39 @@ HTML_TEMPLATE = """
       background-size: 400% 400%;
       animation: sliderMove 8s linear infinite alternate;
     }
-
-@keyframes sliderMove {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
+    @keyframes sliderMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
     .slide {
       display: none;
       width: 100%;
     }
-    /* Make the images taller too */
-.slide img {
-  width: 100%;
-  height: 520px; /* was 400px */
-  object-fit: contain;
-  display: block;
-  margin: 0 auto;
-}
+    .slide img {
+      width: 100%;
+      height: 520px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
     table {
       width: 98%;
       margin: 30px auto;
       border-collapse: collapse;
-      table-layout: fixed; /* This is crucial for consistent column widths */
+      table-layout: fixed;
       background: linear-gradient(
         45deg,
-        rgba(255, 182, 193, 0.9) 0%,   
-        rgba(255, 240, 245, 0.95) 25%, 
-        rgba(255, 228, 240, 0.95) 50%, 
-        rgba(255, 192, 203, 0.9) 75%,  
-        rgba(255, 218, 235, 0.95) 100% 
+        rgba(255, 182, 193, 0.9) 0%,
+        rgba(255, 240, 245, 0.95) 25%,
+        rgba(255, 228, 240, 0.95) 50%,
+        rgba(255, 192, 203, 0.9) 75%,
+        rgba(255, 218, 235, 0.95) 100%
       );
       background-size: 400% 400%;
       animation: tableGradient 12s ease-in-out infinite alternate;
       border-radius: 25px;
       overflow: hidden;
-      box-shadow: 
+      box-shadow:
         0 15px 35px rgba(255, 105, 180, 0.4),
         0 5px 15px rgba(255, 182, 193, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -346,8 +342,8 @@ HTML_TEMPLATE = """
       content: '';
       position: absolute;
       top: -4px; left: -4px; right: -4px; bottom: -4px;
-      background: linear-gradient(45deg, 
-        #ff69b4, #ff1493, #ff69b4, #ffc0cb, 
+      background: linear-gradient(45deg,
+        #ff69b4, #ff1493, #ff69b4, #ffc0cb,
         #ffb6e6, #ff69b4, #d63384, #ff69b4);
       background-size: 400% 400%;
       border-radius: 25px;
@@ -370,17 +366,17 @@ HTML_TEMPLATE = """
       font-weight: 500;
     }
     th {
-      background: linear-gradient(135deg, 
-        #ff69b4 0%, 
-        #ff1493 25%, 
-        #d63384 50%, 
-        #b83dba 75%, 
+      background: linear-gradient(135deg,
+        #ff69b4 0%,
+        #ff1493 25%,
+        #d63384 50%,
+        #b83dba 75%,
         #8b2c5c 100%);
       color: #fff;
       font-weight: 900;
-      text-shadow: 
+      text-shadow:
         2px 2px 4px rgba(0,0,0,0.3),
-        0 0 10px rgba(255, 255, 255, 0.5); /* Glowy effect */
+        0 0 10px rgba(255, 255, 255, 0.5);
       padding: 25px 20px;
       font-size: 1.15em;
       position: relative;
@@ -403,22 +399,19 @@ HTML_TEMPLATE = """
     }
     th:nth-child(2) {
       text-align: center;
-      width: 100px;
-      max-width: 100px;
+      width: 50px;
+      max-width: 50px;
     }
-    
     th:nth-child(3) {
       text-align: left;
       width: 350px;
       max-width: 350px;
     }
-    
     th:nth-child(4) {
       text-align: center;
       width: 160px;
       max-width: 160px;
     }
-    
     th:nth-child(5) {
       text-align: center;
       width: 140px;
@@ -434,50 +427,42 @@ HTML_TEMPLATE = """
       font-weight: 800;
       color: #d63384;
       text-shadow: 1px 1px 2px rgba(255, 182, 193, 0.8);
-      width: 180px; /* Match header */
+      width: 180px;
       max-width: 180px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    
-    /* Changes column - match header width */
     td:nth-child(2) {
       text-align: center;
-      width: 100px; /* Match header */
-      max-width: 100px;
+      width: 50px;
+      max-width: 50px;
     }
-    
-    /* URL column - match header width */
     td:nth-child(3) {
       text-align: left;
-      width: 350px; /* Match header */
+      width: 350px;
       max-width: 350px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    
-    /* Status column - match header width */
     td:nth-child(4) {
       text-align: center;
-      width: 160px; /* Match header */
+      width: 160px;
       max-width: 160px;
       vertical-align: middle;
     }
-    
-    /* Last Update column - match header width */
     td:nth-child(5) {
       text-align: center;
       font-size: 0.9em;
       color: #b83dba;
       font-weight: 600;
-      width: 140px; /* Match header */
+      width: 140px;
       max-width: 140px;
     }
     tr:hover {
       background: linear-gradient(135deg, #ffe4f1, #fff0f5, #ffe4f1);
-      transform: scale(1.01); /* Less dramatic scale */
+      transform: scale(1.01);
       transition: all 0.3s ease;
       box-shadow: 0 6px 20px rgba(214, 51, 132, 0.2);
     }
@@ -488,20 +473,18 @@ HTML_TEMPLATE = """
       font-weight: 600;
       font-size: 1em;
       vertical-align: middle;
-      /* Remove text-align: center - let column-specific rules handle this */
       position: relative;
       background: rgba(255, 255, 255, 0.1);
       transition: all 0.3s ease;
     }
-    /* Enhanced row hover effects */
     tr:hover {
-      background: linear-gradient(135deg, 
-        rgba(255, 182, 193, 0.3), 
-        rgba(255, 240, 245, 0.4), 
+      background: linear-gradient(135deg,
+        rgba(255, 182, 193, 0.3),
+        rgba(255, 240, 245, 0.4),
         rgba(255, 218, 235, 0.3));
       transform: scale(1.02) translateY(-2px);
       transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      box-shadow: 
+      box-shadow:
         0 10px 30px rgba(255, 105, 180, 0.3),
         0 5px 15px rgba(255, 182, 193, 0.4);
     }
@@ -557,15 +540,15 @@ HTML_TEMPLATE = """
       color: #fff;
     }
     .status-updated {
-      background: linear-gradient(135deg, 
-        #ff69b4 0%, 
-        #ff1493 50%, 
+      background: linear-gradient(135deg,
+        #ff69b4 0%,
+        #ff1493 50%,
         #d63384 100%);
       color: #fff;
       padding: 12px 20px;
       border-radius: 25px;
       font-weight: 800;
-      box-shadow: 
+      box-shadow:
         0 6px 20px rgba(255, 105, 180, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
       display: inline-flex;
@@ -582,16 +565,15 @@ HTML_TEMPLATE = """
       position: relative;
       overflow: hidden;
     }
-    
     .status-updated::before { content: "🎉"; }
     .status-updated::after {
       content: '';
       position: absolute;
       top: 0; left: -100%;
       width: 100%; height: 100%;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
         transparent);
       animation: shimmer 2s infinite;
     }
@@ -603,8 +585,8 @@ HTML_TEMPLATE = """
       color: #8b2c5c;
       font-style: italic;
       padding: 12px 20px;
-      background: linear-gradient(135deg, 
-        rgba(255, 240, 245, 0.8), 
+      background: linear-gradient(135deg,
+        rgba(255, 240, 245, 0.8),
         rgba(255, 228, 240, 0.9));
       border-radius: 25px;
       border: 2px solid rgba(255, 182, 193, 0.6);
@@ -619,7 +601,6 @@ HTML_TEMPLATE = """
       justify-content: center;
       box-shadow: 0 3px 10px rgba(255, 182, 193, 0.3);
     }
-    /* Enhanced header with gradient border */
     .last-checked {
       text-align: center;
       color: #d63384;
@@ -638,22 +619,22 @@ HTML_TEMPLATE = """
       background-size: 200% 100%;
       animation: loading 1.5s infinite;
     }
-    ..change-badge {
-      background: linear-gradient(135deg, 
-        #ff6b35 0%, 
-        #ff8c42 50%, 
+    .change-badge {
+      background: linear-gradient(135deg,
+        #ff6b35 0%,
+        #ff8c42 50%,
         #f7931e 100%);
       color: white;
-      border-radius: 20px; /* More rounded */
-      padding: 10px 16px;
+      border-radius: 20px;
+      padding: 10px 8px;
       font-size: 0.9em;
       font-weight: 800;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 45px;
+      min-width: 30px;
       height: 40px;
-      box-shadow: 
+      box-shadow:
         0 6px 20px rgba(255, 107, 53, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
       text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
@@ -662,14 +643,13 @@ HTML_TEMPLATE = """
       position: relative;
       overflow: hidden;
     }
-  .change-badge.zero {
+    .change-badge.zero {
       background: linear-gradient(135deg, #e9ecef, #dee2e6);
       color: #6c757d;
       cursor: default;
     }
-  
     .change-badge:hover {
-      transform: scale(1.1) rotate(2deg); /* Less dramatic hover */
+      transform: scale(1.1) rotate(2deg);
       box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
     }
     .change-badge.zero:hover {
@@ -707,14 +687,14 @@ HTML_TEMPLATE = """
       background: #f8f9fa;
     }
     .json-code {
-      background: white; /* Changed from dark background */
-      color: #333; /* Changed from light text */
+      background: white;
+      color: #333;
       padding: 20px;
       border-radius: 10px;
-      font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Changed from monospace */
-      font-size: 14px; /* Increased font size */
-      line-height: 1.6; /* Better line spacing */
-      white-space: normal; /* Allow text wrapping */
+      font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: normal;
       word-wrap: break-word;
       max-height: 100%;
       overflow: auto;
@@ -740,22 +720,19 @@ HTML_TEMPLATE = """
       animation: highlightMove 6s linear infinite alternate;
       padding: 30px 0 20px 0;
     }
-
-@keyframes highlightMove {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-@keyframes loading {
+    @keyframes highlightMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+    @keyframes loading {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-    /* Site name icons based on content */
     .site-wicked::before { content: "🧙‍♀️ "; }
     .site-miserables::before { content: "⚖️ "; }
     .site-mormon::before { content: "📖🐸 "; }
     .site-audrey::before { content: "🔍 "; }
     .site-houdini::before { content: "🎩 "; }
-    
     .close-json-btn {
       background: white;
       color: #d63384;
@@ -774,13 +751,13 @@ HTML_TEMPLATE = """
       font-weight: 500;
       transition: all 0.3s ease;
       position: relative;
-    }td a:hover {
+    }
+    td a:hover {
       color: #8b2c5c;
       text-decoration: underline;
       text-decoration-color: #ff69b4;
       text-decoration-thickness: 2px;
     }
-    
     .json-overlay {
       position: fixed;
       top: 0;
@@ -793,13 +770,6 @@ HTML_TEMPLATE = """
     }
   </style>
 </head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5032121715924684"
-     crossorigin="anonymous"></script>
-<!-- Add this inside your <head> or at the top of your HTML -->
-
-<a href="https://www.cursors-4u.com/cursor/2011/02/18/cute-bow-tie-hearts-blinking-blue-and-pink-pointer.html" target="_blank" title="Cute Bow Tie Hearts Blinking Blue and Pink Pointer">
-  <img src="https://cur.cursors-4u.net/cursor.png" border="0" alt="Cute Bow Tie Hearts Blinking Blue and Pink Pointer" style="position:absolute; top: 0px; right: 0px;" />
-</a>
 <body>
 <div id="telegram-popup-overlay" style="display:block;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:9999;">
   <div style="background:linear-gradient(135deg,#ff69b4,#d63384);max-width:340px;margin:12vh auto 0 auto;padding:32px 24px 24px 24px;border-radius:22px;box-shadow:0 8px 32px #d6338440;text-align:center;position:relative;">
@@ -819,20 +789,13 @@ HTML_TEMPLATE = """
 </div>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <h1>✨ Ticket Monitor Dashboard ✨</h1>
-
-<!-- Telegram Join Popup with matching table header colors -->
-
-
 <div class="animated-bg"></div>
 <div class="floating-sparkle s1">✨</div>
 <div class="floating-sparkle s2">💖</div>
 <div class="floating-sparkle s3">🌸</div>
 <div class="floating-sparkle s4">💕</div>
 <div class="floating-sparkle s5">✨</div>
-
-<!-- Slideshow + Spotify widget alineados -->
 <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 40px auto 30px auto; max-width: 1200px;">
-  <!-- Slideshow grande y centrado -->
   <div style="flex: 2 1 0; min-width: 0; display: flex; justify-content: center;">
     <div class="slideshow-container" style="max-width: 700px; width: 100%; margin: 0 auto;">
       <div class="slide">
@@ -915,12 +878,10 @@ HTML_TEMPLATE = """
       </div>
     </div>
   </div>
-  <!-- Widget Spotify alineado verticalmente -->
   <div style="flex: 0 0 340px; min-width: 300px; display: flex; align-items: center;">
     <iframe style="border-radius:12px; box-shadow:0 4px 16px #d6338440;" src="https://open.spotify.com/embed/playlist/7w9wB3KwgtClfngWeFLBQX?utm_source=generator&theme=0" width="340" height="452" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
   </div>
 </div>
-
 <div class="notification-overlay" id="notificationOverlay"></div>
 <div class="notification-popup" id="notificationPopup">
   <h2>✨ New Changes Detected! ✨</h2>
@@ -930,7 +891,6 @@ HTML_TEMPLATE = """
     <button class="popup-button" onclick="closeNotification()">Cerrar</button>
   </div>
 </div>
-
 <div class="json-overlay" id="jsonOverlay" onclick="closeJsonPopup()"></div>
 <div class="json-popup" id="jsonPopup">
   <div class="json-popup-header">
@@ -941,12 +901,7 @@ HTML_TEMPLATE = """
     <div class="json-code" id="jsonContent">Loading...</div>
   </div>
 </div>
-
-
 <div class="last-checked" id="lastChecked">Last Checked: Loading...</div>
-
-
-
 <table id="changesTable">
   <tr>
     <th>Show/Website</th>
@@ -960,47 +915,36 @@ HTML_TEMPLATE = """
 <div style="max-width: 600px; margin: 40px auto; padding: 30px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 8px 25px rgba(214, 51, 132, 0.2); border: 2px solid #ff69b4;">
   <h2 style="color: #d63384; text-align: center; margin-bottom: 20px;">💡 ¿Tienes una sugerencia?</h2>
   <p style="text-align: center; color: #8b2c5c; margin-bottom: 25px;">¡Sugiere un nuevo sitio web para monitorear!</p>
-  
   <form id="suggestionForm" style="display: flex; flex-direction: column; gap: 15px;">
-    <input type="text" id="siteName" placeholder="Nombre del sitio (ej: Hamilton El Musical)" 
+    <input type="text" id="siteName" placeholder="Nombre del sitio (ej: Hamilton El Musical)"
            style="padding: 12px; border: 2px solid #ff69b4; border-radius: 10px; font-size: 16px;">
-    
-    <input type="url" id="siteUrl" placeholder="URL del sitio (ej: https://hamilton.com)" 
+    <input type="url" id="siteUrl" placeholder="URL del sitio (ej: https://hamilton.com)"
            style="padding: 12px; border: 2px solid #ff69b4; border-radius: 10px; font-size: 16px;">
-    
-    <textarea id="reason" placeholder="¿Por qué deberíamos monitorear este sitio? (opcional)" 
+    <textarea id="reason" placeholder="¿Por qué deberíamos monitorear este sitio? (opcional)"
               style="padding: 12px; border: 2px solid #ff69b4; border-radius: 10px; font-size: 16px; min-height: 80px; resize: vertical;"></textarea>
-    
     <button type="submit" style="background: linear-gradient(135deg, #ff69b4, #d63384); color: white; padding: 15px; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; transition: transform 0.2s;">
       📤 Enviar Sugerencia
     </button>
   </form>
-  
   <div id="suggestionResult" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
 </div>
-
 <script>
 document.getElementById('suggestionForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  
   const siteName = document.getElementById('siteName').value;
   const siteUrl = document.getElementById('siteUrl').value;
   const reason = document.getElementById('reason').value;
-  
   if (!siteName || !siteUrl) {
     document.getElementById('suggestionResult').innerHTML = '<span style="color: #d63384;">Por favor completa todos los campos obligatorios</span>';
     return;
   }
-  
   try {
     const response = await fetch('/api/suggest-site', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ siteName, siteUrl, reason })
     });
-    
     const result = await response.json();
-    
     if (response.ok) {
       document.getElementById('suggestionResult').innerHTML = '<span style="color: #28a745;">✅ ¡Sugerencia enviada! La revisaremos pronto.</span>';
       document.getElementById('suggestionForm').reset();
@@ -1011,236 +955,189 @@ document.getElementById('suggestionForm').addEventListener('submit', async funct
     document.getElementById('suggestionResult').innerHTML = '<span style="color: #d63384;">❌ Error al enviar la sugerencia</span>';
   }
 });
-</script>
-
-<script>
-  let slideIndex = 0;
-  showSlides();
-
-  function showSlides() {
-    let slides = document.getElementsByClassName("slide");
-    if (slides.length === 0) return;
-
-    for (let i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";
-    }
-    slideIndex++;
-    if (slideIndex > slides.length) { slideIndex = 1; }
-    slides[slideIndex-1].style.display = "block";
-    setTimeout(showSlides, 3000);
+let slideIndex = 0;
+showSlides();
+function showSlides() {
+  let slides = document.getElementsByClassName("slide");
+  if (slides.length === 0) return;
+  for (let i = 0; i < slides.length; i++) {
+    slides[i].style.display = "none";
   }
-  window.addEventListener('DOMContentLoaded', function() {
+  slideIndex++;
+  if (slideIndex > slides.length) { slideIndex = 1; }
+  slides[slideIndex-1].style.display = "block";
+  setTimeout(showSlides, 3000);
+}
+window.addEventListener('DOMContentLoaded', function() {
   if (!localStorage.getItem('telegram_popup_shown')) {
     document.getElementById('telegram-popup-overlay').style.display = 'block';
     localStorage.setItem('telegram_popup_shown', 'yes');
   }
 });
-  function showNotification() {
-    document.getElementById('notificationOverlay').style.display = 'block';
-    document.getElementById('notificationPopup').style.display = 'block';
-
-    // Play notification sound
-    playNotificationSound();
+function showNotification() {
+  document.getElementById('notificationOverlay').style.display = 'block';
+  document.getElementById('notificationPopup').style.display = 'block';
+  playNotificationSound();
+}
+function playNotificationSound() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const playTone = (frequency, startTime, duration) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+    const now = audioContext.currentTime;
+    playTone(523.25, now, 0.2);
+    playTone(659.25, now + 0.1, 0.2);
+    playTone(783.99, now + 0.2, 0.3);
+  } catch (e) {
+    console.log('Audio not supported');
   }
-
-  function playNotificationSound() {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-      const playTone = (frequency, startTime, duration) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(frequency, startTime);
-        oscillator.type = 'sine';
-
-        gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-
-        oscillator.start(startTime);
-        oscillator.stop(startTime + duration);
-      };
-
-      const now = audioContext.currentTime;
-      playTone(523.25, now, 0.2);        // C5
-      playTone(659.25, now + 0.1, 0.2);  // E5
-      playTone(783.99, now + 0.2, 0.3);  // G5
-    } catch (e) {
-      console.log('Audio not supported');
-    }
+}
+function closeNotification() {
+  document.getElementById('notificationOverlay').style.display = 'none';
+  document.getElementById('notificationPopup').style.display = 'none';
+}
+function viewJsonFromPopup() {
+  showJsonPopup();
+  closeNotification();
+}
+async function showJsonPopup() {
+  document.getElementById('jsonOverlay').style.display = 'block';
+  document.getElementById('jsonPopup').style.display = 'block';
+  document.getElementById('jsonContent').textContent = 'Loading JSON data...';
+  try {
+    const response = await fetch('/api/changes.json');
+    const jsonData = await response.text();
+    document.getElementById('jsonContent').textContent = jsonData;
+  } catch (error) {
+    document.getElementById('jsonContent').textContent = 'Error loading JSON data: ' + error.message;
   }
-
-  function closeNotification() {
-    document.getElementById('notificationOverlay').style.display = 'none';
-    document.getElementById('notificationPopup').style.display = 'none';
-  }
-
-  function viewJsonFromPopup() {
-    showJsonPopup();
-    closeNotification();
-  }
-
-  async function showJsonPopup() {
-    document.getElementById('jsonOverlay').style.display = 'block';
-    document.getElementById('jsonPopup').style.display = 'block';
-    document.getElementById('jsonContent').textContent = 'Loading JSON data...';
-
-    try {
-      const response = await fetch('/api/changes.json');
-      const jsonData = await response.text();
-      document.getElementById('jsonContent').textContent = jsonData;
-    } catch (error) {
-      document.getElementById('jsonContent').textContent = 'Error loading JSON data: ' + error.message;
-    }
-  }
-
-  function closeJsonPopup() {
-    document.getElementById('jsonOverlay').style.display = 'none';
-    document.getElementById('jsonPopup').style.display = 'none';
-  }
-  // ...existing code...
+}
+function closeJsonPopup() {
+  document.getElementById('jsonOverlay').style.display = 'none';
+  document.getElementById('jsonPopup').style.display = 'none';
+}
 async function showChangeDetails(label) {
   try {
     const response = await fetch('/api/ticket-changes');
     const data = await response.json();
-    
-    // Find the specific item
     const item = data.find(d => d.label === label);
     if (!item) {
       alert('No se encontraron datos de cambios para ' + label);
       return;
     }
-    
-    // Create SIMPLE user-friendly content - NO technical stuff
     const friendlyContent = `
-            <div style="font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333;">
+      <div style="font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #d63384; border-bottom: 2px solid #ff69b4; padding-bottom: 10px;">
           📋 Cambios en: ${item.label}
         </h2>
-        
         <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 15px 0;">
           <h3 style="color: #d63384; margin-top: 0;">🌐 Página</h3>
           <p><strong>Sitio:</strong> ${item.label}</p>
           <p><strong>Enlace:</strong> <a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></p>
           <p><strong>Última revisión:</strong> ${item.fecha_legible}</p>
         </div>
-
         <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin: 15px 0;">
           <h3 style="color: #856404; margin-top: 0;">📝 ¿Qué ha cambiado?</h3>
           <p style="font-size: 16px; line-height: 1.8;">
-            ${item.status.includes('Actualizado') ? 
-              '✅ <strong>¡La página se ha actualizado!</strong><br>Esto significa que hay nuevas noticias, entradas disponibles, cambios de precios, nuevas fechas, o información actualizada.' : 
+            ${item.status.includes('Actualizado') ?
+              '✅ <strong>¡La página se ha actualizado!</strong><br>Esto significa que hay nuevas noticias, entradas disponibles, cambios de precios, nuevas fechas, o información actualizada.' :
               '😊 <strong>No hay cambios</strong><br>La página sigue igual que la última vez que la revisamos.'
             }
           </p>
         </div>
-
         ${item.change_count > 0 ? `
         <div style="background: #d1ecf1; padding: 20px; border-radius: 10px; margin: 15px 0;">
           <h3 style="color: #0c5460; margin-top: 0;">🔢 Historial</h3>
           <p>Esta página ha cambiado <strong>${item.change_count} ${item.change_count === 1 ? 'vez' : 'veces'}</strong> desde que la monitoreamos.</p>
         </div>
         ` : ''}
-
         <div style="background: #e2e3e5; padding: 20px; border-radius: 10px; margin: 15px 0;">
           <h3 style="color: #383d41; margin-top: 0;">💡 ¿Qué hacer ahora?</h3>
-          ${item.status.includes('Actualizado') ? 
+          ${item.status.includes('Actualizado') ?
             '<p>🎯 <strong>¡Visita la página ahora!</strong></p><p>Puede haber:</p><ul><li>🎟️ Nuevas entradas disponibles</li><li>💰 Cambios en los precios</li><li>📅 Nuevas fechas de funciones</li><li>👥 Cambios en el elenco</li><li>📢 Noticias importantes</li></ul>' :
             '<p>😌 <strong>Todo tranquilo por ahora</strong></p><p>Te avisaremos en cuanto haya novedades.</p>'
           }
         </div>
-
         <div style="text-align: center; margin-top: 25px;">
-          <a href="${item.url}" target="_blank" 
+          <a href="${item.url}" target="_blank"
              style="background: linear-gradient(135deg, #ff69b4, #d63384); color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(214, 51, 132, 0.3); font-size: 16px;">
             🔗 Ver ${item.label}
           </a>
         </div>
       </div>
     `;
-    
-    // Show in popup with HTML content
     document.getElementById('jsonOverlay').style.display = 'block';
     document.getElementById('jsonPopup').style.display = 'block';
     document.getElementById('jsonContent').innerHTML = friendlyContent;
-    
   } catch (error) {
     alert('Error cargando los detalles: ' + error.message);
   }
 }
-// ...existing code...
-  async function updateTicketData() {
-    try {
-      const response = await fetch('/api/ticket-changes');
-      const data = await response.json();
-
-      document.getElementById('lastChecked').textContent =
-        'Last Checked: ' + new Date().toLocaleString();
-
-      const table = document.getElementById('changesTable');
-      table.innerHTML = `
-        <tr>
-          <th>Show/Website</th>
-           <th>Cambios</th>
-          <th>URL</th>
-          <th>Status</th>
-          <th>Last Update</th>
-        </tr>
+async function updateTicketData() {
+  try {
+    const response = await fetch('/api/ticket-changes');
+    const data = await response.json();
+    document.getElementById('lastChecked').textContent =
+      'Last Checked: ' + new Date().toLocaleString();
+    const table = document.getElementById('changesTable');
+    table.innerHTML = `
+      <tr>
+        <th>Show/Website</th>
+        <th>Cambios</th>
+        <th>URL</th>
+        <th>Status</th>
+        <th>Last Update</th>
+      </tr>
+    `;
+    let hasUpdates = false;
+    data.forEach(item => {
+      const row = table.insertRow();
+      const changeCount = item.change_count || 0;
+      const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
+      let siteClass = '';
+      const labelLower = item.label.toLowerCase();
+      if (labelLower.includes('wicked')) siteClass = 'site-wicked';
+      else if (labelLower.includes('miserables')) siteClass = 'site-miserables';
+      else if (labelLower.includes('mormon') || labelLower.includes('book')) siteClass = 'site-mormon';
+      else if (labelLower.includes('audrey')) siteClass = 'site-audrey';
+      else if (labelLower.includes('houdini')) siteClass = 'site-houdini';
+      const changesBadge = changeCount > 0
+        ? `<span class="${badgeClass}" onclick="showChangeDetails('${item.label}')" style="cursor: pointer;" title="Click to see changes">${changeCount}</span>`
+        : `<span class="${badgeClass}">${changeCount}</span>`;
+      row.innerHTML = `
+        <td><span class="${siteClass}">${item.label}</span></td>
+        <td>${changesBadge}</td>
+        <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
+        <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
+        <td>${new Date(item.timestamp).toLocaleString()}</td>
       `;
-
-      let hasUpdates = false;
-      data.forEach(item => {
-        const row = table.insertRow();
-        const changeCount = item.change_count || 0;
-        const badgeClass = changeCount === 0 ? 'change-badge zero' : 'change-badge';
-        
-        // Add site-specific CSS classes for emojis
-        let siteClass = '';
-        const labelLower = item.label.toLowerCase();
-        if (labelLower.includes('wicked')) siteClass = 'site-wicked';
-        else if (labelLower.includes('miserables')) siteClass = 'site-miserables';
-        else if (labelLower.includes('mormon') || labelLower.includes('book')) siteClass = 'site-mormon';
-        else if (labelLower.includes('audrey')) siteClass = 'site-audrey';
-        else if (labelLower.includes('houdini')) siteClass = 'site-houdini';
-        
-        // Make changes badge clickable if > 0
-        const changesBadge = changeCount > 0 
-          ? `<span class="${badgeClass}" onclick="showChangeDetails('${item.label}')" style="cursor: pointer;" title="Click to see changes">${changeCount}</span>`
-          : `<span class="${badgeClass}">${changeCount}</span>`;
-
-        row.innerHTML = `
-          <td><span class="${siteClass}">${item.label}</span></td>
-          <td>${changesBadge}</td>
-          <td><a href="${item.url}" target="_blank" style="color: #d63384;">${item.url}</a></td>
-          <td class="${item.status.includes('Actualizado') ? 'status-updated' : 'status-no-change'}">${item.status}</td>
-          <td>${new Date(item.timestamp).toLocaleString()}</td>
-        `;
-        
-        if (item.status.includes('Actualizado')) {
-          hasUpdates = true;
-          row.style.background = 'linear-gradient(135deg, #ffe4f1, #ffc0cb)';
-        }
-      });
-
-      if (hasUpdates) {
-        showNotification();
+      if (item.status.includes('Actualizado')) {
+        hasUpdates = true;
+        row.style.background = 'linear-gradient(135deg, #ffe4f1, #ffc0cb)';
       }
-
-    } catch (error) {
-      console.error('Error fetching ticket data:', error);
-      document.getElementById('lastChecked').textContent = 'Error loading data';
+    });
+    if (hasUpdates) {
+      showNotification();
     }
+  } catch (error) {
+    console.error('Error fetching ticket data:', error);
+    document.getElementById('lastChecked').textContent = 'Error loading data';
   }
-
-  // Initial load and periodic updates
-  updateTicketData();
-  setInterval(updateTicketData, 5000); // Check every 5 seconds
+}
+updateTicketData();
+setInterval(updateTicketData, 5000);
 </script>
-
 </body>
 </html>
 """
