@@ -40,38 +40,56 @@ def send_whatsapp_message(label, url, to):
 
 def send_telegram_message(text, chat_id=None):
     """Send message to Telegram. If chat_id is provided, send to that specific chat."""
+    print(f"🐛 DEBUG: send_telegram_message called with text: {text[:50]}...")
+    
     token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Main bot token
     if not chat_id:
         chat_id = os.environ.get("TELEGRAM_CHAT_ID")  # Default chat_id en .env
     
+    print(f"🐛 DEBUG: Token: {token[:10]}...{token[-5:] if token else 'None'}")
+    print(f"🐛 DEBUG: Chat ID: {chat_id}")
+    
     if not token or not chat_id:
-        print("Telegram token or chat_id not set")
+        print("❌ ERROR: Telegram token or chat_id not set")
         return
     
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    
+    print(f"🐛 DEBUG: Sending to URL: {url}")
+    print(f"🐛 DEBUG: Payload: {payload}")
+    
     try:
         r = requests.post(url, data=payload, timeout=5)
-        print("Telegram response:", r.status_code, r.text)
+        print(f"✅ Telegram response: {r.status_code} - {r.text}")
     except Exception as e:
-        print("Telegram notification failed:", e)
+        print(f"❌ Telegram notification failed: {e}")
 
 def send_to_admin_group(text):
     """Send message specifically to the admin Telegram bot"""
+    print(f"🐛 DEBUG: send_to_admin_group called with text: {text[:50]}...")
+    
     admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
     admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
     
+    print(f"🐛 DEBUG: Admin Token: {admin_token[:10]}...{admin_token[-5:] if admin_token else 'None'}")
+    print(f"🐛 DEBUG: Admin Chat ID: {admin_chat_id}")
+    
     if not admin_token or not admin_chat_id:
-        print("Admin Telegram bot token or chat ID not configured - skipping admin notification")
+        print("❌ ERROR: Admin Telegram bot token or chat ID not configured - skipping admin notification")
         return
     
     url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
     payload = {"chat_id": admin_chat_id, "text": text, "parse_mode": "HTML"}
+    
+    print(f"🐛 DEBUG: Admin sending to URL: {url}")
+    print(f"🐛 DEBUG: Admin payload: {payload}")
+    
     try:
         r = requests.post(url, data=payload, timeout=5)
-        print("Admin Telegram response:", r.status_code, r.text)
+        print(f"✅ Admin Telegram response: {r.status_code} - {r.text}")
     except Exception as e:
-        print("Admin Telegram notification failed:", e)
+        print(f"❌ Admin Telegram notification failed: {e}")
 
 def send_suggestion_with_approval_buttons(text, suggestion_id, site_name, site_url, reason):
     """Send suggestion to admin bot with approve/reject buttons"""
@@ -1756,6 +1774,29 @@ def check_changes():
         return {"new_changes": has_new_changes}
     except:
         return {"new_changes": False}
+
+@app.route('/test-notification')
+def test_notification():
+    """Simple test to trigger notifications"""
+    print("🧪 TEST: Starting notification test...")
+    
+    # Test main bot
+    print("🧪 TEST: Testing main bot...")
+    send_telegram_message("🧪 Test desde app.py - Bot Principal funcionando!")
+    
+    # Test admin bot
+    print("🧪 TEST: Testing admin bot...")
+    send_to_admin_group("🧪 Test desde app.py - Bot Admin funcionando!")
+    
+    return """
+    <html>
+    <body style="font-family: system-ui; padding: 20px; text-align: center; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
+        <h1 style="color: #d63384;">🧪 Test de Notificaciones Enviado</h1>
+        <p>Check your Telegram and the console/terminal for debug messages.</p>
+        <a href="/" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">← Back to Dashboard</a>
+    </body>
+    </html>
+    """
 
 @app.route('/test-bots')
 def test_bots():
