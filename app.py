@@ -1778,25 +1778,53 @@ def check_changes():
 @app.route('/test-notification')
 def test_notification():
     """Simple test to trigger notifications"""
-    print("🧪 TEST: Starting notification test...")
-    
-    # Test main bot
-    print("🧪 TEST: Testing main bot...")
-    send_telegram_message("🧪 Test desde app.py - Bot Principal funcionando!")
-    
-    # Test admin bot
-    print("🧪 TEST: Testing admin bot...")
-    send_to_admin_group("🧪 Test desde app.py - Bot Admin funcionando!")
-    
-    return """
-    <html>
-    <body style="font-family: system-ui; padding: 20px; text-align: center; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
-        <h1 style="color: #d63384;">🧪 Test de Notificaciones Enviado</h1>
-        <p>Check your Telegram and the console/terminal for debug messages.</p>
-        <a href="/" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">← Back to Dashboard</a>
-    </body>
-    </html>
-    """
+    try:
+        print("🧪 TEST: Starting notification test...")
+        
+        # Test environment variables first
+        main_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+        
+        if not main_token or not admin_token or not chat_id:
+            return f"""
+            <html><body style="padding: 20px;">
+                <h1>❌ Configuration Error</h1>
+                <p>Main token: {'✅' if main_token else '❌'}</p>
+                <p>Admin token: {'✅' if admin_token else '❌'}</p>
+                <p>Chat ID: {'✅' if chat_id else '❌'}</p>
+            </body></html>
+            """
+        
+        # Test main bot
+        print("🧪 TEST: Testing main bot...")
+        send_telegram_message("🧪 Test desde app.py - Bot Principal funcionando!")
+        
+        # Test admin bot
+        print("🧪 TEST: Testing admin bot...")
+        send_to_admin_group("🧪 Test desde app.py - Bot Admin funcionando!")
+        
+        return """
+        <html>
+        <body style="font-family: system-ui; padding: 20px; text-align: center; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
+            <h1 style="color: #d63384;">🧪 Test de Notificaciones Enviado</h1>
+            <p>Check your Telegram and the console/terminal for debug messages.</p>
+            <a href="/" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">← Back to Dashboard</a>
+        </body>
+        </html>
+        """
+        
+    except Exception as e:
+        print(f"❌ ERROR in test_notification: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"""
+        <html><body style="padding: 20px;">
+            <h1>❌ Error</h1>
+            <p>{str(e)}</p>
+            <pre>{traceback.format_exc()}</pre>
+        </body></html>
+        """
 
 @app.route('/test-bots')
 def test_bots():
