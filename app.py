@@ -40,7 +40,7 @@ def send_whatsapp_message(label, url, to):
 
 def send_telegram_message(text, chat_id=None):
     """Send message to Telegram. If chat_id is provided, send to that specific chat."""
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Pon tu token en .env
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Main bot token
     if not chat_id:
         chat_id = os.environ.get("TELEGRAM_CHAT_ID")  # Default chat_id en .env
     
@@ -52,7 +52,7 @@ def send_telegram_message(text, chat_id=None):
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
     try:
         r = requests.post(url, data=payload, timeout=5)
-        print("Telegram response:", r.status_code, r.text)  # <-- Añade esto
+        print("Telegram response:", r.status_code, r.text)
     except Exception as e:
         print("Telegram notification failed:", e)
 
@@ -72,6 +72,40 @@ def send_to_admin_group(text):
         print("Admin Telegram response:", r.status_code, r.text)
     except Exception as e:
         print("Admin Telegram notification failed:", e)
+
+def send_suggestion_with_approval_buttons(text, suggestion_id, site_name, site_url, reason):
+    """Send suggestion to admin bot with approve/reject buttons"""
+    admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
+    admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
+    
+    if not admin_token or not admin_chat_id:
+        print("Admin Telegram bot token or chat ID not configured")
+        return
+    
+    url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
+    
+    # Create inline keyboard with approve/reject buttons
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "✅ Aprobar", "callback_data": f"approve_{suggestion_id}"},
+                {"text": "❌ Rechazar", "callback_data": f"reject_{suggestion_id}"}
+            ]
+        ]
+    }
+    
+    payload = {
+        "chat_id": admin_chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "reply_markup": json.dumps(keyboard)
+    }
+    
+    try:
+        r = requests.post(url, data=payload, timeout=5)
+        print("Admin suggestion with buttons response:", r.status_code, r.text)
+    except Exception as e:
+        print("Admin suggestion notification failed:", e)
 
 # Real ticket monitoring URLs
 URLS = [
@@ -1215,7 +1249,7 @@ def suggest_site():
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Send notification via Telegram to admin bot
+        # Send notification via Telegram to admin bot with approval buttons
         admin_message = f"""
 🆕 <b>Nueva Sugerencia de Sitio Web</b>
 
@@ -1227,8 +1261,8 @@ def suggest_site():
 <a href="{site_url}">Ver sitio sugerido</a>
         """.strip()
         
-        # Send to admin bot (different from ticket notifications)
-        send_to_admin_group(admin_message)
+        # Send to admin bot with approval buttons
+        send_suggestion_with_approval_buttons(admin_message, len(suggestions) - 1, site_name, site_url, reason)
         
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
@@ -1248,9 +1282,11 @@ def view_suggestions():
         """
         
         for suggestion in reversed(suggestions):  # Most recent first
+            status = suggestion.get('status', 'Pendiente')
+            status_color = '#28a745' if status == 'Aprobada' else '#dc3545' if status == 'Rechazada' else '#ffc107'
             html += f"""
             <div style="border: 1px solid #ccc; margin: 10px; padding: 15px; border-radius: 5px;">
-                <h3>{suggestion['siteName']}</h3>
+                <h3>{suggestion['siteName']} <span style="color: {status_color}; font-size: 0.8em;">[{status}]</span></h3>
                 <p><strong>URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank">{suggestion['siteUrl']}</a></p>
                 <p><strong>Razón:</strong> {suggestion['reason'] or 'No especificada'}</p>
                 <p><strong>Fecha:</strong> {suggestion['fecha_legible']}</p>
@@ -1262,6 +1298,101 @@ def view_suggestions():
         
     except FileNotFoundError:
         return "<h1>No hay sugerencias aún</h1>"
+
+@app.route('/telegram-webhook', methods=['POST'])
+def telegram_webhook():
+    """Handle Telegram webhook for button callbacks"""
+    from flask import request
+    try:
+        data = request.get_json()
+        
+        # Check if this is a callback query (button press)
+        if 'callback_query' in data:
+            callback_query = data['callback_query']
+            callback_data = callback_query['data']
+            message_id = callback_query['message']['message_id']
+            chat_id = callback_query['message']['chat']['id']
+            
+            # Parse callback data
+            if callback_data.startswith('approve_'):
+                suggestion_id = int(callback_data.replace('approve_', ''))
+                handle_approval(suggestion_id, True, message_id, chat_id)
+            elif callback_data.startswith('reject_'):
+                suggestion_id = int(callback_data.replace('reject_', ''))
+                handle_approval(suggestion_id, False, message_id, chat_id)
+            
+            return jsonify({"ok": True})
+        
+        return jsonify({"ok": True})
+        
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+def handle_approval(suggestion_id, approved, message_id, chat_id):
+    """Handle suggestion approval/rejection"""
+    try:
+        # Load suggestions
+        with open('suggestions.json', 'r') as f:
+            suggestions = json.load(f)
+        
+        if suggestion_id >= len(suggestions):
+            print(f"Invalid suggestion ID: {suggestion_id}")
+            return
+        
+        suggestion = suggestions[suggestion_id]
+        status = "Aprobada" if approved else "Rechazada"
+        suggestion['status'] = status
+        suggestion['approved_at'] = datetime.now(UTC).isoformat()
+        
+        # Save updated suggestions
+        with open('suggestions.json', 'w') as f:
+            json.dump(suggestions, f, indent=2, ensure_ascii=False)
+        
+        # Update the admin message
+        admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
+        edit_url = f"https://api.telegram.org/bot{admin_token}/editMessageText"
+        
+        updated_text = f"""
+🆕 <b>Sugerencia de Sitio Web - {status}</b>
+
+📝 <b>Nombre:</b> {suggestion['siteName']}
+🔗 <b>URL:</b> {suggestion['siteUrl']}
+💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
+📅 <b>Fecha:</b> {suggestion['fecha_legible']}
+✅ <b>Estado:</b> {status}
+
+<a href="{suggestion['siteUrl']}">Ver sitio sugerido</a>
+        """.strip()
+        
+        edit_payload = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "text": updated_text,
+            "parse_mode": "HTML"
+        }
+        
+        requests.post(edit_url, data=edit_payload, timeout=5)
+        
+        # If approved, send notification to main bot
+        if approved:
+            main_message = f"""
+🎉 <b>Nueva Web Aprobada para Monitoreo</b>
+
+📝 <b>Sitio:</b> {suggestion['siteName']}
+🔗 <b>URL:</b> {suggestion['siteUrl']}
+💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
+
+¡Este sitio ha sido aprobado y será considerado para monitoreo!
+
+<a href="{suggestion['siteUrl']}">Ver sitio</a>
+            """.strip()
+            
+            # Send to main bot
+            send_telegram_message(main_message)
+        
+    except Exception as e:
+        print(f"Error handling approval: {e}")
 
 @app.route('/api/changes.json')
 def get_changes_json():
@@ -1296,6 +1427,25 @@ def check_changes():
         return {"new_changes": has_new_changes}
     except:
         return {"new_changes": False}
+
+@app.route('/setup-webhook')
+def setup_webhook():
+    """Setup Telegram webhook for the admin bot"""
+    admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
+    if not admin_token:
+        return jsonify({"error": "Admin bot token not configured"}), 400
+    
+    # You'll need to replace this with your actual domain/ngrok URL
+    webhook_url = "https://your-domain.com/telegram-webhook"  # Change this!
+    
+    setup_url = f"https://api.telegram.org/bot{admin_token}/setWebhook"
+    payload = {"url": webhook_url}
+    
+    try:
+        r = requests.post(setup_url, data=payload, timeout=5)
+        return jsonify({"status": r.status_code, "response": r.json()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
