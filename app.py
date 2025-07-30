@@ -38,12 +38,16 @@ def send_whatsapp_message(label, url, to):
     )
     return message.sid
 
-def send_telegram_message(text):
+def send_telegram_message(text, chat_id=None):
+    """Send message to Telegram. If chat_id is provided, send to that specific chat."""
     token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Pon tu token en .env
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")  # Pon tu chat_id en .env
+    if not chat_id:
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID")  # Default chat_id en .env
+    
     if not token or not chat_id:
         print("Telegram token or chat_id not set")
         return
+    
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
     try:
@@ -51,6 +55,14 @@ def send_telegram_message(text):
         print("Telegram response:", r.status_code, r.text)  # <-- Añade esto
     except Exception as e:
         print("Telegram notification failed:", e)
+
+def send_to_admin_group(text):
+    """Send message specifically to the admin Telegram group"""
+    admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
+    if admin_chat_id:
+        send_telegram_message(text, admin_chat_id)
+    else:
+        print("Admin Telegram chat ID not configured - skipping admin notification")
 
 # Real ticket monitoring URLs
 URLS = [
@@ -1194,7 +1206,7 @@ def suggest_site():
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Send notification to admin via Telegram
+        # Send notification to admin group via Telegram
         admin_message = f"""
 🆕 <b>Nueva Sugerencia de Sitio Web</b>
 
@@ -1206,7 +1218,8 @@ def suggest_site():
 <a href="{site_url}">Ver sitio sugerido</a>
         """.strip()
         
-        send_telegram_message(admin_message)
+        # Send to admin group (for suggestions) instead of main group
+        send_to_admin_group(admin_message)
         
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
