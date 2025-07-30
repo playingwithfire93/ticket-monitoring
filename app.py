@@ -1235,6 +1235,7 @@ def suggest_site():
     except Exception as e:
         print(f"Error in suggest_site: {e}")
         return jsonify({"error": "Error interno del servidor"}), 500
+      
 @app.route('/admin/suggestions')
 def view_suggestions():
     try:
