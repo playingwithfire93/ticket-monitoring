@@ -1206,7 +1206,7 @@ def suggest_site():
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Send notification to admin group via Telegram
+        # Send notification via Telegram to main chat
         admin_message = f"""
 🆕 <b>Nueva Sugerencia de Sitio Web</b>
 
@@ -1218,8 +1218,8 @@ def suggest_site():
 <a href="{site_url}">Ver sitio sugerido</a>
         """.strip()
         
-        # Send to admin group (for suggestions) instead of main group
-        send_to_admin_group(admin_message)
+        # Send to main chat (same as ticket notifications)
+        send_telegram_message(admin_message)
         
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
