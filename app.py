@@ -1344,7 +1344,13 @@ def debug_suggestions():
         
         html += f"""
         <p><strong>Total suggestions:</strong> {len(suggestions)}</p>
-        <p><a href="/admin/approval-panel">← Back to Approval Panel</a></p>
+        <div style="text-align: center; margin: 30px;">
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
+                <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
+            </div>
+        </div>
         </body></html>
         """
         
@@ -1533,10 +1539,15 @@ def approval_panel():
                 """
     
     html += """
-            <div style="text-align: center; margin-top: 40px;">
-                <a href="/admin/suggestions" style="color: #d63384; text-decoration: none; font-weight: bold;">
-                    📋 Ver todas las sugerencias (historial completo)
-                </a>
+            <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #ffe0f7;">
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
+                    <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                    <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
+                    <a href="/admin/notifications" style="background: #fd7e14; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);">🔔 Notificaciones</a>
+                </div>
+                <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
+                    ⏱️ Esta página se actualiza automáticamente cada 30 segundos
+                </p>
             </div>
         </div>
         
@@ -1622,7 +1633,10 @@ def handle_suggestion_action(suggestion_id, approved):
             <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
                 <h1 style="color: #d63384;">⚠️ Sugerencia ya procesada</h1>
                 <p>La sugerencia <strong>"{suggestion.get('siteName', 'Desconocido')}"</strong> ya fue <strong>{current_status}</strong>.</p>
-                <a href="/admin/approval-panel" style="color: #ff69b4; font-weight: bold;">← Volver al panel</a>
+                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
+                    <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                </div>
             </body></html>
             """
         
@@ -1695,8 +1709,10 @@ def handle_suggestion_action(suggestion_id, approved):
                 <p style="color: {action_color}; font-weight: bold;">La sugerencia ha sido {next_action}.</p>
                 {'<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' if approved else ''}
             </div>
-            <div style="margin-top: 30px;">
-                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">← Volver al Panel</a>
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
+                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
             </div>
         </body></html>
         """
@@ -1710,7 +1726,11 @@ def handle_suggestion_action(suggestion_id, approved):
             <h1 style="color: #dc3545;">❌ Error Interno</h1>
             <p>Ha ocurrido un error al procesar la sugerencia.</p>
             <p><strong>Detalles:</strong> {str(e)}</p>
-            <a href="/admin/approval-panel" style="color: #ff69b4; font-weight: bold;">← Volver al panel</a>
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
+                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                <a href="/debug/suggestions" style="background: #6c757d; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);">🐛 Debug</a>
+            </div>
         </body></html>
         """, 500
         admin_confirmation = f"""
@@ -1773,9 +1793,11 @@ def view_suggestions():
         
         html += """
         <div style="text-align: center; margin: 30px;">
-            <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">
-                ← Volver al Panel de Aprobación
-            </a>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
+                <a href="/admin/notifications" style="background: #fd7e14; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);">🔔 Notificaciones</a>
+            </div>
         </div>
         </body></html>
         """
