@@ -1313,6 +1313,192 @@ def suggest_site():
         traceback.print_exc()
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
       
+@app.route('/admin/monitoring-list')
+def monitoring_list():
+    """Mostrar la lista actual de URLs que están siendo monitoreadas"""
+    try:
+        # Get current URLS from memory
+        current_urls = URLS.copy()
+        
+        # Also load from urls.json
+        try:
+            with open('urls.json', 'r') as f:
+                urls_data = json.load(f)
+        except FileNotFoundError:
+            urls_data = []
+        
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Lista de Monitoreo</title>
+            <style>
+                body {{
+                    font-family: system-ui, -apple-system, sans-serif;
+                    background: linear-gradient(120deg, #ffb6e6 0%, #fecfef 50%, #ffb6e6 100%);
+                    margin: 0;
+                    padding: 20px;
+                    min-height: 100vh;
+                }}
+                .container {{
+                    max-width: 1000px;
+                    margin: 0 auto;
+                    background: rgba(255, 255, 255, 0.95);
+                    border-radius: 20px;
+                    padding: 30px;
+                    box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3);
+                }}
+                h1 {{
+                    color: #d63384;
+                    text-align: center;
+                    margin-bottom: 30px;
+                    font-size: 2.5em;
+                    text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
+                }}
+                .stats {{
+                    background: linear-gradient(135deg, #ff69b4, #d63384);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px;
+                    text-align: center;
+                    margin-bottom: 30px;
+                }}
+                .section {{
+                    margin: 30px 0;
+                    background: white;
+                    border: 2px solid #ff69b4;
+                    border-radius: 15px;
+                    padding: 20px;
+                    box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
+                }}
+                .section h2 {{
+                    color: #d63384;
+                    border-bottom: 2px solid #ffe0f7;
+                    padding-bottom: 10px;
+                }}
+                .url-item {{
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin: 10px 0;
+                }}
+                .url-link {{
+                    color: #ff69b4;
+                    text-decoration: none;
+                    font-weight: bold;
+                }}
+                .url-link:hover {{ text-decoration: underline; }}
+                .musical-group {{
+                    border-left: 4px solid #ff69b4;
+                    padding-left: 15px;
+                    margin: 15px 0;
+                }}
+                .navigation {{
+                    text-align: center;
+                    margin-top: 40px;
+                    padding-top: 30px;
+                    border-top: 2px solid #ffe0f7;
+                }}
+                .nav-buttons {{
+                    display: flex;
+                    gap: 15px;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                }}
+                .nav-btn {{
+                    padding: 15px 30px;
+                    text-decoration: none;
+                    border-radius: 25px;
+                    font-weight: bold;
+                    color: white;
+                    transition: transform 0.2s;
+                }}
+                .nav-btn:hover {{ transform: translateY(-2px); }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🔄 Lista de Monitoreo Activa</h1>
+                
+                <div class="stats">
+                    <strong>📊 Total de URLs monitoreadas: {len(current_urls)}</strong><br>
+                    <strong>🎭 Musicales en urls.json: {len(urls_data)}</strong>
+                </div>
+                
+                <div class="section">
+                    <h2>📋 URLs Activas en Memoria (URLS array)</h2>
+        """
+        
+        if not current_urls:
+            html += "<p>No hay URLs configuradas en el array URLS.</p>"
+        else:
+            for i, url_item in enumerate(current_urls):
+                html += f"""
+                <div class="url-item">
+                    <strong>#{i+1}: {url_item.get('label', 'Sin nombre')}</strong><br>
+                    <a href="{url_item.get('url', '#')}" target="_blank" class="url-link">{url_item.get('url', 'Sin URL')}</a>
+                </div>
+                """
+        
+        html += """
+                </div>
+                
+                <div class="section">
+                    <h2>📁 URLs en archivo urls.json</h2>
+        """
+        
+        if not urls_data:
+            html += "<p>No hay datos en urls.json.</p>"
+        else:
+            for musical in urls_data:
+                musical_name = musical.get('musical', 'Sin nombre')
+                urls = musical.get('urls', [])
+                
+                html += f"""
+                <div class="musical-group">
+                    <h3 style="color: #ff69b4;">{musical_name} ({len(urls)} URLs)</h3>
+                """
+                
+                for url in urls:
+                    html += f"""
+                    <div class="url-item">
+                        <a href="{url}" target="_blank" class="url-link">{url}</a>
+                    </div>
+                    """
+                
+                html += "</div>"
+        
+        html += """
+                </div>
+                
+                <div class="navigation">
+                    <div class="nav-buttons">
+                        <a href="/" style="background: #28a745; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);" class="nav-btn">🏠 Página Principal</a>
+                        <a href="/admin/approval-panel" style="background: #ff69b4; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);" class="nav-btn">📋 Panel de Aprobación</a>
+                        <a href="/admin/suggestions" style="background: #6f42c1; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);" class="nav-btn">📊 Ver Historial</a>
+                    </div>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
+                        ⚡ Esta página muestra las URLs que están siendo monitoreadas actualmente
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html
+        
+    except Exception as e:
+        return f"""
+        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: #ffe6e6;">
+            <h1 style="color: #dc3545;">❌ Error</h1>
+            <p>Error al cargar la lista de monitoreo: {str(e)}</p>
+            <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">🏠 Página Principal</a>
+        </body></html>
+        """, 500
+
 @app.route('/debug/suggestions')
 def debug_suggestions():
     """Debug endpoint to check suggestions file"""
@@ -1544,6 +1730,7 @@ def approval_panel():
                     <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
                     <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
                     <a href="/admin/notifications" style="background: #fd7e14; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);">🔔 Notificaciones</a>
+                    <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Lista de Monitoreo</a>
                 </div>
                 <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
                     ⏱️ Esta página se actualiza automáticamente cada 30 segundos
@@ -1656,19 +1843,70 @@ def handle_suggestion_action(suggestion_id, approved):
             print(f"❌ ERROR saving suggestions: {save_error}")
             return f"<h1>Error: No se pudo guardar: {str(save_error)}</h1>", 500
         
-        # If approved, send notification to main bot
+        # If approved, add to monitoring list and send notification to main bot
         if approved:
+            # Add to URLS list for monitoring
+            site_name = suggestion.get('siteName', 'Nuevo Sitio')
+            site_url = suggestion.get('siteUrl', '')
+            
+            try:
+                # Add to the URLS array in code (for current session)
+                new_url_entry = {"label": site_name, "url": site_url}
+                global URLS
+                URLS.append(new_url_entry)
+                print(f"✅ SUCCESS: Added to URLS array: {site_name}")
+                
+                # Add to urls.json file (for persistence)
+                try:
+                    with open('urls.json', 'r') as f:
+                        urls_data = json.load(f)
+                except FileNotFoundError:
+                    urls_data = []
+                
+                # Check if site already exists in urls.json
+                site_exists = False
+                for musical_entry in urls_data:
+                    if musical_entry.get('musical', '').lower() == site_name.lower():
+                        # Site exists, add URL if not already there
+                        if site_url not in musical_entry.get('urls', []):
+                            musical_entry['urls'].append(site_url)
+                            print(f"✅ SUCCESS: Added URL to existing musical: {site_name}")
+                        site_exists = True
+                        break
+                
+                if not site_exists:
+                    # Create new entry
+                    new_musical_entry = {
+                        "musical": site_name,
+                        "urls": [site_url]
+                    }
+                    urls_data.append(new_musical_entry)
+                    print(f"✅ SUCCESS: Created new musical entry: {site_name}")
+                
+                # Save urls.json
+                with open('urls.json', 'w') as f:
+                    json.dump(urls_data, f, indent=2, ensure_ascii=False)
+                
+                monitoring_success = True
+                print(f"✅ SUCCESS: Added {site_name} to monitoring list")
+                
+            except Exception as monitoring_error:
+                print(f"⚠️ WARNING: Could not add to monitoring list: {monitoring_error}")
+                monitoring_success = False
+            
+            # Send notification to main bot
             try:
                 main_message = f"""
-🎉 <b>Nueva Web Aprobada para Monitoreo</b>
+🎉 <b>Nueva Web Aprobada y Añadida al Monitoreo</b>
 
 📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
 🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
 💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
 📅 <b>Fecha de sugerencia:</b> {suggestion.get('fecha_legible', 'N/A')}
 ✅ <b>Aprobada:</b> {datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")}
+{'🔄 <b>Estado del monitoreo:</b> Añadida automáticamente al sistema' if monitoring_success else '⚠️ <b>Estado del monitoreo:</b> Error al añadir (revisar manualmente)'}
 
-¡Este sitio ha sido aprobado y será considerado para monitoreo!
+¡Este sitio ya está siendo monitoreado automáticamente!
 
 <a href="{suggestion.get('siteUrl', '#')}">Ver sitio</a>
                 """.strip()
@@ -1681,14 +1919,25 @@ def handle_suggestion_action(suggestion_id, approved):
         
         # Send confirmation to admin bot
         try:
-            admin_confirmation = f"""
-✅ <b>Sugerencia {status}</b>
+            if approved:
+                admin_confirmation = f"""
+✅ <b>Sugerencia {status} y Añadida al Monitoreo</b>
 
 📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
 🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
 📋 <b>Estado:</b> {status}
-{'🚀 Notificación enviada al bot principal' if approved else '🗑️ Sugerencia descartada'}
-            """.strip()
+🔄 <b>Monitoreo:</b> {'Añadida automáticamente al sistema' if 'monitoring_success' in locals() and monitoring_success else 'Error al añadir (revisar manualmente)'}
+🚀 Notificación enviada al bot principal
+                """.strip()
+            else:
+                admin_confirmation = f"""
+✅ <b>Sugerencia {status}</b>
+
+📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
+🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
+� <b>Estado:</b> {status}
+�🗑️ Sugerencia descartada
+                """.strip()
             
             send_to_admin_group(admin_confirmation)
             print("✅ SUCCESS: Admin bot confirmation sent")
@@ -1698,7 +1947,14 @@ def handle_suggestion_action(suggestion_id, approved):
         # Return success page
         action_emoji = "🎉" if approved else "🗑️"
         action_color = "#28a745" if approved else "#dc3545"
-        next_action = "considerado para monitoreo" if approved else "descartado"
+        next_action = "añadido al monitoreo automáticamente" if approved else "descartado"
+        
+        success_details = ""
+        if approved:
+            if 'monitoring_success' in locals() and monitoring_success:
+                success_details = '<p style="color: #28a745;">🔄 <strong>Añadido al monitoreo:</strong> El sitio ya está siendo monitoreado automáticamente.</p>'
+            else:
+                success_details = '<p style="color: #ffc107;">⚠️ <strong>Monitoreo:</strong> Hubo un problema al añadir automáticamente. Revisar manualmente.</p>'
         
         return f"""
         <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
@@ -1707,12 +1963,14 @@ def handle_suggestion_action(suggestion_id, approved):
                 <h2 style="color: #d63384;">{suggestion.get('siteName', 'Desconocido')}</h2>
                 <p><strong>URL:</strong> <a href="{suggestion.get('siteUrl', '#')}" target="_blank" style="color: #ff69b4;">{suggestion.get('siteUrl', 'N/A')}</a></p>
                 <p style="color: {action_color}; font-weight: bold;">La sugerencia ha sido {next_action}.</p>
+                {success_details}
                 {'<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' if approved else ''}
             </div>
             <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
                 <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
                 <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
+                <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
             </div>
         </body></html>
         """
