@@ -991,8 +991,35 @@ document.getElementById('suggestionForm').addEventListener('submit', async funct
     });
     const result = await response.json();
     if (response.ok) {
-      document.getElementById('suggestionResult').innerHTML = '<span style="color: #28a745;">✅ ¡Sugerencia enviada! La revisaremos pronto.</span>';
+      // Mostrar mensaje de éxito con animación
+      document.getElementById('suggestionResult').innerHTML = `
+        <div style="
+          background: linear-gradient(45deg, #28a745, #20c997);
+          color: white;
+          padding: 15px;
+          border-radius: 10px;
+          box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+          animation: successPulse 2s ease-in-out;
+          border: 2px solid #28a745;
+        ">
+          🎉 ¡Sugerencia enviada exitosamente!<br>
+          📧 Te notificaremos cuando sea revisada<br>
+          ⏰ Tiempo estimado: 24-48 horas
+        </div>
+        <style>
+          @keyframes successPulse {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+        </style>
+      `;
       document.getElementById('suggestionForm').reset();
+      
+      // Limpiar el mensaje después de 5 segundos
+      setTimeout(() => {
+        document.getElementById('suggestionResult').innerHTML = '';
+      }, 5000);
     } else {
       document.getElementById('suggestionResult').innerHTML = '<span style="color: #d63384;">❌ Error: ' + result.error + '</span>';
     }
@@ -1249,24 +1276,31 @@ def suggest_site():
         
         print("🐛 DEBUG: Suggestion saved to file")
         
-        # Send simple notification to admin bot
+        # Send enhanced notification to admin bot
         try:
             admin_message = f"""
-🆕 <b>Nueva Sugerencia #{len(suggestions)}</b>
+🚨 <b>¡NUEVA SUGERENCIA RECIBIDA!</b> 🚨
 
-📝 <b>Nombre:</b> {site_name}
-🔗 <b>URL:</b> {site_url}
+🆔 <b>Sugerencia #{ len(suggestions)}</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 <b>Sitio:</b> {site_name}
+🌐 <b>URL:</b> <a href="{site_url}">{site_url}</a>
 💭 <b>Razón:</b> {reason or 'No especificada'}
-📅 <b>Fecha:</b> {suggestion['fecha_legible']}
+⏰ <b>Recibida:</b> {suggestion['fecha_legible']}
 
-<a href="{site_url}">Ver sitio</a>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 <b>ACCIONES DISPONIBLES:</b>
 
-📋 Panel: http://localhost:5000/admin/approval-panel
+🌐 <a href="{site_url}">Ver sitio web sugerido</a>
+📋 <a href="http://localhost:5000/admin/approval-panel">Panel de Aprobación</a>
+
+⚡ <i>¡Revisar y aprobar lo antes posible!</i>
             """.strip()
             
-            print("🐛 DEBUG: Sending to admin bot...")
+            print("🐛 DEBUG: Sending enhanced notification to admin bot...")
             send_to_admin_group(admin_message)
-            print("🐛 DEBUG: Admin notification sent")
+            print("🐛 DEBUG: Enhanced admin notification sent")
             
         except Exception as notification_error:
             print(f"⚠️ WARNING: Could not send admin notification: {notification_error}")
@@ -1894,6 +1928,181 @@ def setup_webhook():
         return jsonify({"status": r.status_code, "response": r.json()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/admin/notifications')
+def admin_notifications():
+    """Página especial para recibir notificaciones en tiempo real"""
+    return """
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>🔔 Panel de Notificaciones Admin</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                margin: 0;
+                padding: 20px;
+                min-height: 100vh;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }
+            h1 {
+                text-align: center;
+                color: #333;
+                margin-bottom: 30px;
+            }
+            .notification {
+                background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 10px 0;
+                animation: slideIn 0.5s ease-out;
+                display: none;
+            }
+            .notification.show {
+                display: block;
+            }
+            .status {
+                text-align: center;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            @keyframes slideIn {
+                from { transform: translateX(-100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            .pulse {
+                animation: pulse 1s ease-in-out;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔔 Panel de Notificaciones Admin</h1>
+            <div class="status" id="status">
+                ✅ Esperando nuevas sugerencias...
+            </div>
+            <div id="notifications"></div>
+        </div>
+
+        <script>
+            let lastCheck = 0;
+            let notificationSound = null;
+
+            // Crear sonido de notificación
+            function createNotificationSound() {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            }
+
+            // Verificar nuevas sugerencias
+            async function checkForNewSuggestions() {
+                try {
+                    const response = await fetch('/get-suggestions-count');
+                    const data = await response.json();
+                    
+                    if (data.count > lastCheck && lastCheck > 0) {
+                        // Nueva sugerencia detectada!
+                        showNotification(`🆕 Nueva sugerencia recibida! Total: ${data.count}`);
+                        createNotificationSound();
+                        
+                        // Notificación del navegador si está permitida
+                        if (Notification.permission === 'granted') {
+                            new Notification('🆕 Nueva Sugerencia!', {
+                                body: `Se ha recibido una nueva sugerencia de sitio web.`,
+                                icon: '🔔'
+                            });
+                        }
+                    }
+                    
+                    lastCheck = data.count;
+                    document.getElementById('status').innerHTML = 
+                        `✅ Última verificación: ${new Date().toLocaleTimeString()}<br>
+                         📊 Total sugerencias: ${data.count}`;
+                } catch (error) {
+                    console.error('Error checking suggestions:', error);
+                    document.getElementById('status').innerHTML = 
+                        `❌ Error de conexión: ${new Date().toLocaleTimeString()}`;
+                }
+            }
+
+            function showNotification(message) {
+                const notificationDiv = document.createElement('div');
+                notificationDiv.className = 'notification show pulse';
+                notificationDiv.innerHTML = `
+                    <strong>${new Date().toLocaleTimeString()}</strong><br>
+                    ${message}<br>
+                    <a href="/admin/approval-panel" style="color: #ffeb3b; text-decoration: underline;">
+                        👆 Ir al Panel de Aprobación
+                    </a>
+                `;
+                
+                document.getElementById('notifications').insertBefore(
+                    notificationDiv, 
+                    document.getElementById('notifications').firstChild
+                );
+
+                // Mantener solo las últimas 5 notificaciones
+                const notifications = document.querySelectorAll('.notification');
+                if (notifications.length > 5) {
+                    notifications[notifications.length - 1].remove();
+                }
+            }
+
+            // Solicitar permisos de notificación
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // Inicializar verificación
+            checkForNewSuggestions();
+            setInterval(checkForNewSuggestions, 5000); // Verificar cada 5 segundos
+
+            document.getElementById('status').innerHTML += '<br>🔄 Verificando cada 5 segundos...';
+        </script>
+    </body>
+    </html>
+    """
+
+@app.route('/get-suggestions-count')
+def get_suggestions_count():
+    """API para obtener el número total de sugerencias"""
+    try:
+        with open('suggestions.json', 'r') as f:
+            suggestions = json.load(f)
+        return jsonify({"count": len(suggestions)})
+    except FileNotFoundError:
+        return jsonify({"count": 0})
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
