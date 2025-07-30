@@ -14,6 +14,7 @@ import os
 from twilio.rest import Client
 from dotenv import load_dotenv
 import difflib
+import traceback
 
 load_dotenv()
 
@@ -1287,8 +1288,9 @@ def suggest_site():
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
     except Exception as e:
-        print(f"Error in suggest_site: {e}")
-        return jsonify({"error": "Error interno del servidor"}), 500
+        print(f"❌ ERROR in suggest_site: {e}")
+        traceback.print_exc()
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
       
 @app.route('/admin/approval-panel')
 def approval_panel():
