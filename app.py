@@ -1960,13 +1960,15 @@ def admin_notifications():
                 margin-bottom: 30px;
             }
             .notification {
-                background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+                background: linear-gradient(45deg, #667eea, #764ba2);
                 color: white;
                 padding: 20px;
-                border-radius: 10px;
-                margin: 10px 0;
+                border-radius: 15px;
+                margin: 15px 0;
                 animation: slideIn 0.5s ease-out;
                 display: none;
+                border: 2px solid #a855f7;
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
             }
             .notification.show {
                 display: block;
@@ -2028,27 +2030,32 @@ def admin_notifications():
             // Verificar nuevas sugerencias
             async function checkForNewSuggestions() {
                 try {
-                    const response = await fetch('/get-suggestions-count');
+                    const response = await fetch('/get-latest-suggestions');
                     const data = await response.json();
                     
-                    if (data.count > lastCheck && lastCheck > 0) {
-                        // Nueva sugerencia detectada!
-                        showNotification(`🆕 Nueva sugerencia recibida! Total: ${data.count}`);
-                        createNotificationSound();
-                        
-                        // Notificación del navegador si está permitida
-                        if (Notification.permission === 'granted') {
-                            new Notification('🆕 Nueva Sugerencia!', {
-                                body: `Se ha recibido una nueva sugerencia de sitio web.`,
-                                icon: '🔔'
-                            });
-                        }
+                    // Verificar si hay nuevas sugerencias
+                    if (data.suggestions.length > 0) {
+                        data.suggestions.forEach(suggestion => {
+                            if (!suggestion.notified) {
+                                // Nueva sugerencia detectada!
+                                showDetailedNotification(suggestion);
+                                createNotificationSound();
+                                
+                                // Notificación del navegador si está permitida
+                                if (Notification.permission === 'granted') {
+                                    new Notification('🆕 Nueva Sugerencia!', {
+                                        body: `Sitio: ${suggestion.siteName}`,
+                                        icon: '🔔'
+                                    });
+                                }
+                            }
+                        });
                     }
                     
-                    lastCheck = data.count;
                     document.getElementById('status').innerHTML = 
                         `✅ Última verificación: ${new Date().toLocaleTimeString()}<br>
-                         📊 Total sugerencias: ${data.count}`;
+                         📊 Total sugerencias: ${data.total}<br>
+                         🆕 Pendientes: ${data.suggestions.length}`;
                 } catch (error) {
                     console.error('Error checking suggestions:', error);
                     document.getElementById('status').innerHTML = 
@@ -2056,15 +2063,96 @@ def admin_notifications():
                 }
             }
 
-            function showNotification(message) {
+            function showDetailedNotification(suggestion) {
                 const notificationDiv = document.createElement('div');
                 notificationDiv.className = 'notification show pulse';
                 notificationDiv.innerHTML = `
-                    <strong>${new Date().toLocaleTimeString()}</strong><br>
-                    ${message}<br>
-                    <a href="/admin/approval-panel" style="color: #ffeb3b; text-decoration: underline;">
-                        👆 Ir al Panel de Aprobación
-                    </a>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong>🆕 NUEVA SUGERENCIA</strong>
+                        <span style="font-size: 0.9em; opacity: 0.8;">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <div style="margin: 5px 0;"><strong>📝 Sitio:</strong> ${suggestion.siteName}</div>
+                        <div style="margin: 5px 0;"><strong>🌐 URL:</strong> 
+                            <a href="${suggestion.siteUrl}" target="_blank" style="color: #ffeb3b; text-decoration: underline;">
+                                ${suggestion.siteUrl}
+                            </a>
+                        </div>
+                        <div style="margin: 5px 0;"><strong>💭 Razón:</strong> ${suggestion.reason || 'No especificada'}</div>
+                        <div style="margin: 5px 0;"><strong>📅 Recibida:</strong> ${suggestion.fecha_legible}</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="/admin/approval-panel" style="background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                            � Ir al Panel de Aprobación
+                        </a>
+                    </div>
+                `;
+                
+                document.getElementById('notifications').insertBefore(
+                    notificationDiv, 
+                    document.getElementById('notifications').firstChild
+                );
+
+                // Mantener solo las últimas 5 notificaciones
+                const notifications = document.querySelectorAll('.notification');
+                if (notifications.length > 5) {
+                    notifications[notifications.length - 1].remove();
+                }
+            }
+
+            // Inicializar verificación y cargar sugerencias existentes
+            async function initializePanel() {
+                await checkForNewSuggestions();
+                await loadExistingSuggestions();
+            }
+
+            // Cargar sugerencias existentes al inicio
+            async function loadExistingSuggestions() {
+                try {
+                    const response = await fetch('/get-latest-suggestions');
+                    const data = await response.json();
+                    
+                    if (data.suggestions.length === 0 && data.total > 0) {
+                        // Si no hay sugerencias recientes pero sí hay en total, mostrar las últimas
+                        const allResponse = await fetch('/get-all-suggestions?limit=3');
+                        const allData = await allResponse.json();
+                        
+                        allData.suggestions.forEach(suggestion => {
+                            showDetailedNotification(suggestion, true); // true = es carga inicial
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading existing suggestions:', error);
+                }
+            }
+
+            function showDetailedNotification(suggestion, isInitial = false) {
+                const notificationDiv = document.createElement('div');
+                notificationDiv.className = 'notification show' + (isInitial ? '' : ' pulse');
+                
+                const headerText = isInitial ? '📋 SUGERENCIA EXISTENTE' : '🆕 NUEVA SUGERENCIA';
+                const headerColor = isInitial ? 'rgba(255,255,255,0.7)' : 'rgba(255,235,59,0.9)';
+                
+                notificationDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong style="color: ${headerColor};">${headerText}</strong>
+                        <span style="font-size: 0.9em; opacity: 0.8;">${isInitial ? suggestion.fecha_legible : new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <div style="margin: 5px 0;"><strong>📝 Sitio:</strong> ${suggestion.siteName}</div>
+                        <div style="margin: 5px 0;"><strong>🌐 URL:</strong> 
+                            <a href="${suggestion.siteUrl}" target="_blank" style="color: #ffeb3b; text-decoration: underline;">
+                                ${suggestion.siteUrl}
+                            </a>
+                        </div>
+                        <div style="margin: 5px 0;"><strong>💭 Razón:</strong> ${suggestion.reason || 'No especificada'}</div>
+                        <div style="margin: 5px 0;"><strong>📅 Recibida:</strong> ${suggestion.fecha_legible}</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="/admin/approval-panel" style="background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                            📋 Ir al Panel de Aprobación
+                        </a>
+                    </div>
                 `;
                 
                 document.getElementById('notifications').insertBefore(
@@ -2084,8 +2172,8 @@ def admin_notifications():
                 Notification.requestPermission();
             }
 
-            // Inicializar verificación
-            checkForNewSuggestions();
+            // Inicializar
+            initializePanel();
             setInterval(checkForNewSuggestions, 5000); // Verificar cada 5 segundos
 
             document.getElementById('status').innerHTML += '<br>🔄 Verificando cada 5 segundos...';
@@ -2094,9 +2182,59 @@ def admin_notifications():
     </html>
     """
 
+@app.route('/get-all-suggestions')
+def get_all_suggestions():
+    """API para obtener todas las sugerencias con límite opcional"""
+    from flask import request
+    try:
+        limit = request.args.get('limit', type=int)
+        
+        with open('suggestions.json', 'r') as f:
+            suggestions = json.load(f)
+        
+        if limit:
+            suggestions = suggestions[-limit:]  # Últimas N sugerencias
+        
+        return jsonify({
+            "total": len(suggestions),
+            "suggestions": suggestions
+        })
+    except FileNotFoundError:
+        return jsonify({"total": 0, "suggestions": []})
+
+@app.route('/get-latest-suggestions')
+def get_latest_suggestions():
+    """API para obtener las últimas sugerencias con detalles completos"""
+    try:
+        with open('suggestions.json', 'r') as f:
+            suggestions = json.load(f)
+        
+        # Obtener las últimas 3 sugerencias para mostrar
+        latest_suggestions = suggestions[-3:] if len(suggestions) > 3 else suggestions
+        
+        # Marcar como nuevas las que fueron agregadas en los últimos 5 minutos
+        now = datetime.now(UTC)
+        recent_suggestions = []
+        
+        for suggestion in latest_suggestions:
+            suggestion_time = datetime.fromisoformat(suggestion['timestamp'].replace('Z', '+00:00'))
+            time_diff = (now - suggestion_time).total_seconds()
+            
+            # Si la sugerencia es de los últimos 10 minutos, marcarla como nueva
+            if time_diff < 600:  # 10 minutos
+                suggestion['notified'] = False
+                recent_suggestions.append(suggestion)
+        
+        return jsonify({
+            "total": len(suggestions),
+            "suggestions": recent_suggestions
+        })
+    except FileNotFoundError:
+        return jsonify({"total": 0, "suggestions": []})
+
 @app.route('/get-suggestions-count')
 def get_suggestions_count():
-    """API para obtener el número total de sugerencias"""
+    """API para obtener el número total de sugerencias (mantener compatibilidad)"""
     try:
         with open('suggestions.json', 'r') as f:
             suggestions = json.load(f)
