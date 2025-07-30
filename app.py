@@ -57,12 +57,21 @@ def send_telegram_message(text, chat_id=None):
         print("Telegram notification failed:", e)
 
 def send_to_admin_group(text):
-    """Send message specifically to the admin Telegram group"""
+    """Send message specifically to the admin Telegram bot"""
+    admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
     admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
-    if admin_chat_id:
-        send_telegram_message(text, admin_chat_id)
-    else:
-        print("Admin Telegram chat ID not configured - skipping admin notification")
+    
+    if not admin_token or not admin_chat_id:
+        print("Admin Telegram bot token or chat ID not configured - skipping admin notification")
+        return
+    
+    url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
+    payload = {"chat_id": admin_chat_id, "text": text, "parse_mode": "HTML"}
+    try:
+        r = requests.post(url, data=payload, timeout=5)
+        print("Admin Telegram response:", r.status_code, r.text)
+    except Exception as e:
+        print("Admin Telegram notification failed:", e)
 
 # Real ticket monitoring URLs
 URLS = [
@@ -1206,7 +1215,7 @@ def suggest_site():
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Send notification via Telegram to main chat
+        # Send notification via Telegram to admin bot
         admin_message = f"""
 🆕 <b>Nueva Sugerencia de Sitio Web</b>
 
@@ -1218,8 +1227,8 @@ def suggest_site():
 <a href="{site_url}">Ver sitio sugerido</a>
         """.strip()
         
-        # Send to main chat (same as ticket notifications)
-        send_telegram_message(admin_message)
+        # Send to admin bot (different from ticket notifications)
+        send_to_admin_group(admin_message)
         
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
