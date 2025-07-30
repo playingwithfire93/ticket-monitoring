@@ -1313,6 +1313,46 @@ def suggest_site():
         traceback.print_exc()
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
       
+@app.route('/debug/suggestions')
+def debug_suggestions():
+    """Debug endpoint to check suggestions file"""
+    try:
+        with open('suggestions.json', 'r') as f:
+            suggestions = json.load(f)
+        
+        html = """
+        <html><head><title>Debug Suggestions</title></head>
+        <body style="font-family: monospace; padding: 20px; background: #f0f0f0;">
+        <h1>🐛 Debug: Suggestions File</h1>
+        """
+        
+        for i, suggestion in enumerate(suggestions):
+            status = suggestion.get('status', 'Pendiente')
+            html += f"""
+            <div style="border: 1px solid #ccc; margin: 10px 0; padding: 15px; background: white;">
+                <h3>Suggestion #{i}</h3>
+                <p><strong>Name:</strong> {suggestion.get('siteName', 'N/A')}</p>
+                <p><strong>URL:</strong> {suggestion.get('siteUrl', 'N/A')}</p>
+                <p><strong>Status:</strong> {status}</p>
+                <p><strong>Date:</strong> {suggestion.get('fecha_legible', 'N/A')}</p>
+                <p><strong>Actions:</strong> 
+                    <a href="/admin/approve/{i}" style="color: green;">Approve</a> | 
+                    <a href="/admin/reject/{i}" style="color: red;">Reject</a>
+                </p>
+            </div>
+            """
+        
+        html += f"""
+        <p><strong>Total suggestions:</strong> {len(suggestions)}</p>
+        <p><a href="/admin/approval-panel">← Back to Approval Panel</a></p>
+        </body></html>
+        """
+        
+        return html
+        
+    except Exception as e:
+        return f"<h1>Error: {str(e)}</h1>", 500
+
 @app.route('/admin/approval-panel')
 def approval_panel():
     try:
@@ -1549,22 +1589,39 @@ def reject_suggestion(suggestion_id):
 def handle_suggestion_action(suggestion_id, approved):
     """Handle suggestion approval/rejection via web interface"""
     try:
-        # Load suggestions
-        with open('suggestions.json', 'r') as f:
-            suggestions = json.load(f)
+        print(f"🐛 DEBUG: Processing suggestion_id: {suggestion_id}, approved: {approved}")
         
-        if suggestion_id >= len(suggestions):
-            return f"<h1>Error: Sugerencia #{suggestion_id} no encontrada</h1>", 404
+        # Load suggestions
+        try:
+            with open('suggestions.json', 'r') as f:
+                suggestions = json.load(f)
+            print(f"🐛 DEBUG: Loaded {len(suggestions)} suggestions")
+        except FileNotFoundError:
+            print("❌ ERROR: suggestions.json not found")
+            return f"<h1>Error: No se encontró el archivo de sugerencias</h1>", 404
+        except json.JSONDecodeError as e:
+            print(f"❌ ERROR: Invalid JSON in suggestions.json: {e}")
+            return f"<h1>Error: Archivo de sugerencias corrupto</h1>", 500
+        
+        if not suggestions:
+            print("❌ ERROR: No suggestions found")
+            return f"<h1>Error: No hay sugerencias</h1>", 404
+        
+        if suggestion_id < 0 or suggestion_id >= len(suggestions):
+            print(f"❌ ERROR: suggestion_id {suggestion_id} out of range (0-{len(suggestions)-1})")
+            return f"<h1>Error: Sugerencia #{suggestion_id} no encontrada. Rango válido: 0-{len(suggestions)-1}</h1>", 404
         
         suggestion = suggestions[suggestion_id]
+        print(f"🐛 DEBUG: Found suggestion: {suggestion.get('siteName', 'Unknown')}")
         
         # Check if already processed
-        if suggestion.get('status', 'Pendiente') != 'Pendiente':
-            status = suggestion.get('status')
+        current_status = suggestion.get('status', 'Pendiente')
+        if current_status != 'Pendiente':
+            print(f"⚠️ WARNING: Suggestion already processed with status: {current_status}")
             return f"""
             <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
                 <h1 style="color: #d63384;">⚠️ Sugerencia ya procesada</h1>
-                <p>La sugerencia <strong>"{suggestion['siteName']}"</strong> ya fue <strong>{status}</strong>.</p>
+                <p>La sugerencia <strong>"{suggestion.get('siteName', 'Desconocido')}"</strong> ya fue <strong>{current_status}</strong>.</p>
                 <a href="/admin/approval-panel" style="color: #ff69b4; font-weight: bold;">← Volver al panel</a>
             </body></html>
             """
@@ -1574,30 +1631,88 @@ def handle_suggestion_action(suggestion_id, approved):
         suggestion['approved_at'] = datetime.now(UTC).isoformat()
         suggestion['approved_by'] = 'Admin Web Panel'
         
+        print(f"🐛 DEBUG: Setting status to: {status}")
+        
         # Save updated suggestions
-        with open('suggestions.json', 'w') as f:
-            json.dump(suggestions, f, indent=2, ensure_ascii=False)
+        try:
+            with open('suggestions.json', 'w') as f:
+                json.dump(suggestions, f, indent=2, ensure_ascii=False)
+            print("✅ SUCCESS: Suggestions file updated")
+        except Exception as save_error:
+            print(f"❌ ERROR saving suggestions: {save_error}")
+            return f"<h1>Error: No se pudo guardar: {str(save_error)}</h1>", 500
         
         # If approved, send notification to main bot
         if approved:
-            main_message = f"""
+            try:
+                main_message = f"""
 🎉 <b>Nueva Web Aprobada para Monitoreo</b>
 
-📝 <b>Sitio:</b> {suggestion['siteName']}
-🔗 <b>URL:</b> {suggestion['siteUrl']}
+📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
+🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
 💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
-📅 <b>Fecha de sugerencia:</b> {suggestion['fecha_legible']}
+📅 <b>Fecha de sugerencia:</b> {suggestion.get('fecha_legible', 'N/A')}
 ✅ <b>Aprobada:</b> {datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")}
 
 ¡Este sitio ha sido aprobado y será considerado para monitoreo!
 
-<a href="{suggestion['siteUrl']}">Ver sitio</a>
-            """.strip()
-            
-            # Send to main bot
-            send_telegram_message(main_message)
+<a href="{suggestion.get('siteUrl', '#')}">Ver sitio</a>
+                """.strip()
+                
+                # Send to main bot
+                send_telegram_message(main_message)
+                print("✅ SUCCESS: Main bot notification sent")
+            except Exception as main_bot_error:
+                print(f"⚠️ WARNING: Could not send main bot notification: {main_bot_error}")
         
         # Send confirmation to admin bot
+        try:
+            admin_confirmation = f"""
+✅ <b>Sugerencia {status}</b>
+
+📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
+🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
+📋 <b>Estado:</b> {status}
+{'🚀 Notificación enviada al bot principal' if approved else '🗑️ Sugerencia descartada'}
+            """.strip()
+            
+            send_to_admin_group(admin_confirmation)
+            print("✅ SUCCESS: Admin bot confirmation sent")
+        except Exception as admin_bot_error:
+            print(f"⚠️ WARNING: Could not send admin bot confirmation: {admin_bot_error}")
+        
+        # Return success page
+        action_emoji = "🎉" if approved else "🗑️"
+        action_color = "#28a745" if approved else "#dc3545"
+        next_action = "considerado para monitoreo" if approved else "descartado"
+        
+        return f"""
+        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
+            <h1 style="color: {action_color};">{action_emoji} Sugerencia {status}</h1>
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3); max-width: 500px; margin: 20px auto;">
+                <h2 style="color: #d63384;">{suggestion.get('siteName', 'Desconocido')}</h2>
+                <p><strong>URL:</strong> <a href="{suggestion.get('siteUrl', '#')}" target="_blank" style="color: #ff69b4;">{suggestion.get('siteUrl', 'N/A')}</a></p>
+                <p style="color: {action_color}; font-weight: bold;">La sugerencia ha sido {next_action}.</p>
+                {'<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' if approved else ''}
+            </div>
+            <div style="margin-top: 30px;">
+                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">← Volver al Panel</a>
+            </div>
+        </body></html>
+        """
+        
+    except Exception as e:
+        print(f"❌ CRITICAL ERROR in handle_suggestion_action: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"""
+        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: #ffe6e6;">
+            <h1 style="color: #dc3545;">❌ Error Interno</h1>
+            <p>Ha ocurrido un error al procesar la sugerencia.</p>
+            <p><strong>Detalles:</strong> {str(e)}</p>
+            <a href="/admin/approval-panel" style="color: #ff69b4; font-weight: bold;">← Volver al panel</a>
+        </body></html>
+        """, 500
         admin_confirmation = f"""
 ✅ <b>Sugerencia {status}</b>
 
