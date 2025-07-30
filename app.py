@@ -92,40 +92,6 @@ def send_to_admin_group(text):
     except Exception as e:
         print(f"❌ Admin Telegram notification failed: {e}")
 
-def send_suggestion_with_approval_buttons(text, suggestion_id, site_name, site_url, reason):
-    """Send suggestion to admin bot with approve/reject buttons"""
-    admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
-    admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
-    
-    if not admin_token or not admin_chat_id:
-        print("Admin Telegram bot token or chat ID not configured")
-        return
-    
-    url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
-    
-    # Create inline keyboard with approve/reject buttons
-    keyboard = {
-        "inline_keyboard": [
-            [
-                {"text": "✅ Aprobar", "callback_data": f"approve_{suggestion_id}"},
-                {"text": "❌ Rechazar", "callback_data": f"reject_{suggestion_id}"}
-            ]
-        ]
-    }
-    
-    payload = {
-        "chat_id": admin_chat_id,
-        "text": text,
-        "parse_mode": "HTML",
-        "reply_markup": json.dumps(keyboard)
-    }
-    
-    try:
-        r = requests.post(url, data=payload, timeout=5)
-        print("Admin suggestion with buttons response:", r.status_code, r.text)
-    except Exception as e:
-        print("Admin suggestion notification failed:", e)
-
 # Real ticket monitoring URLs
 URLS = [
     #{"label": "ddf", "url": "https://httpbin.org/get"},
@@ -1236,10 +1202,21 @@ from datetime import datetime
 def suggest_site():
     from flask import request
     try:
+        print("🐛 DEBUG: suggest_site called")
+        
+        # Get JSON data
         data = request.get_json()
+        if not data:
+            print("❌ ERROR: No JSON data received")
+            return jsonify({"error": "No se recibieron datos"}), 400
+        
+        print(f"🐛 DEBUG: Received data: {data}")
+        
         site_name = data.get('siteName', '').strip()
         site_url = data.get('siteUrl', '').strip()
         reason = data.get('reason', '').strip()
+        
+        print(f"🐛 DEBUG: Parsed - Name: {site_name}, URL: {site_url}, Reason: {reason}")
         
         if not site_name or not site_url:
             return jsonify({"error": "Nombre y URL son obligatorios"}), 400
@@ -1256,7 +1233,9 @@ def suggest_site():
             "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
         }
         
-        # Save to file (you can also send via Telegram/WhatsApp)
+        print(f"🐛 DEBUG: Created suggestion: {suggestion}")
+        
+        # Save to file
         try:
             with open('suggestions.json', 'r') as f:
                 suggestions = json.load(f)
@@ -1268,29 +1247,37 @@ def suggest_site():
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Send notification via Telegram to admin bot
-        admin_message = f"""
-🆕 <b>Nueva Sugerencia de Sitio Web #{len(suggestions)}</b>
+        print("🐛 DEBUG: Suggestion saved to file")
+        
+        # Send simple notification to admin bot
+        try:
+            admin_message = f"""
+🆕 <b>Nueva Sugerencia #{len(suggestions)}</b>
 
 📝 <b>Nombre:</b> {site_name}
 🔗 <b>URL:</b> {site_url}
 💭 <b>Razón:</b> {reason or 'No especificada'}
 📅 <b>Fecha:</b> {suggestion['fecha_legible']}
 
-<a href="{site_url}">Ver sitio sugerido</a>
+<a href="{site_url}">Ver sitio</a>
 
-📋 Para revisar y aprobar: http://localhost:5000/admin/approval-panel
-        """.strip()
-        
-        # Send to admin bot
-        send_to_admin_group(admin_message)
+📋 Panel: http://localhost:5000/admin/approval-panel
+            """.strip()
+            
+            print("🐛 DEBUG: Sending to admin bot...")
+            send_to_admin_group(admin_message)
+            print("🐛 DEBUG: Admin notification sent")
+            
+        except Exception as notification_error:
+            print(f"⚠️ WARNING: Could not send admin notification: {notification_error}")
+            # Don't fail the whole request if notification fails
         
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
     except Exception as e:
         print(f"❌ ERROR in suggest_site: {e}")
         traceback.print_exc()
-        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
       
 @app.route('/admin/approval-panel')
 def approval_panel():
