@@ -5,6 +5,7 @@ import traceback
 import requests
 from datetime import datetime, timezone
 from flask import Flask, render_template, render_template_string, jsonify, request
+from flask_socketio import SocketIO
 
 URLS = []
 def group_urls_by_musical(urls):
@@ -15,12 +16,9 @@ def send_to_admin_group(message):
   print(f"Admin notification: {message}")
 def send_telegram_message(message):
   print(f"Telegram message: {message}")
-class SocketIO:
-  def run(self, app, host, port, debug):
-    print(f"Running app on {host}:{port} debug={debug}")
-socketio = SocketIO()
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 def scrape_all_sites():
   """Scrape all URLs from urls.json and return their status and timestamp."""
@@ -230,4 +228,4 @@ def get_suggestions_count():
     return jsonify({"count": 0})
 
 if __name__ == '__main__':
-  socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+  socketio.run(app, host='0.0.0.0', port=5000)

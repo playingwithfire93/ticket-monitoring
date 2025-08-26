@@ -3,7 +3,7 @@ services:
     name: ticket-monitor
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn --worker-class eventlet -w 1 app:app
     plan: free
     autoDeploy: true
     region: frankfurt
