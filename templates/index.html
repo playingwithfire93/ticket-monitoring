@@ -4,210 +4,70 @@
   <meta charset="UTF-8" />
   <title>🎟️ Ticket Monitor Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #ffe4e6, #fbcfe8);
-      color: #444;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 3rem;
-      color: #ec4899;
-      margin-bottom: 2rem;
-      animation: fadeIn 1s ease-in-out;
-    }
-
-    .dashboard {
-      background: white;
-      border: 1px solid #f9a8d4;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(249, 168, 212, 0.2);
-      padding: 1.5rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-
-    .last-checked {
-      font-size: 0.9rem;
-      font-style: italic;
-      color: #ec4899;
-    }
-
-    .badge {
-      background: #ec4899;
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      animation: pulse 1.5s infinite;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-
-    .card {
-      background: #ffe4e6;
-      border: 1px solid #f9a8d4;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(249, 168, 212, 0.2);
-      transition: 0.3s ease all;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      animation: fadeIn 0.5s ease-in-out;
-    }
-
-    .card:hover {
-      border-color: #ec4899;
-      box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
-    }
-
-    .card span:first-child {
-      font-size: 1.5rem;
-    }
-
-    .musical-group {
-      margin-bottom: 2rem;
-      border-radius: 12px;
-      background: #fff0fa;
-      box-shadow: 0 2px 8px rgba(236,72,153,0.08);
-      padding: 1rem;
-    }
-    .musical-title {
-      font-size: 1.5rem;
-      color: #d63384;
-      cursor: pointer;
-      margin-bottom: 0.5rem;
-      user-select: none;
-    }
-    .links-list {
-      margin-left: 1rem;
-      display: none;
-    }
-    .links-list.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🎭 HOLAAAA</h1>
-
-    <div class="dashboard">
-      <div class="header">
-        <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-        <span class="badge">🔄 Auto-refreshing</span>
-      </div>
-
-      <div id="changesList" class="grid">
-        <div class="card"><span>⏳</span><span>Loading updates...</span></div>
-      </div>
-
-      <div class="section">
-        <h2>Sitios Monitorizados</h2>
-        {% for musical, links in grouped_urls.items() %}
-        <div class="musical-group">
-          <div class="musical-title" onclick="toggleLinks('{{ musical }}')">{{ musical }}</div>
-          <ul class="links-list" id="links-{{ musical }}">
-            {% for link in links %}
-            <li><a class="url-link" href="{{ link.url }}" target="_blank">{{ link.label }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% endfor %}
-      </div>
-      <div class="section">
-        <h2>Sugerir Nuevo Sitio</h2>
-        <form id="suggest-form" method="post" action="/api/suggest-site">
-          <input type="text" name="siteName" placeholder="Nombre del sitio" required>
-          <input type="url" name="siteUrl" placeholder="URL del sitio" required>
-          <input type="text" name="reason" placeholder="Razón de la sugerencia" required>
-          <button type="submit">Enviar Sugerencia</button>
-        </form>
-      </div>
-      <div class="navigation">
-        <div class="nav-buttons">
-          <a class="nav-btn" href="/">Inicio</a>
-          <a class="nav-btn" href="/changes">Cambios</a>
-        </div>
-      </div>
+  <div class="dashboard">
+    <div class="header">
+      <h1>🎭 HOLAAAA</h1>
+      <button class="refresh-btn" id="auto-refresh">Auto-refreshing</button>
     </div>
+
+    <!-- Slideshow Section -->
+    <div class="slideshow-container">
+      <div class="slide fade">
+        <img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" style="width:100%">
+      </div>
+      <div class="slide fade">
+        <img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" style="width:100%">
+      </div>
+      <div class="slide fade">
+        <img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" style="width:100%">
+      </div>
+      <!-- Add more slides as needed -->
+      <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1)">&#10095;</a>
+    </div>
+
+    <div class="status" id="status">
+      <span>Last Checked: ...</span>
+    </div>
+    <div class="notification" id="notification">
+      <span>Loading updates...</span>
+    </div>
+
+    <h2>Sitios Monitorizados</h2>
+    <table class="monitor-table">
+      <thead>
+        <tr>
+          <th>Musical</th>
+          <th>URL</th>
+          <th>Status</th>
+          <th>Última actualización</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for musical, links in grouped_urls.items() %}
+          {% for link in links %}
+            <tr>
+              <td>{{ musical }}</td>
+              <td><a href="{{ link.url }}" target="_blank">{{ link.url }}</a></td>
+              <td>{{ link.status }}</td>
+              <td>{{ link.timestamp }}</td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Sugerir Nuevo Sitio</h2>
+    <form id="suggestion-form">
+      <input type="text" name="siteName" placeholder="Nombre del sitio" required>
+      <input type="url" name="siteUrl" placeholder="URL del sitio" required>
+      <input type="text" name="reason" placeholder="Razón de la sugerencia">
+      <button type="submit">Enviar Sugerencia</button>
+    </form>
   </div>
-  <script>
-    async function update() {
-      const res = await fetch("/status");
-      const data = await res.json();
-      document.getElementById("lastChecked").textContent =
-        "Last Checked: " + new Date(data.last_checked).toLocaleString("es-ES");
 
-      const list = document.getElementById("changesList");
-      list.innerHTML = "";
-
-      if (data.changes.length === 0) {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = "<span>✅</span><span>No new changes detected.</span>";
-        list.appendChild(card);
-      } else {
-        data.changes.forEach(change => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `<span>🎫</span><span>${change}</span>`;
-          list.appendChild(card);
-        });
-      }
-    }
-
-    function toggleLinks(musical) {
-      const el = document.getElementById('links-' + musical);
-      el.classList.toggle('active');
-    }
-    // Formulario AJAX
-    document.getElementById('suggest-form').onsubmit = async function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const data = {
-        siteName: form.siteName.value,
-        siteUrl: form.siteUrl.value,
-        reason: form.reason.value
-      };
-      const res = await fetch('/api/suggest-site', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-      alert(result.message || result.error);
-    };
-
-    update();
-    setInterval(update, 10000);
-  </script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
