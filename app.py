@@ -1286,7 +1286,7 @@ def suggest_site():
         # Send enhanced notification to admin bot
         try:
             admin_message = f"""
-🚨 <b>¡NUEVA SUGERENCIA RECIBIDA!</b> 🚨
+&#128680; <b>¡NUEVA SUGERENCIA RECIBIDA!</b> &#128680;
 
 🆔 <b>Sugerencia #{ len(suggestions)}</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
