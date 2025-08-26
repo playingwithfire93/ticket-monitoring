@@ -23,7 +23,8 @@ socketio = SocketIO(app)
 
 @app.route('/')
 def index():
-  return render_template('index.html')
+  grouped_urls = group_urls_by_musical(URLS)
+  return render_template('index.html', grouped_urls=grouped_urls)
 
 def scrape_all_sites():
   """Scrape all URLs from urls.json and return their status and timestamp."""
