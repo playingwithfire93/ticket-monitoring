@@ -1557,6 +1557,7 @@ def debug_suggestions():
         return html;
         
            
+        
     } catch (Exception e) {
         return `<h1>Error: ${e.message}</h1>`, 500;
     }
