@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>🎟️ Ticket Monitor Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
     body {
       margin: 0;
@@ -81,6 +82,28 @@
       font-size: 1.5rem;
     }
 
+    .musical-group {
+      margin-bottom: 2rem;
+      border-radius: 12px;
+      background: #fff0fa;
+      box-shadow: 0 2px 8px rgba(236,72,153,0.08);
+      padding: 1rem;
+    }
+    .musical-title {
+      font-size: 1.5rem;
+      color: #d63384;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+      user-select: none;
+    }
+    .links-list {
+      margin-left: 1rem;
+      display: none;
+    }
+    .links-list.active {
+      display: block;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -93,19 +116,49 @@
   </style>
 </head>
 <body>
-  <h1>🎭 HOLAAAA</h1>
+  <div class="container">
+    <h1>🎭 HOLAAAA</h1>
 
-  <div class="dashboard">
-    <div class="header">
-      <p id="lastChecked" class="last-checked">Last Checked: ...</p>
-      <span class="badge">🔄 Auto-refreshing</span>
-    </div>
+    <div class="dashboard">
+      <div class="header">
+        <p id="lastChecked" class="last-checked">Last Checked: ...</p>
+        <span class="badge">🔄 Auto-refreshing</span>
+      </div>
 
-    <div id="changesList" class="grid">
-      <div class="card"><span>⏳</span><span>Loading updates...</span></div>
+      <div id="changesList" class="grid">
+        <div class="card"><span>⏳</span><span>Loading updates...</span></div>
+      </div>
+
+      <div class="section">
+        <h2>Sitios Monitorizados</h2>
+        {% for musical, links in grouped_urls.items() %}
+        <div class="musical-group">
+          <div class="musical-title" onclick="toggleLinks('{{ musical }}')">{{ musical }}</div>
+          <ul class="links-list" id="links-{{ musical }}">
+            {% for link in links %}
+            <li><a class="url-link" href="{{ link.url }}" target="_blank">{{ link.label }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="section">
+        <h2>Sugerir Nuevo Sitio</h2>
+        <form id="suggest-form" method="post" action="/api/suggest-site">
+          <input type="text" name="siteName" placeholder="Nombre del sitio" required>
+          <input type="url" name="siteUrl" placeholder="URL del sitio" required>
+          <input type="text" name="reason" placeholder="Razón de la sugerencia" required>
+          <button type="submit">Enviar Sugerencia</button>
+        </form>
+      </div>
+      <div class="navigation">
+        <div class="nav-buttons">
+          <a class="nav-btn" href="/">Inicio</a>
+          <a class="nav-btn" href="/changes">Cambios</a>
+        </div>
+      </div>
     </div>
   </div>
-
   <script>
     async function update() {
       const res = await fetch("/status");
@@ -130,6 +183,28 @@
         });
       }
     }
+
+    function toggleLinks(musical) {
+      const el = document.getElementById('links-' + musical);
+      el.classList.toggle('active');
+    }
+    // Formulario AJAX
+    document.getElementById('suggest-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        siteName: form.siteName.value,
+        siteUrl: form.siteUrl.value,
+        reason: form.reason.value
+      };
+      const res = await fetch('/api/suggest-site', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      alert(result.message || result.error);
+    };
 
     update();
     setInterval(update, 10000);

@@ -15,6 +15,7 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 import difflib
 import traceback
+from collections import defaultdict
 
 load_dotenv()
 
@@ -265,6 +266,14 @@ def background_checker():
 
 # Start background checker using SocketIO's method
 socketio.start_background_task(background_checker)
+
+def group_urls_by_musical(urls):
+    groups = defaultdict(list)
+    for item in urls:
+        # Agrupa por la primera palabra del label (ejemplo: 'Wicked', 'Los Miserables', etc.)
+        musical = item['label'].split()[0]
+        groups[musical].append(item)
+    return groups
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -1215,7 +1224,8 @@ setInterval(updateTicketData, 5000);
 """
 @app.route('/')
 def dashboard():
-    return render_template_string(HTML_TEMPLATE)
+    grouped_urls = group_urls_by_musical(URLS)
+    return render_template_string(HTML_TEMPLATE, grouped_urls=grouped_urls)
 
 @app.route('/changes')
 def changes_dummy():
@@ -1454,7 +1464,7 @@ def monitoring_list():
         else:
             for musical in urls_data:
                 musical_name = musical.get('musical', 'Sin nombre')
-                urls = musical.get('urls', [])
+                urls = musical.get('urls', []);
                 
                 html += f"""
                 <div class="musical-group">
@@ -1628,14 +1638,6 @@ def approval_panel():
             .suggestion-details strong {{
                 color: #d63384;
             }}
-            .url-link {{
-                color: #ff69b4;
-                text-decoration: none;
-                font-weight: bold;
-            }}
-            .url-link:hover {{
-                text-decoration: underline;
-            }}
             .action-buttons {{
                 display: flex;
                 gap: 15px;
@@ -1694,43 +1696,33 @@ def approval_panel():
             <div class="stats">
                 <strong>📊 Sugerencias Pendientes: {len(pending_suggestions)}</strong>
             </div>
-    """
-    
-    if not pending_suggestions:
-        html += """
-            <div class="no-suggestions">
-                🎉 ¡No hay sugerencias pendientes!<br>
-                <small>Todas las sugerencias han sido procesadas.</small>
-            </div>
-        """
-    else:
-        for i, suggestion in enumerate(suggestions):
-            if suggestion.get('status', 'Pendiente') == 'Pendiente':
-                html += f"""
-                <div class="suggestion-card">
-                    <div class="suggestion-header">
-                        <div class="suggestion-title">{suggestion['siteName']}</div>
-                        <div class="suggestion-id">#{i}</div>
-                    </div>
-                    <div class="suggestion-details">
-                        <p><strong>🔗 URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank" class="url-link">{suggestion['siteUrl']}</a></p>
-                        <p><strong>💭 Razón:</strong> {suggestion.get('reason', 'No especificada')}</p>
-                        <p><strong>📅 Fecha:</strong> {suggestion['fecha_legible']}</p>
-                    </div>
-                    <div class="action-buttons">
-                        <a href="/admin/approve/{i}" class="btn btn-approve">✅ Aprobar</a>
-                        <a href="/admin/reject/{i}" class="btn btn-reject">❌ Rechazar</a>
-                    </div>
+            
+            {'' if pending_suggestions else '<div class="no-suggestions">🎉 ¡No hay sugerencias pendientes!<br><small>Todas las sugerencias han sido procesadas.</small></div>'}
+            
+            {''.join(f"""
+            <div class="suggestion-card">
+                <div class="suggestion-header">
+                    <div class="suggestion-title">{suggestion['siteName']}</div>
+                    <div class="suggestion-id">#{i}</div>
                 </div>
-                """
-    
-    html += """
+                <div class="suggestion-details">
+                    <p><strong>🔗 URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank" class="url-link">{suggestion['siteUrl']}</a></p>
+                    <p><strong>💭 Razón:</strong> {suggestion.get('reason', 'No especificada')}</p>
+                    <p><strong>📅 Fecha:</strong> {suggestion['fecha_legible']}</p>
+                </div>
+                <div class="action-buttons">
+                    <a href="/admin/approve/{i}" class="btn btn-approve">✅ Aprobar</a>
+                    <a href="/admin/reject/{i}" class="btn btn-reject">❌ Rechazar</a>
+                </div>
+            </div>
+            """ for i, suggestion in enumerate(suggestions) if suggestion.get('status', 'Pendiente') == 'Pendiente')}
+            
             <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #ffe0f7;">
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
                     <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
                     <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
                     <a href="/admin/notifications" style="background: #fd7e14; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);">🔔 Notificaciones</a>
-                    <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Lista de Monitoreo</a>
+                    <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
                 </div>
                 <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
                     ⏱️ Esta página se actualiza automáticamente cada 30 segundos
@@ -1864,167 +1856,113 @@ def handle_suggestion_action(suggestion_id, approved):
                     urls_data = []
                 
                 # Check if site already exists in urls.json
-                site_exists = False
+                site_exists = false;
                 for musical_entry in urls_data:
                     if musical_entry.get('musical', '').lower() == site_name.lower():
-                        # Site exists, add URL if not already there
+                        // Site exists, add URL if not already there
                         if site_url not in musical_entry.get('urls', []):
-                            musical_entry['urls'].append(site_url)
-                            print(f"✅ SUCCESS: Added URL to existing musical: {site_name}")
-                        site_exists = True
-                        break
+                            musical_entry['urls'].append(site_url);
+                            console.log(`✅ SUCCESS: Added URL to existing musical: ${site_name}`);
+                        site_exists = true;
+                        break;
                 
-                if not site_exists:
-                    # Create new entry
-                    new_musical_entry = {
-                        "musical": site_name,
-                        "urls": [site_url]
-                    }
-                    urls_data.append(new_musical_entry)
-                    print(f"✅ SUCCESS: Created new musical entry: {site_name}")
+                if (!site_exists) {
+                  // Create new entry
+                  new_musical_entry = {
+                      "musical": site_name,
+                      "urls": [site_url]
+                  };
+                  urls_data.push(new_musical_entry);
+                  console.log(`✅ SUCCESS: Created new musical entry: ${site_name}`);
+                }
                 
-                # Save urls.json
+                // Save urls.json
                 with open('urls.json', 'w') as f:
                     json.dump(urls_data, f, indent=2, ensure_ascii=False)
                 
-                monitoring_success = True
-                print(f"✅ SUCCESS: Added {site_name} to monitoring list")
+                monitoring_success = true;
+                console.log(`✅ SUCCESS: Added ${site_name} to monitoring list`);
                 
-            except Exception as monitoring_error:
-                print(f"⚠️ WARNING: Could not add to monitoring list: {monitoring_error}")
-                monitoring_success = False
+            } catch (Exception monitoring_error) {
+                console.log(`⚠️ WARNING: Could not add to monitoring list: ${monitoring_error}`);
+                monitoring_success = false;
+            }
             
-            # Send notification to main bot
-            try:
+            // Send notification to main bot
+            try {
                 main_message = f"""
 🎉 <b>Nueva Web Aprobada y Añadida al Monitoreo</b>
 
 📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
 🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
 💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
-📅 <b>Fecha de sugerencia:</b> {suggestion.get('fecha_legible', 'N/A')}
-✅ <b>Aprobada:</b> {datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")}
-{'🔄 <b>Estado del monitoreo:</b> Añadida automáticamente al sistema' if monitoring_success else '⚠️ <b>Estado del monitoreo:</b> Error al añadir (revisar manualmente)'}
 
 ¡Este sitio ya está siendo monitoreado automáticamente!
 
 <a href="{suggestion.get('siteUrl', '#')}">Ver sitio</a>
                 """.strip()
                 
-                # Send to main bot
-                send_telegram_message(main_message)
-                print("✅ SUCCESS: Main bot notification sent")
-            except Exception as main_bot_error:
-                print(f"⚠️ WARNING: Could not send main bot notification: {main_bot_error}")
+                // Send to main bot
+                send_telegram_message(main_message);
+                console.log("✅ SUCCESS: Main bot notification sent");
+            } catch (Exception main_bot_error) {
+                console.log(`⚠️ WARNING: Could not send main bot notification: ${main_bot_error}`);
+            }
+        }
         
-        # Send confirmation to admin bot
-        try:
-            if approved:
+        // Send confirmation to admin bot
+        try {
+            if (approved) {
                 admin_confirmation = f"""
 ✅ <b>Sugerencia {status} y Añadida al Monitoreo</b>
 
 📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
 🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
 📋 <b>Estado:</b> {status}
-🔄 <b>Monitoreo:</b> {'Añadida automáticamente al sistema' if 'monitoring_success' in locals() and monitoring_success else 'Error al añadir (revisar manualmente)'}
+🔄 <b>Monitoreo:</b> {'Añadida automáticamente al sistema' if 'monitoring_success' in locals() && monitoring_success else 'Error al añadir (revisar manualmente)'}
 🚀 Notificación enviada al bot principal
                 """.strip()
-            else:
+            } else {
                 admin_confirmation = f"""
 ✅ <b>Sugerencia {status}</b>
 
 📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
 🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
-� <b>Estado:</b> {status}
-�🗑️ Sugerencia descartada
-                """.strip()
-            
-            send_to_admin_group(admin_confirmation)
-            print("✅ SUCCESS: Admin bot confirmation sent")
-        except Exception as admin_bot_error:
-            print(f"⚠️ WARNING: Could not send admin bot confirmation: {admin_bot_error}")
-        
-        # Return success page
-        action_emoji = "🎉" if approved else "🗑️"
-        action_color = "#28a745" if approved else "#dc3545"
-        next_action = "añadido al monitoreo automáticamente" if approved else "descartado"
-        
-        success_details = ""
-        if approved:
-            if 'monitoring_success' in locals() and monitoring_success:
-                success_details = '<p style="color: #28a745;">🔄 <strong>Añadido al monitoreo:</strong> El sitio ya está siendo monitoreado automáticamente.</p>'
-            else:
-                success_details = '<p style="color: #ffc107;">⚠️ <strong>Monitoreo:</strong> Hubo un problema al añadir automáticamente. Revisar manualmente.</p>'
-        
-        return f"""
-        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
-            <h1 style="color: {action_color};">{action_emoji} Sugerencia {status}</h1>
-            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3); max-width: 500px; margin: 20px auto;">
-                <h2 style="color: #d63384;">{suggestion.get('siteName', 'Desconocido')}</h2>
-                <p><strong>URL:</strong> <a href="{suggestion.get('siteUrl', '#')}" target="_blank" style="color: #ff69b4;">{suggestion.get('siteUrl', 'N/A')}</a></p>
-                <p style="color: {action_color}; font-weight: bold;">La sugerencia ha sido {next_action}.</p>
-                {success_details}
-                {'<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' if approved else ''}
-            </div>
-            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
-                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
-                <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
-                <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
-            </div>
-        </body></html>
-        """
-        
-    except Exception as e:
-        print(f"❌ CRITICAL ERROR in handle_suggestion_action: {e}")
-        import traceback
-        traceback.print_exc()
-        return f"""
-        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: #ffe6e6;">
-            <h1 style="color: #dc3545;">❌ Error Interno</h1>
-            <p>Ha ocurrido un error al procesar la sugerencia.</p>
-            <p><strong>Detalles:</strong> {str(e)}</p>
-            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
-                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
-                <a href="/debug/suggestions" style="background: #6c757d; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);">🐛 Debug</a>
-            </div>
-        </body></html>
-        """, 500
-        admin_confirmation = f"""
-✅ <b>Sugerencia {status}</b>
-
-📝 <b>Sitio:</b> {suggestion['siteName']}
-🔗 <b>URL:</b> {suggestion['siteUrl']}
 📋 <b>Estado:</b> {status}
-{'🚀 Notificación enviada al bot principal' if approved else '🗑️ Sugerencia descartada'}
-        """.strip()
+🗑️ Sugerencia descartada
+                """.strip()
+            }
+            
+            send_to_admin_group(admin_confirmation);
+            
+            // Return success page
+            action_emoji = "🎉" if approved else "🗑️";
+            action_color = "#28a745" if approved else "#dc3545";
+            next_action = "añadido al monitoreo automáticamente" if approved else "descartado";
+            
+            return `
+            <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
+                <h1 style="color: ${action_color};">${action_emoji} Sugerencia ${status}</h1>
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3); max-width: 500px; margin: 20px auto;">
+                    <h2 style="color: #d63384;">${suggestion.get('siteName', 'Desconocido')}</h2>
+                    <p><strong>URL:</strong> <a href="${suggestion.get('siteUrl', '#')}" target="_blank" style="color: #ff69b4;">${suggestion.get('siteUrl', 'N/A')}</a></p>
+                    <p style="color: ${action_color}; font-weight: bold;">La sugerencia ha sido ${next_action}.</p>
+                    ${approved ? '<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' : ''}
+                </div>
+                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
+                    <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
+                    <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
+                    <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
+                </div>
+            </body></html>
+            `;
         
-        send_to_admin_group(admin_confirmation)
-        
-        # Return success page
-        action_emoji = "🎉" if approved else "🗑️"
-        action_color = "#28a745" if approved else "#dc3545"
-        next_action = "considerado para monitoreo" if approved else "descartado"
-        
-        return f"""
-        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
-            <h1 style="color: {action_color};">{action_emoji} Sugerencia {status}</h1>
-            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3); max-width: 500px; margin: 20px auto;">
-                <h2 style="color: #d63384;">{suggestion['siteName']}</h2>
-                <p><strong>URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank" style="color: #ff69b4;">{suggestion['siteUrl']}</a></p>
-                <p style="color: {action_color}; font-weight: bold;">La sugerencia ha sido {next_action}.</p>
-                {'<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' if approved else ''}
-            </div>
-            <div style="margin-top: 30px;">
-                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">← Volver al Panel</a>
-            </div>
-        </body></html>
-        """
-        
-    except Exception as e:
-        print(f"Error handling suggestion action: {e}")
-        return f"<h1>Error: {str(e)}</h1>", 500
+    } catch (Exception e) {
+        console.log(`Error handling suggestion action: ${e}`);
+        return `<h1>Error: ${e.message}</h1>`;
+    }
+}
 
 @app.route('/admin/suggestions')
 def view_suggestions():
@@ -2055,6 +1993,7 @@ def view_suggestions():
                 <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
                 <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
                 <a href="/admin/notifications" style="background: #fd7e14; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);">🔔 Notificaciones</a>
+                <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
             </div>
         </div>
         </body></html>
@@ -2079,85 +2018,92 @@ def telegram_webhook():
             chat_id = callback_query['message']['chat']['id']
             
             # Parse callback data
-            if callback_data.startswith('approve_'):
+            if callback_data.startsWith('approve_'):
                 suggestion_id = int(callback_data.replace('approve_', ''))
-                handle_approval(suggestion_id, True, message_id, chat_id)
-            elif callback_data.startswith('reject_'):
+                handle_approval(suggestion_id, true, message_id, chat_id)
+            } else if (callback_data.startsWith('reject_')) {
                 suggestion_id = int(callback_data.replace('reject_', ''))
-                handle_approval(suggestion_id, False, message_id, chat_id)
+                handle_approval(suggestion_id, false, message_id, chat_id)
+            }
             
-            return jsonify({"ok": True})
+            return jsonify({"ok": true})
         
-        return jsonify({"ok": True})
+        return jsonify({"ok": true})
         
-    except Exception as e:
-        print(f"Webhook error: {e}")
+    } catch (Exception e) {
+        print(`Webhook error: ${e}`)
         return jsonify({"error": str(e)}), 500
+    }
 
-def handle_approval(suggestion_id, approved, message_id, chat_id):
+function handle_approval(suggestion_id, approved, message_id, chat_id) {
     """Handle suggestion approval/rejection"""
-    try:
-        # Load suggestions
+    try {
+        // Load suggestions
         with open('suggestions.json', 'r') as f:
             suggestions = json.load(f)
         
-        if suggestion_id >= len(suggestions):
-            print(f"Invalid suggestion ID: {suggestion_id}")
-            return
+        if (suggestion_id >= suggestions.length) {
+            console.log(`Invalid suggestion ID: ${suggestion_id}`);
+            return;
+        }
         
-        suggestion = suggestions[suggestion_id]
-        status = "Aprobada" if approved else "Rechazada"
-        suggestion['status'] = status
-        suggestion['approved_at'] = datetime.now(UTC).isoformat()
+        suggestion = suggestions[suggestion_id];
+        status = approved ? "Aprobada" : "Rechazada";
+        suggestion['status'] = status;
+        suggestion['approved_at'] = datetime.now(UTC).isoformat();
         
-        # Save updated suggestions
+        // Save updated suggestions
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Update the admin message
+        // Update the admin message
         admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
-        edit_url = f"https://api.telegram.org/bot{admin_token}/editMessageText"
+        edit_url = `https://api.telegram.org/bot${admin_token}/editMessageText`;
         
-        updated_text = f"""
-🆕 <b>Sugerencia de Sitio Web - {status}</b>
+        updated_text = `
+🆕 <b>Sugerencia de Sitio Web - ${status}</b>
 
-📝 <b>Nombre:</b> {suggestion['siteName']}
-🔗 <b>URL:</b> {suggestion['siteUrl']}
-💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
-📅 <b>Fecha:</b> {suggestion['fecha_legible']}
-✅ <b>Estado:</b> {status}
+📝 <b>Nombre:</b> ${suggestion['siteName']}
+🔗 <b>URL:</b> ${suggestion['siteUrl']}
+💭 <b>Razón:</b> ${suggestion.get('reason', 'No especificada')}
+📅 <b>Fecha:</b> ${suggestion['fecha_legible']}
+✅ <b>Estado:</b> ${status}
 
-<a href="{suggestion['siteUrl']}">Ver sitio sugerido</a>
-        """.strip()
+<a href="${suggestion['siteUrl']}">Ver sitio sugerido</a>
+        `.trim();
         
         edit_payload = {
             "chat_id": chat_id,
             "message_id": message_id,
             "text": updated_text,
             "parse_mode": "HTML"
-        }
+        };
         
-        requests.post(edit_url, data=edit_payload, timeout=5)
+        requests.post(edit_url, data=edit_payload, timeout=5);
         
-        # If approved, send notification to main bot
-        if approved:
-            main_message = f"""
+        // If approved, send notification to main bot
+        if (approved) {
+            main_message = `
 🎉 <b>Nueva Web Aprobada para Monitoreo</b>
 
-📝 <b>Sitio:</b> {suggestion['siteName']}
-🔗 <b>URL:</b> {suggestion['siteUrl']}
-💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
+📝 <b>Sitio:</b> ${suggestion['siteName']}
+🔗 <b>URL:</b> ${suggestion['siteUrl']}
+💭 <b>Razón:</b> ${suggestion.get('reason', 'No especificada')}
 
 ¡Este sitio ha sido aprobado y será considerado para monitoreo!
 
-<a href="{suggestion['siteUrl']}">Ver sitio</a>
-            """.strip()
+<a href="${suggestion['siteUrl']}">Ver sitio</a>
+            `.trim();
             
-            # Send to main bot
-            send_telegram_message(main_message)
+            // Send to main bot
+            send_telegram_message(main_message);
+            console.log("✅ SUCCESS: Main bot notification sent");
+        }
         
-    except Exception as e:
-        print(f"Error handling approval: {e}")
+    } catch (Exception e) {
+        console.log(`Error handling approval: ${e}`);
+    }
+}
 
 @app.route('/api/changes.json')
 def get_changes_json():
@@ -2214,96 +2160,35 @@ def test_notification():
             </body></html>
             """
         
-        # Test main bot
-        print("🧪 TEST: Testing main bot...")
-        send_telegram_message("🧪 Test desde app.py - Bot Principal funcionando!")
+        // Test main bot
+        console.log("🧪 TEST: Testing main bot...");
+        send_telegram_message("🧪 Test desde app.py - Bot Principal funcionando!");
         
-        # Test admin bot
-        print("🧪 TEST: Testing admin bot...")
-        send_to_admin_group("🧪 Test desde app.py - Bot Admin funcionando!")
+        // Test admin bot
+        console.log("🧪 TEST: Testing admin bot...");
+        send_to_admin_group("🧪 Test desde app.py - Bot Admin funcionando!");
         
-        return """
+        return `
         <html>
-        <body style="font-family: system-ui; padding: 20px; text-align: center; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
-            <h1 style="color: #d63384;">🧪 Test de Notificaciones Enviado</h1>
+        <body style="font-family: monospace; padding: 20px; background: #f0f0f0;">
+            <h1>🧪 Test de Notificaciones Enviado</h1>
             <p>Check your Telegram and the console/terminal for debug messages.</p>
             <a href="/" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">← Back to Dashboard</a>
         </body>
         </html>
-        """
+        `;
         
-    except Exception as e:
-        print(f"❌ ERROR in test_notification: {e}")
-        import traceback
-        traceback.print_exc()
-        return f"""
+    } catch (Exception e) {
+        console.log(`❌ ERROR in test_notification: ${e}`);
+        return `
         <html><body style="padding: 20px;">
             <h1>❌ Error</h1>
-            <p>{str(e)}</p>
-            <pre>{traceback.format_exc()}</pre>
+            <p>${e.message}</p>
+            <pre>${e.stack}</pre>
         </body></html>
-        """
-
-@app.route('/test-bots')
-def test_bots():
-    """Test both Telegram bots directly from the web app"""
-    results = []
-    
-    # Get environment variables
-    main_token = os.environ.get('TELEGRAM_BOT_TOKEN')
-    main_chat = os.environ.get('TELEGRAM_CHAT_ID')
-    admin_token = os.environ.get('ADMIN_TELEGRAM_BOT_TOKEN')
-    admin_chat = os.environ.get('ADMIN_TELEGRAM_CHAT_ID')
-    
-    results.append(f"Main token: {main_token[:10]}...{main_token[-5:] if main_token else 'None'}")
-    results.append(f"Admin token: {admin_token[:10]}...{admin_token[-5:] if admin_token else 'None'}")
-    results.append(f"Chat ID: {main_chat}")
-    results.append("")
-    
-    # Test main bot
-    results.append("Testing main bot...")
-    try:
-        url = f"https://api.telegram.org/bot{main_token}/sendMessage"
-        payload = {'chat_id': main_chat, 'text': '🧪 Test desde app.py - Bot Principal'}
-        r = requests.post(url, data=payload, timeout=10)
-        results.append(f"Main bot response: {r.status_code}")
-        if r.status_code != 200:
-            results.append(f"Main bot error: {r.text}")
-        else:
-            results.append("✅ Main bot working!")
-    except Exception as e:
-        results.append(f"Main bot exception: {e}")
-    
-    results.append("")
-    
-    # Test admin bot
-    results.append("Testing admin bot...")
-    try:
-        url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
-        payload = {'chat_id': admin_chat, 'text': '🧪 Test desde app.py - Bot Admin'}
-        r = requests.post(url, data=payload, timeout=10)
-        results.append(f"Admin bot response: {r.status_code}")
-        if r.status_code != 200:
-            results.append(f"Admin bot error: {r.text}")
-        else:
-            results.append("✅ Admin bot working!")
-    except Exception as e:
-        results.append(f"Admin bot exception: {e}")
-    
-    # Return results as HTML
-    html = f"""
-    <html>
-    <head><title>Bot Test Results</title></head>
-    <body style="font-family: monospace; padding: 20px; background: #f0f0f0;">
-        <h1>🧪 Bot Test Results</h1>
-        <pre>{'<br>'.join(results)}</pre>
-        <br>
-        <a href="/" style="background: #ff69b4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Back to Dashboard</a>
-    </body>
-    </html>
-    """
-    
-    return html
+        `;
+    }
+}
 
 @app.route('/setup-webhook')
 def setup_webhook():
@@ -2458,120 +2343,11 @@ def admin_notifications():
                 }
             }
 
-            function showDetailedNotification(suggestion) {
-                const notificationDiv = document.createElement('div');
-                notificationDiv.className = 'notification show pulse';
-                notificationDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <strong>🆕 NUEVA SUGERENCIA</strong>
-                        <span style="font-size: 0.9em; opacity: 0.8;">${new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
-                        <div style="margin: 5px 0;"><strong>📝 Sitio:</strong> ${suggestion.siteName}</div>
-                        <div style="margin: 5px 0;"><strong>🌐 URL:</strong> 
-                            <a href="${suggestion.siteUrl}" target="_blank" style="color: #ffeb3b; text-decoration: underline;">
-                                ${suggestion.siteUrl}
-                            </a>
-                        </div>
-                        <div style="margin: 5px 0;"><strong>💭 Razón:</strong> ${suggestion.reason || 'No especificada'}</div>
-                        <div style="margin: 5px 0;"><strong>📅 Recibida:</strong> ${suggestion.fecha_legible}</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <a href="/admin/approval-panel" style="background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
-                            � Ir al Panel de Aprobación
-                        </a>
-                    </div>
-                `;
-                
-                document.getElementById('notifications').insertBefore(
-                    notificationDiv, 
-                    document.getElementById('notifications').firstChild
-                );
-
-                // Mantener solo las últimas 5 notificaciones
-                const notifications = document.querySelectorAll('.notification');
-                if (notifications.length > 5) {
-                    notifications[notifications.length - 1].remove();
-                }
-            }
-
-            // Inicializar verificación y cargar sugerencias existentes
-            async function initializePanel() {
-                await checkForNewSuggestions();
-                await loadExistingSuggestions();
-            }
-
-            // Cargar sugerencias existentes al inicio
-            async function loadExistingSuggestions() {
-                try {
-                    const response = await fetch('/get-latest-suggestions');
-                    const data = await response.json();
-                    
-                    if (data.suggestions.length === 0 && data.total > 0) {
-                        // Si no hay sugerencias recientes pero sí hay en total, mostrar las últimas
-                        const allResponse = await fetch('/get-all-suggestions?limit=3');
-                        const allData = await allResponse.json();
-                        
-                        allData.suggestions.forEach(suggestion => {
-                            showDetailedNotification(suggestion, true); // true = es carga inicial
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error loading existing suggestions:', error);
-                }
-            }
-
-            function showDetailedNotification(suggestion, isInitial = false) {
-                const notificationDiv = document.createElement('div');
-                notificationDiv.className = 'notification show' + (isInitial ? '' : ' pulse');
-                
-                const headerText = isInitial ? '📋 SUGERENCIA EXISTENTE' : '🆕 NUEVA SUGERENCIA';
-                const headerColor = isInitial ? 'rgba(255,255,255,0.7)' : 'rgba(255,235,59,0.9)';
-                
-                notificationDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <strong style="color: ${headerColor};">${headerText}</strong>
-                        <span style="font-size: 0.9em; opacity: 0.8;">${isInitial ? suggestion.fecha_legible : new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
-                        <div style="margin: 5px 0;"><strong>📝 Sitio:</strong> ${suggestion.siteName}</div>
-                        <div style="margin: 5px 0;"><strong>🌐 URL:</strong> 
-                            <a href="${suggestion.siteUrl}" target="_blank" style="color: #ffeb3b; text-decoration: underline;">
-                                ${suggestion.siteUrl}
-                            </a>
-                        </div>
-                        <div style="margin: 5px 0;"><strong>💭 Razón:</strong> ${suggestion.reason || 'No especificada'}</div>
-                        <div style="margin: 5px 0;"><strong>📅 Recibida:</strong> ${suggestion.fecha_legible}</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <a href="/admin/approval-panel" style="background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
-                            📋 Ir al Panel de Aprobación
-                        </a>
-                    </div>
-                `;
-                
-                document.getElementById('notifications').insertBefore(
-                    notificationDiv, 
-                    document.getElementById('notifications').firstChild
-                );
-
-                // Mantener solo las últimas 5 notificaciones
-                const notifications = document.querySelectorAll('.notification');
-                if (notifications.length > 5) {
-                    notifications[notifications.length - 1].remove();
-                }
-            }
-
-            // Solicitar permisos de notificación
-            if (Notification.permission === 'default') {
-                Notification.requestPermission();
-            }
-
-            // Inicializar
-            initializePanel();
-            setInterval(checkForNewSuggestions, 5000); // Verificar cada 5 segundos
-
-            document.getElementById('status').innerHTML += '<br>🔄 Verificando cada 5 segundos...';
+            // Verificar nuevas sugerencias al cargar
+            window.addEventListener('load', () => {
+                checkForNewSuggestions();
+                setInterval(checkForNewSuggestions, 5000);
+            });
         </script>
     </body>
     </html>
@@ -2615,17 +2391,20 @@ def get_latest_suggestions():
             suggestion_time = datetime.fromisoformat(suggestion['timestamp'].replace('Z', '+00:00'))
             time_diff = (now - suggestion_time).total_seconds()
             
-            # Si la sugerencia es de los últimos 10 minutos, marcarla como nueva
-            if time_diff < 600:  # 10 minutos
-                suggestion['notified'] = False
-                recent_suggestions.append(suggestion)
+            // Si la sugerencia es de los últimos 10 minutos, marcarla como nueva
+            if (time_diff < 600) {  // 10 minutos
+                suggestion['notified'] = false;
+                recent_suggestions.push(suggestion);
+            }
+        }
         
         return jsonify({
             "total": len(suggestions),
             "suggestions": recent_suggestions
         })
-    except FileNotFoundError:
+    } catch (FileNotFoundError) {
         return jsonify({"total": 0, "suggestions": []})
+    }
 
 @app.route('/get-suggestions-count')
 def get_suggestions_count():
