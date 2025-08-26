@@ -8,22 +8,31 @@
 <body>
   <div class="dashboard">
     <div class="header">
-      <h1>🎭 HOLAAAA</h1>
+      <h1>🎭 Ticket Monitor Dashboard</h1>
       <button class="refresh-btn" id="auto-refresh">Auto-refreshing</button>
     </div>
 
     <!-- Slideshow Section -->
     <div class="slideshow-container">
-      <div class="slide fade">
-        <img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" style="width:100%">
-      </div>
-      <div class="slide fade">
-        <img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" style="width:100%">
-      </div>
-      <div class="slide fade">
-        <img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" style="width:100%">
-      </div>
-      <!-- Add more slides as needed -->
+      <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='AUDREY1.jpg') }}" alt="AUDREY1" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='HOUDINI1.jpg') }}" alt="HOUDINI1" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS1.jpg') }}" alt="LESMIS1" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS2.jpg') }}" alt="LESMIS2" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS3.png') }}" alt="LESMIS3" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS4.jpg') }}" alt="LESMIS4" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS5.jpg') }}" alt="LESMIS5" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS6.jpg') }}" alt="LESMIS6" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS7.jpg') }}" alt="LESMIS7" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED1.jpg') }}" alt="WICKED1" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED2.jpg') }}" alt="WICKED2" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED3.jpg') }}" alt="WICKED3" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED4.jpg') }}" alt="WICKED4" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED5.jpg') }}" alt="WICKED5" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED6.jpg') }}" alt="WICKED6" class="slide-img"></div>
+      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED7.jpg') }}" alt="WICKED7" class="slide-img"></div>
       <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
       <a class="next" onclick="plusSlides(1)">&#10095;</a>
     </div>
@@ -49,7 +58,7 @@
         {% for musical, links in grouped_urls.items() %}
           {% for link in links %}
             <tr>
-              <td>{{ musical }}</td>
+              <td><strong>{{ musical }}</strong></td>
               <td><a href="{{ link.url }}" target="_blank">{{ link.url }}</a></td>
               <td>{{ link.status }}</td>
               <td>{{ link.timestamp }}</td>
