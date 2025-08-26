@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sugerencias de Sitios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Sugerencias Recibidas</h1>
+    {% if suggestions %}
+        {% for i, suggestion in enumerate(suggestions) %}
+            <div class="suggestion-card">
+                <div class="suggestion-header">
+                    <div class="suggestion-title">{{ suggestion.siteName }}</div>
+                    <div class="suggestion-id">#{{ i }}</div>
+                </div>
+                <div class="suggestion-details">
+                    <p><strong>URL:</strong> <a href="{{ suggestion.siteUrl }}" target="_blank">{{ suggestion.siteUrl }}</a></p>
+                    <p><strong>Razón:</strong> {{ suggestion.reason or 'No especificada' }}</p>
+                    <p><strong>Fecha:</strong> {{ suggestion.fecha_legible }}</p>
+                    <p><strong>Status:</strong> {{ suggestion.status or 'Pendiente' }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <h2>No hay sugerencias aún</h2>
+    {% endif %}
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="/" class="nav-btn">Página Principal</a>
+    </div>
+</body>
+</html>

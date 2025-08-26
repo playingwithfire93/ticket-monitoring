@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Comment
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template, render_template_string
 from flask_socketio import SocketIO
 import time
 import os
@@ -42,56 +42,56 @@ def send_whatsapp_message(label, url, to):
 
 def send_telegram_message(text, chat_id=None):
     """Send message to Telegram. If chat_id is provided, send to that specific chat."""
-    print(f"🐛 DEBUG: send_telegram_message called with text: {text[:50]}...")
+    print(f"DEBUG: send_telegram_message called with text: {text[:50]}...")
     
     token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Main bot token
     if not chat_id:
         chat_id = os.environ.get("TELEGRAM_CHAT_ID")  # Default chat_id en .env
     
-    print(f"🐛 DEBUG: Token: {token[:10]}...{token[-5:] if token else 'None'}")
-    print(f"🐛 DEBUG: Chat ID: {chat_id}")
+    print(f"DEBUG: Token: {token[:10]}...{token[-5:] if token else 'None'}")
+    print(f"DEBUG: Chat ID: {chat_id}")
     
     if not token or not chat_id:
-        print("❌ ERROR: Telegram token or chat_id not set")
+        print("ERROR: Telegram token or chat_id not set")
         return
     
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
     
-    print(f"🐛 DEBUG: Sending to URL: {url}")
-    print(f"🐛 DEBUG: Payload: {payload}")
+    print(f"DEBUG: Sending to URL: {url}")
+    print(f"DEBUG: Payload: {payload}")
     
     try:
         r = requests.post(url, data=payload, timeout=5)
-        print(f"✅ Telegram response: {r.status_code} - {r.text}")
+        print(f"Telegram response: {r.status_code} - {r.text}")
     except Exception as e:
-        print(f"❌ Telegram notification failed: {e}")
+        print(f"Telegram notification failed: {e}")
 
 def send_to_admin_group(text):
     """Send message specifically to the admin Telegram bot"""
-    print(f"🐛 DEBUG: send_to_admin_group called with text: {text[:50]}...")
+    print(f"DEBUG: send_to_admin_group called with text: {text[:50]}...")
     
     admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
     admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
     
-    print(f"🐛 DEBUG: Admin Token: {admin_token[:10]}...{admin_token[-5:] if admin_token else 'None'}")
-    print(f"🐛 DEBUG: Admin Chat ID: {admin_chat_id}")
+    print(f"DEBUG: Admin Token: {admin_token[:10]}...{admin_token[-5:] if admin_token else 'None'}")
+    print(f"DEBUG: Admin Chat ID: {admin_chat_id}")
     
     if not admin_token or not admin_chat_id:
-        print("❌ ERROR: Admin Telegram bot token or chat ID not configured - skipping admin notification")
+        print("ERROR: Admin Telegram bot token or chat ID not configured - skipping admin notification")
         return
     
     url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
     payload = {"chat_id": admin_chat_id, "text": text, "parse_mode": "HTML"}
     
-    print(f"🐛 DEBUG: Admin sending to URL: {url}")
-    print(f"🐛 DEBUG: Admin payload: {payload}")
+    print(f"DEBUG: Admin sending to URL: {url}")
+    print(f"DEBUG: Admin payload: {payload}")
     
     try:
         r = requests.post(url, data=payload, timeout=5)
-        print(f"✅ Admin Telegram response: {r.status_code} - {r.text}")
+        print(f"Admin Telegram response: {r.status_code} - {r.text}")
     except Exception as e:
-        print(f"❌ Admin Telegram notification failed: {e}")
+        print(f"Admin Telegram notification failed: {e}")
 
 # Real ticket monitoring URLs
 URLS = [
@@ -1218,10 +1218,7 @@ async function updateTicketData() {
 }
 updateTicketData();
 setInterval(updateTicketData, 5000);
-</script>
-</body>
-</html>
-"""
+
 @app.route('/')
 def dashboard():
     grouped_urls = group_urls_by_musical(URLS)
@@ -1239,21 +1236,21 @@ from datetime import datetime
 def suggest_site():
     from flask import request
     try:
-        print("🐛 DEBUG: suggest_site called")
+        print("DEBUG: suggest_site called")
         
         # Get JSON data
         data = request.get_json()
         if not data:
-            print("❌ ERROR: No JSON data received")
+            print("ERROR: No JSON data received")
             return jsonify({"error": "No se recibieron datos"}), 400
         
-        print(f"🐛 DEBUG: Received data: {data}")
+        print(f"DEBUG: Received data: {data}")
         
         site_name = data.get('siteName', '').strip()
         site_url = data.get('siteUrl', '').strip()
         reason = data.get('reason', '').strip()
         
-        print(f"🐛 DEBUG: Parsed - Name: {site_name}, URL: {site_url}, Reason: {reason}")
+        print(f"DEBUG: Parsed - Name: {site_name}, URL: {site_url}, Reason: {reason}")
         
         if not site_name or not site_url:
             return jsonify({"error": "Nombre y URL son obligatorios"}), 400
@@ -1270,7 +1267,7 @@ def suggest_site():
             "fecha_legible": datetime.now(UTC).strftime("%d/%m/%Y %H:%M:%S UTC")
         }
         
-        print(f"🐛 DEBUG: Created suggestion: {suggestion}")
+        print(f"DEBUG: Created suggestion: {suggestion}")
         
         # Save to file
         try:
@@ -1284,7 +1281,7 @@ def suggest_site():
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        print("🐛 DEBUG: Suggestion saved to file")
+        print("DEBUG: Suggestion saved to file")
         
         # Send enhanced notification to admin bot
         try:
@@ -1308,18 +1305,18 @@ def suggest_site():
 ⚡ <i>¡Revisar y aprobar lo antes posible!</i>
             """.strip()
             
-            print("🐛 DEBUG: Sending enhanced notification to admin bot...")
+            print("DEBUG: Sending enhanced notification to admin bot...")
             send_to_admin_group(admin_message)
-            print("🐛 DEBUG: Enhanced admin notification sent")
+            print("DEBUG: Enhanced admin notification sent")
             
         except Exception as notification_error:
-            print(f"⚠️ WARNING: Could not send admin notification: {notification_error}")
+            print(f"WARNING: Could not send admin notification: {notification_error}")
             # Don't fail the whole request if notification fails
         
         return jsonify({"success": True, "message": "Sugerencia enviada correctamente"})
         
     except Exception as e:
-        print(f"❌ ERROR in suggest_site: {e}")
+        print(f"ERROR in suggest_site: {e}")
         traceback.print_exc()
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
       
@@ -1328,104 +1325,105 @@ def monitoring_list():
     """Mostrar la lista actual de URLs que están siendo monitoreadas"""
     try:
         # Get current URLS from memory
-        current_urls = URLS.copy()
+        current_urls = URLS.copy();
         
-        # Also load from urls.json
-        try:
+        // Also load from urls.json
+        try {
             with open('urls.json', 'r') as f:
-                urls_data = json.load(f)
-        except FileNotFoundError:
-            urls_data = []
+                urls_data = json.load(f);
+        } catch (FileNotFoundError) {
+            urls_data = [];
+        }
         
-        html = f"""
+        html = `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
             <title>Lista de Monitoreo</title>
             <style>
-                body {{
+                body {
                     font-family: system-ui, -apple-system, sans-serif;
                     background: linear-gradient(120deg, #ffb6e6 0%, #fecfef 50%, #ffb6e6 100%);
                     margin: 0;
                     padding: 20px;
                     min-height: 100vh;
-                }}
-                .container {{
+                }
+                .container {
                     max-width: 1000px;
                     margin: 0 auto;
                     background: rgba(255, 255, 255, 0.95);
                     border-radius: 20px;
                     padding: 30px;
                     box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3);
-                }}
-                h1 {{
+                }
+                h1 {
                     color: #d63384;
                     text-align: center;
                     margin-bottom: 30px;
                     font-size: 2.5em;
                     text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
-                }}
-                .stats {{
+                }
+                .stats {
                     background: linear-gradient(135deg, #ff69b4, #d63384);
                     color: white;
                     padding: 20px;
                     border-radius: 15px;
                     text-align: center;
                     margin-bottom: 30px;
-                }}
-                .section {{
+                }
+                .section {
                     margin: 30px 0;
                     background: white;
                     border: 2px solid #ff69b4;
                     border-radius: 15px;
                     padding: 20px;
                     box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
-                }}
-                .section h2 {{
+                }
+                .section h2 {
                     color: #d63384;
                     border-bottom: 2px solid #ffe0f7;
                     padding-bottom: 10px;
-                }}
-                .url-item {{
+                }
+                .url-item {
                     background: #f8f9fa;
                     border: 1px solid #dee2e6;
                     border-radius: 8px;
                     padding: 15px;
                     margin: 10px 0;
-                }}
-                .url-link {{
+                }
+                .url-link {
                     color: #ff69b4;
                     text-decoration: none;
                     font-weight: bold;
-                }}
-                .url-link:hover {{ text-decoration: underline; }}
-                .musical-group {{
+                }
+                .url-link:hover { text-decoration: underline; }
+                .musical-group {
                     border-left: 4px solid #ff69b4;
                     padding-left: 15px;
                     margin: 15px 0;
-                }}
-                .navigation {{
+                }
+                .navigation {
                     text-align: center;
                     margin-top: 40px;
                     padding-top: 30px;
                     border-top: 2px solid #ffe0f7;
-                }}
-                .nav-buttons {{
+                }
+                .nav-buttons {
                     display: flex;
                     gap: 15px;
                     justify-content: center;
                     flex-wrap: wrap;
-                }}
-                .nav-btn {{
+                }
+                .nav-btn {
                     padding: 15px 30px;
                     text-decoration: none;
                     border-radius: 25px;
                     font-weight: bold;
                     color: white;
                     transition: transform 0.2s;
-                }}
-                .nav-btn:hover {{ transform: translateY(-2px); }}
+                }
+                .nav-btn:hover { transform: translateY(-2px); }
             </style>
         </head>
         <body>
@@ -1433,61 +1431,67 @@ def monitoring_list():
                 <h1>🔄 Lista de Monitoreo Activa</h1>
                 
                 <div class="stats">
-                    <strong>📊 Total de URLs monitoreadas: {len(current_urls)}</strong><br>
-                    <strong>🎭 Musicales en urls.json: {len(urls_data)}</strong>
+                    <strong>📊 Total de URLs monitoreadas: ${current_urls.length}</strong><br>
+                    <strong>🎭 Musicales en urls.json: ${urls_data.length}</strong>
                 </div>
                 
                 <div class="section">
                     <h2>📋 URLs Activas en Memoria (URLS array)</h2>
-        """
+        `;
         
-        if not current_urls:
-            html += "<p>No hay URLs configuradas en el array URLS.</p>"
-        else:
-            for i, url_item in enumerate(current_urls):
-                html += f"""
+        if (!current_urls.length) {
+            html += "<p>No hay URLs configuradas en el array URLS.</p>";
+        } else {
+            current_urls.forEach((url_item, i) => {
+                html += `
                 <div class="url-item">
-                    <strong>#{i+1}: {url_item.get('label', 'Sin nombre')}</strong><br>
-                    <a href="{url_item.get('url', '#')}" target="_blank" class="url-link">{url_item.get('url', 'Sin URL')}</a>
+                    <strong>#{i+1}: ${url_item.get('label', 'Sin nombre')}</strong><br>
+                    <a href="${url_item.get('url', '#')}" target="_blank" class="url-link">${url_item.get('url', 'Sin URL')}</a>
                 </div>
-                """
+                `;
+            });
+        }
         
-        html += """
+        html += `
                 </div>
                 
                 <div class="section">
                     <h2>📁 URLs en archivo urls.json</h2>
-        """
+        `;
         
-        if not urls_data:
-            html += "<p>No hay datos en urls.json.</p>"
-        else:
-            for musical in urls_data:
-                musical_name = musical.get('musical', 'Sin nombre')
-                urls = musical.get('urls', []);
+        if (!urls_data.length) {
+            html += "<p>No hay datos en urls.json.</p>";
+        } else {
+            urls_data.forEach(musical => {
+                const musical_name = musical.get('musical', 'Sin nombre');
+                const urls = musical.get('urls', []);
                 
-                html += f"""
+                html += `
                 <div class="musical-group">
-                    <h3 style="color: #ff69b4;">{musical_name} ({len(urls)} URLs)</h3>
-                """
+                    <h3 style="color: #ff69b4;">${musical_name} (${urls.length} URLs)</h3>
+                `;
                 
-                for url in urls:
-                    html += f"""
+                urls.forEach(url => {
+                    html += `
                     <div class="url-item">
-                        <a href="{url}" target="_blank" class="url-link">{url}</a>
+                        <a href="${url}" target="_blank" class="url-link">${url}</a>
                     </div>
-                    """
+                    `;
+                });
                 
-                html += "</div>"
+                html += "</div>";
+            });
+        }
         
-        html += """
+        html += `
                 </div>
                 
                 <div class="navigation">
                     <div class="nav-buttons">
-                        <a href="/" style="background: #28a745; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);" class="nav-btn">🏠 Página Principal</a>
-                        <a href="/admin/approval-panel" style="background: #ff69b4; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);" class="nav-btn">📋 Panel de Aprobación</a>
-                        <a href="/admin/suggestions" style="background: #6f42c1; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);" class="nav-btn">📊 Ver Historial</a>
+                        <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);" class="nav-btn">🏠 Página Principal</a>
+                        <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);" class="nav-btn">📋 Panel de Aprobación</a>
+                        <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);" class="nav-btn">📊 Ver Historial</a>
+                        <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);" class="nav-btn">🔄 Ver Monitoreo</a>
                     </div>
                     <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
                         ⚡ Esta página muestra las URLs que están siendo monitoreadas actualmente
@@ -1496,18 +1500,19 @@ def monitoring_list():
             </div>
         </body>
         </html>
-        """
+        `;
         
-        return html
+        return html;
         
-    except Exception as e:
-        return f"""
+    } catch (Exception e) {
+        return `
         <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: #ffe6e6;">
             <h1 style="color: #dc3545;">❌ Error</h1>
-            <p>Error al cargar la lista de monitoreo: {str(e)}</p>
+            <p>Error al cargar la lista de monitoreo: ${e.message}</p>
             <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">🏠 Página Principal</a>
         </body></html>
-        """, 500
+        `, 500;
+}
 
 @app.route('/debug/suggestions')
 def debug_suggestions():
@@ -1538,8 +1543,8 @@ def debug_suggestions():
             </div>
             """
         
-        html += f"""
-        <p><strong>Total suggestions:</strong> {len(suggestions)}</p>
+        html += `
+        <p><strong>Total suggestions:</strong> ${suggestions.length}</p>
         <div style="text-align: center; margin: 30px;">
             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
@@ -1547,55 +1552,58 @@ def debug_suggestions():
                 <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
             </div>
         </div>
-        </body></html>
-        """
+        `;
         
-        return html
+        return html;
         
-    except Exception as e:
-        return f"<h1>Error: {str(e)}</h1>", 500
+           
+    } catch (Exception e) {
+        return `<h1>Error: ${e.message}</h1>`, 500;
+    }
+}
 
 @app.route('/admin/approval-panel')
 def approval_panel():
-    try:
+    try {
         with open('suggestions.json', 'r') as f:
-            suggestions = json.load(f)
-    except FileNotFoundError:
-        suggestions = []
+            suggestions = json.load(f);
+    } catch (FileNotFoundError) {
+        suggestions = [];
+    }
     
-    # Filter pending suggestions
-    pending_suggestions = [s for i, s in enumerate(suggestions) if s.get('status', 'Pendiente') == 'Pendiente']
+    // Filter pending suggestions
+    pending_suggestions = suggestions.filter(s => s.get('status', 'Pendiente') === 'Pendiente');
     
-    html = f"""
+    html = `
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
         <title>Panel de Aprobación de Sugerencias</title>
         <style>
-            body {{
+            body {
                 font-family: system-ui, -apple-system, sans-serif;
                 background: linear-gradient(120deg, #ffb6e6 0%, #fecfef 50%, #ffb6e6 100%);
                 margin: 0;
                 padding: 20px;
                 min-height: 100vh;
-            }}
-            .container {{
+            }
+            .container {
                 max-width: 1000px;
                 margin: 0 auto;
                 background: rgba(255, 255, 255, 0.95);
                 border-radius: 20px;
                 padding: 30px;
                 box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3);
-            }}
-            h1 {{
+            }
+            h1 {
                 color: #d63384;
                 text-align: center;
                 margin-bottom: 30px;
                 font-size: 2.5em;
                 text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
-            }}
-            .suggestion-card {{
+            }
+            .suggestion-card {
                 background: white;
                 border: 2px solid #ff69b4;
                 border-radius: 15px;
@@ -1603,47 +1611,47 @@ def approval_panel():
                 margin: 20px 0;
                 box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
                 transition: transform 0.2s;
-            }}
-            .suggestion-card:hover {{
+            }
+            .suggestion-card:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 8px 25px rgba(255, 105, 180, 0.3);
-            }}
-            .suggestion-header {{
+            }
+            .suggestion-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 15px;
                 padding-bottom: 10px;
                 border-bottom: 2px solid #ffe0f7;
-            }}
-            .suggestion-title {{
+            }
+            .suggestion-title {
                 font-size: 1.5em;
                 font-weight: bold;
                 color: #d63384;
-            }}
-            .suggestion-id {{
+            }
+            .suggestion-id {
                 background: #ff69b4;
                 color: white;
                 padding: 5px 10px;
                 border-radius: 15px;
                 font-size: 0.9em;
-            }}
-            .suggestion-details {{
+            }
+            .suggestion-details {
                 margin: 15px 0;
-            }}
-            .suggestion-details p {{
+            }
+            .suggestion-details p {
                 margin: 8px 0;
                 color: #666;
-            }}
-            .suggestion-details strong {{
+            }
+            .suggestion-details strong {
                 color: #d63384;
-            }}
-            .action-buttons {{
+            }
+            .action-buttons {
                 display: flex;
                 gap: 15px;
                 margin-top: 20px;
-            }}
-            .btn {{
+            }
+            .btn {
                 padding: 12px 25px;
                 border: none;
                 border-radius: 25px;
@@ -1654,39 +1662,39 @@ def approval_panel():
                 text-decoration: none;
                 display: inline-block;
                 text-align: center;
-            }}
-            .btn-approve {{
+            }
+            .btn-approve {
                 background: linear-gradient(135deg, #28a745, #20c997);
                 color: white;
                 box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-            }}
-            .btn-approve:hover {{
+            }
+            .btn-approve:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-            }}
-            .btn-reject {{
+            }
+            .btn-reject {
                 background: linear-gradient(135deg, #dc3545, #e83e8c);
                 color: white;
                 box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
-            }}
-            .btn-reject:hover {{
+            }
+            .btn-reject:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
-            }}
-            .no-suggestions {{
+            }
+            .no-suggestions {
                 text-align: center;
                 color: #666;
                 font-size: 1.2em;
                 margin: 50px 0;
-            }}
-            .stats {{
+            }
+            .stats {
                 background: linear-gradient(135deg, #ff69b4, #d63384);
                 color: white;
                 padding: 15px;
                 border-radius: 15px;
                 text-align: center;
                 margin-bottom: 30px;
-            }}
+            }
         </style>
     </head>
     <body>
@@ -1694,28 +1702,28 @@ def approval_panel():
             <h1>✨ Panel de Aprobación ✨</h1>
             
             <div class="stats">
-                <strong>📊 Sugerencias Pendientes: {len(pending_suggestions)}</strong>
+                <strong>📊 Sugerencias Pendientes: ${pending_suggestions.length}</strong>
             </div>
             
-            {'' if pending_suggestions else '<div class="no-suggestions">🎉 ¡No hay sugerencias pendientes!<br><small>Todas las sugerencias han sido procesadas.</small></div>'}
+            ${pending_suggestions.length === 0 ? '<div class="no-suggestions">🎉 ¡No hay sugerencias pendientes!<br><small>Todas las sugerencias han sido procesadas.</small></div>' : ''}
             
-            {''.join(f"""
+            ${pending_suggestions.map((suggestion, i) => `
             <div class="suggestion-card">
                 <div class="suggestion-header">
-                    <div class="suggestion-title">{suggestion['siteName']}</div>
-                    <div class="suggestion-id">#{i}</div>
+                    <div class="suggestion-title">${suggestion.siteName}</div>
+                    <div class="suggestion-id">#${i}</div>
                 </div>
                 <div class="suggestion-details">
-                    <p><strong>🔗 URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank" class="url-link">{suggestion['siteUrl']}</a></p>
-                    <p><strong>💭 Razón:</strong> {suggestion.get('reason', 'No especificada')}</p>
-                    <p><strong>📅 Fecha:</strong> {suggestion['fecha_legible']}</p>
+                    <p><strong>🔗 URL:</strong> <a href="${suggestion.siteUrl}" target="_blank" class="url-link">${suggestion.siteUrl}</a></p>
+                    <p><strong>💭 Razón:</strong> ${suggestion.reason || 'No especificada'}</p>
+                    <p><strong>📅 Fecha:</strong> ${suggestion.fecha_legible}</p>
                 </div>
                 <div class="action-buttons">
-                    <a href="/admin/approve/{i}" class="btn btn-approve">✅ Aprobar</a>
-                    <a href="/admin/reject/{i}" class="btn btn-reject">❌ Rechazar</a>
+                    <a href="/admin/approve/${i}" class="btn btn-approve">✅ Aprobar</a>
+                    <a href="/admin/reject/${i}" class="btn btn-reject">❌ Rechazar</a>
                 </div>
             </div>
-            """ for i, suggestion in enumerate(suggestions) if suggestion.get('status', 'Pendiente') == 'Pendiente')}
+            `).join('')}
             
             <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #ffe0f7;">
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
@@ -1729,239 +1737,9 @@ def approval_panel():
                 </p>
             </div>
         </div>
-        
-        <script>
-        // Auto-refresh every 30 seconds
-        setTimeout(() => {
-            window.location.reload();
-        }, 30000);
-        </script>
     </body>
     </html>
-    """
-    
-    return html
-    try:
-        with open('suggestions.json', 'r') as f:
-            suggestions = json.load(f)
-        
-        html = """
-        <html><head><title>Sugerencias de Sitios</title></head><body>
-        <h1>Sugerencias Recibidas</h1>
-        """
-        
-        for suggestion in reversed(suggestions):  # Most recent first
-            status = suggestion.get('status', 'Pendiente')
-            status_color = '#28a745' if status == 'Aprobada' else '#dc3545' if status == 'Rechazada' else '#ffc107'
-            html += f"""
-            <div style="border: 1px solid #ccc; margin: 10px; padding: 15px; border-radius: 5px;">
-                <h3>{suggestion['siteName']} <span style="color: {status_color}; font-size: 0.8em;">[{status}]</span></h3>
-                <p><strong>URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank">{suggestion['siteUrl']}</a></p>
-                <p><strong>Razón:</strong> {suggestion['reason'] or 'No especificada'}</p>
-                <p><strong>Fecha:</strong> {suggestion['fecha_legible']}</p>
-            </div>
-            """
-        
-        html += "</body></html>"
-        return html
-        
-    except FileNotFoundError:
-        return "<h1>No hay sugerencias aún</h1>"
-
-@app.route('/admin/approve/<int:suggestion_id>')
-def approve_suggestion(suggestion_id):
-    return handle_suggestion_action(suggestion_id, True)
-
-@app.route('/admin/reject/<int:suggestion_id>')
-def reject_suggestion(suggestion_id):
-    return handle_suggestion_action(suggestion_id, False)
-
-def handle_suggestion_action(suggestion_id, approved):
-    """Handle suggestion approval/rejection via web interface"""
-    try:
-        print(f"🐛 DEBUG: Processing suggestion_id: {suggestion_id}, approved: {approved}")
-        
-        # Load suggestions
-        try:
-            with open('suggestions.json', 'r') as f:
-                suggestions = json.load(f)
-            print(f"🐛 DEBUG: Loaded {len(suggestions)} suggestions")
-        except FileNotFoundError:
-            print("❌ ERROR: suggestions.json not found")
-            return f"<h1>Error: No se encontró el archivo de sugerencias</h1>", 404
-        except json.JSONDecodeError as e:
-            print(f"❌ ERROR: Invalid JSON in suggestions.json: {e}")
-            return f"<h1>Error: Archivo de sugerencias corrupto</h1>", 500
-        
-        if not suggestions:
-            print("❌ ERROR: No suggestions found")
-            return f"<h1>Error: No hay sugerencias</h1>", 404
-        
-        if suggestion_id < 0 or suggestion_id >= len(suggestions):
-            print(f"❌ ERROR: suggestion_id {suggestion_id} out of range (0-{len(suggestions)-1})")
-            return f"<h1>Error: Sugerencia #{suggestion_id} no encontrada. Rango válido: 0-{len(suggestions)-1}</h1>", 404
-        
-        suggestion = suggestions[suggestion_id]
-        print(f"🐛 DEBUG: Found suggestion: {suggestion.get('siteName', 'Unknown')}")
-        
-        # Check if already processed
-        current_status = suggestion.get('status', 'Pendiente')
-        if current_status != 'Pendiente':
-            print(f"⚠️ WARNING: Suggestion already processed with status: {current_status}")
-            return f"""
-            <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
-                <h1 style="color: #d63384;">⚠️ Sugerencia ya procesada</h1>
-                <p>La sugerencia <strong>"{suggestion.get('siteName', 'Desconocido')}"</strong> ya fue <strong>{current_status}</strong>.</p>
-                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
-                    <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
-                </div>
-            </body></html>
-            """
-        
-        status = "Aprobada" if approved else "Rechazada"
-        suggestion['status'] = status
-        suggestion['approved_at'] = datetime.now(UTC).isoformat()
-        suggestion['approved_by'] = 'Admin Web Panel'
-        
-        print(f"🐛 DEBUG: Setting status to: {status}")
-        
-        # Save updated suggestions
-        try:
-            with open('suggestions.json', 'w') as f:
-                json.dump(suggestions, f, indent=2, ensure_ascii=False)
-            print("✅ SUCCESS: Suggestions file updated")
-        except Exception as save_error:
-            print(f"❌ ERROR saving suggestions: {save_error}")
-            return f"<h1>Error: No se pudo guardar: {str(save_error)}</h1>", 500
-        
-        # If approved, add to monitoring list and send notification to main bot
-        if approved:
-            # Add to URLS list for monitoring
-            site_name = suggestion.get('siteName', 'Nuevo Sitio')
-            site_url = suggestion.get('siteUrl', '')
-            
-            try:
-                # Add to the URLS array in code (for current session)
-                new_url_entry = {"label": site_name, "url": site_url}
-                global URLS
-                URLS.append(new_url_entry)
-                print(f"✅ SUCCESS: Added to URLS array: {site_name}")
-                
-                # Add to urls.json file (for persistence)
-                try:
-                    with open('urls.json', 'r') as f:
-                        urls_data = json.load(f)
-                except FileNotFoundError:
-                    urls_data = []
-                
-                # Check if site already exists in urls.json
-                site_exists = false;
-                for musical_entry in urls_data:
-                    if musical_entry.get('musical', '').lower() == site_name.lower():
-                        // Site exists, add URL if not already there
-                        if site_url not in musical_entry.get('urls', []):
-                            musical_entry['urls'].append(site_url);
-                            console.log(`✅ SUCCESS: Added URL to existing musical: ${site_name}`);
-                        site_exists = true;
-                        break;
-                
-                if (!site_exists) {
-                  // Create new entry
-                  new_musical_entry = {
-                      "musical": site_name,
-                      "urls": [site_url]
-                  };
-                  urls_data.push(new_musical_entry);
-                  console.log(`✅ SUCCESS: Created new musical entry: ${site_name}`);
-                }
-                
-                // Save urls.json
-                with open('urls.json', 'w') as f:
-                    json.dump(urls_data, f, indent=2, ensure_ascii=False)
-                
-                monitoring_success = true;
-                console.log(`✅ SUCCESS: Added ${site_name} to monitoring list`);
-                
-            } catch (Exception monitoring_error) {
-                console.log(`⚠️ WARNING: Could not add to monitoring list: ${monitoring_error}`);
-                monitoring_success = false;
-            }
-            
-            // Send notification to main bot
-            try {
-                main_message = f"""
-🎉 <b>Nueva Web Aprobada y Añadida al Monitoreo</b>
-
-📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
-🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
-💭 <b>Razón:</b> {suggestion.get('reason', 'No especificada')}
-
-¡Este sitio ya está siendo monitoreado automáticamente!
-
-<a href="{suggestion.get('siteUrl', '#')}">Ver sitio</a>
-                """.strip()
-                
-                // Send to main bot
-                send_telegram_message(main_message);
-                console.log("✅ SUCCESS: Main bot notification sent");
-            } catch (Exception main_bot_error) {
-                console.log(`⚠️ WARNING: Could not send main bot notification: ${main_bot_error}`);
-            }
-        }
-        
-        // Send confirmation to admin bot
-        try {
-            if (approved) {
-                admin_confirmation = f"""
-✅ <b>Sugerencia {status} y Añadida al Monitoreo</b>
-
-📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
-🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
-📋 <b>Estado:</b> {status}
-🔄 <b>Monitoreo:</b> {'Añadida automáticamente al sistema' if 'monitoring_success' in locals() && monitoring_success else 'Error al añadir (revisar manualmente)'}
-🚀 Notificación enviada al bot principal
-                """.strip()
-            } else {
-                admin_confirmation = f"""
-✅ <b>Sugerencia {status}</b>
-
-📝 <b>Sitio:</b> {suggestion.get('siteName', 'Desconocido')}
-🔗 <b>URL:</b> {suggestion.get('siteUrl', 'N/A')}
-📋 <b>Estado:</b> {status}
-🗑️ Sugerencia descartada
-                """.strip()
-            }
-            
-            send_to_admin_group(admin_confirmation);
-            
-            // Return success page
-            action_emoji = "🎉" if approved else "🗑️";
-            action_color = "#28a745" if approved else "#dc3545";
-            next_action = "añadido al monitoreo automáticamente" if approved else "descartado";
-            
-            return `
-            <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(120deg, #ffb6e6, #fecfef);">
-                <h1 style="color: ${action_color};">${action_emoji} Sugerencia ${status}</h1>
-                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3); max-width: 500px; margin: 20px auto;">
-                    <h2 style="color: #d63384;">${suggestion.get('siteName', 'Desconocido')}</h2>
-                    <p><strong>URL:</strong> <a href="${suggestion.get('siteUrl', '#')}" target="_blank" style="color: #ff69b4;">${suggestion.get('siteUrl', 'N/A')}</a></p>
-                    <p style="color: ${action_color}; font-weight: bold;">La sugerencia ha sido ${next_action}.</p>
-                    ${approved ? '<p style="color: #28a745;">📱 Se ha enviado una notificación al bot principal.</p>' : ''}
-                </div>
-                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
-                    <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
-                    <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
-                    <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
-                </div>
-            </body></html>
-            `;
-        
-    } catch (Exception e) {
-        console.log(`Error handling suggestion action: ${e}`);
-        return `<h1>Error: ${e.message}</h1>`;
-    }
+    `;
 }
 
 @app.route('/admin/suggestions')
@@ -1969,39 +1747,9 @@ def view_suggestions():
     try:
         with open('suggestions.json', 'r') as f:
             suggestions = json.load(f)
-        
-        html = """
-        <html><head><title>Sugerencias de Sitios</title></head><body>
-        <h1>Historial de Sugerencias</h1>
-        """
-        
-        for i, suggestion in enumerate(reversed(suggestions)):  # Most recent first
-            status = suggestion.get('status', 'Pendiente')
-            status_color = '#28a745' if status == 'Aprobada' else '#dc3545' if status == 'Rechazada' else '#ffc107'
-            html += f"""
-            <div style="border: 1px solid #ccc; margin: 10px; padding: 15px; border-radius: 5px;">
-                <h3>#{len(suggestions)-i-1}: {suggestion['siteName']} <span style="color: {status_color}; font-size: 0.8em;">[{status}]</span></h3>
-                <p><strong>URL:</strong> <a href="{suggestion['siteUrl']}" target="_blank">{suggestion['siteUrl']}</a></p>
-                <p><strong>Razón:</strong> {suggestion.get('reason', 'No especificada')}</p>
-                <p><strong>Fecha:</strong> {suggestion['fecha_legible']}</p>
-            </div>
-            """
-        
-        html += """
-        <div style="text-align: center; margin: 30px;">
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
-                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
-                <a href="/admin/notifications" style="background: #fd7e14; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);">🔔 Notificaciones</a>
-                <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);">🔄 Ver Monitoreo</a>
-            </div>
-        </div>
-        </body></html>
-        """
-        return html
-        
+        return render_template('suggestions.html', suggestions=suggestions)
     except FileNotFoundError:
-        return "<h1>No hay sugerencias aún</h1>"
+        return render_template('suggestions.html', suggestions=[])
 
 @app.route('/telegram-webhook', methods=['POST'])
 def telegram_webhook():
@@ -2097,7 +1845,7 @@ function handle_approval(suggestion_id, approved, message_id, chat_id) {
             
             // Send to main bot
             send_telegram_message(main_message);
-            console.log("✅ SUCCESS: Main bot notification sent");
+            console.log("SUCCESS: Main bot notification sent");
         }
         
     } catch (Exception e) {
@@ -2133,40 +1881,42 @@ def get_ticket_changes():
 
 @app.route('/api/check-changes')
 def check_changes():
-    try:
+    try {
         has_new_changes = any(item.get('status', '').find('Actualizado') != -1 for item in latest_changes)
         return {"new_changes": has_new_changes}
-    except:
+    } catch {
         return {"new_changes": False}
+    }
 
 @app.route('/test-notification')
 def test_notification():
     """Simple test to trigger notifications"""
-    try:
-        print("🧪 TEST: Starting notification test...")
+    try {
+        console.log("TEST: Starting notification test...");
         
-        # Test environment variables first
+        // Test environment variables first
         main_token = os.environ.get("TELEGRAM_BOT_TOKEN")
         admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
         chat_id = os.environ.get("TELEGRAM_CHAT_ID")
         
-        if not main_token or not admin_token or not chat_id:
-            return f"""
+        if (!main_token || !admin_token || !chat_id) {
+            return `
             <html><body style="padding: 20px;">
                 <h1>❌ Configuration Error</h1>
-                <p>Main token: {'✅' if main_token else '❌'}</p>
-                <p>Admin token: {'✅' if admin_token else '❌'}</p>
-                <p>Chat ID: {'✅' if chat_id else '❌'}</p>
+                <p>Main token: ${main_token ? '✅' : '❌'}</p>
+                <p>Admin token: ${admin_token ? '✅' : '❌'}</p>
+                <p>Chat ID: ${chat_id ? '✅' : '❌'}</p>
             </body></html>
-            """
+            `;
+        }
         
         // Test main bot
-        console.log("🧪 TEST: Testing main bot...");
-        send_telegram_message("🧪 Test desde app.py - Bot Principal funcionando!");
+        console.log("TEST: Testing main bot...");
+        send_telegram_message("Test desde app.py - Bot Principal funcionando!");
         
         // Test admin bot
-        console.log("🧪 TEST: Testing admin bot...");
-        send_to_admin_group("🧪 Test desde app.py - Bot Admin funcionando!");
+        console.log("TEST: Testing admin bot...");
+        send_to_admin_group("Test desde app.py - Bot Admin funcionando!");
         
         return `
         <html>
@@ -2179,7 +1929,7 @@ def test_notification():
         `;
         
     } catch (Exception e) {
-        console.log(`❌ ERROR in test_notification: ${e}`);
+        console.log(`ERROR in test_notification: ${e}`);
         return `
         <html><body style="padding: 20px;">
             <h1>❌ Error</h1>
@@ -2203,11 +1953,13 @@ def setup_webhook():
     setup_url = f"https://api.telegram.org/bot{admin_token}/setWebhook"
     payload = {"url": webhook_url}
     
-    try:
-        r = requests.post(setup_url, data=payload, timeout=5)
-        return jsonify({"status": r.status_code, "response": r.json()})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    try {
+        r = requests.post(setup_url, data=payload, timeout=5);
+        return jsonify({"status": r.status_code, "response": r.json()});
+    } catch (Exception e) {
+        return jsonify({"error": str(e)}), 500;
+    }
+}
 
 @app.route('/admin/notifications')
 def admin_notifications():
@@ -2357,49 +2109,51 @@ def admin_notifications():
 def get_all_suggestions():
     """API para obtener todas las sugerencias con límite opcional"""
     from flask import request
-    try:
+    try {
         limit = request.args.get('limit', type=int)
         
         with open('suggestions.json', 'r') as f:
             suggestions = json.load(f)
         
-        if limit:
-            suggestions = suggestions[-limit:]  # Últimas N sugerencias
+        if (limit) {
+            suggestions = suggestions.slice(-limit);  // Últimas N sugerencias
+        }
         
         return jsonify({
-            "total": len(suggestions),
+            "total": suggestions.length,
             "suggestions": suggestions
         })
-    except FileNotFoundError:
+    } catch (FileNotFoundError) {
         return jsonify({"total": 0, "suggestions": []})
+    }
 
 @app.route('/get-latest-suggestions')
 def get_latest_suggestions():
     """API para obtener las últimas sugerencias con detalles completos"""
-    try:
+    try {
         with open('suggestions.json', 'r') as f:
             suggestions = json.load(f)
         
-        # Obtener las últimas 3 sugerencias para mostrar
-        latest_suggestions = suggestions[-3:] if len(suggestions) > 3 else suggestions
+        // Obtener las últimas 3 sugerencias para mostrar
+        latest_suggestions = suggestions.slice(-3);
         
-        # Marcar como nuevas las que fueron agregadas en los últimos 5 minutos
-        now = datetime.now(UTC)
-        recent_suggestions = []
+        // Marcar como nuevas las que fueron agregadas en los últimos 5 minutos
+        now = datetime.now(UTC);
+        recent_suggestions = [];
         
-        for suggestion in latest_suggestions:
-            suggestion_time = datetime.fromisoformat(suggestion['timestamp'].replace('Z', '+00:00'))
-            time_diff = (now - suggestion_time).total_seconds()
+        latest_suggestions.forEach(suggestion => {
+            suggestion_time = datetime.fromisoformat(suggestion['timestamp'].replace('Z', '+00:00'));
+            time_diff = (now - suggestion_time).total_seconds();
             
             // Si la sugerencia es de los últimos 10 minutos, marcarla como nueva
             if (time_diff < 600) {  // 10 minutos
                 suggestion['notified'] = false;
                 recent_suggestions.push(suggestion);
             }
-        }
+        });
         
         return jsonify({
-            "total": len(suggestions),
+            "total": suggestions.length,
             "suggestions": recent_suggestions
         })
     } catch (FileNotFoundError) {
@@ -2409,12 +2163,13 @@ def get_latest_suggestions():
 @app.route('/get-suggestions-count')
 def get_suggestions_count():
     """API para obtener el número total de sugerencias (mantener compatibilidad)"""
-    try:
+    try {
         with open('suggestions.json', 'r') as f:
             suggestions = json.load(f)
-        return jsonify({"count": len(suggestions)})
-    except FileNotFoundError:
+        return jsonify({"count": suggestions.length})
+    } catch (FileNotFoundError) {
         return jsonify({"count": 0})
+    }
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
