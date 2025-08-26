@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Monitoreo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>&#128260; Lista de Monitoreo Activa</h1>
+        <div class="stats">
+            <strong>&#128202; Total de URLs monitoreadas: {{ current_urls|length }}</strong><br>
+            <strong>&#127917; Musicales en urls.json: {{ urls_data|length }}</strong>
+        </div>
+        <div class="section">
+            <h2>&#128221; URLs Activas en Memoria (URLS array)</h2>
+            {% if not current_urls %}
+                <p>No hay URLs configuradas en el array URLS.</p>
+            {% else %}
+                {% for url_item in current_urls %}
+                <div class="url-item">
+                    <strong>{{ loop.index }}: {{ url_item.label or 'Sin nombre' }}</strong><br>
+                    <a href="{{ url_item.url or '#' }}" target="_blank" class="url-link">{{ url_item.url or 'Sin URL' }}</a>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="section">
+            <h2>&#128193; URLs en archivo urls.json</h2>
+            {% if not urls_data %}
+                <p>No hay datos en urls.json.</p>
+            {% else %}
+                {% for musical in urls_data %}
+                <div class="musical-group">
+                    <h3 style="color: #ff69b4;">{{ musical.musical or 'Sin nombre' }} ({{ musical.urls|length }} URLs)</h3>
+                    {% for url in musical.urls %}
+                    <div class="url-item">
+                        <a href="{{ url }}" target="_blank" class="url-link">{{ url }}</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="navigation">
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" style="background: #28a745;">&#127968; Página Principal</a>
+                <a href="/admin/approval-panel" class="nav-btn" style="background: #ff69b4;">&#128221; Panel de Aprobación</a>
+                <a href="/admin/suggestions" class="nav-btn" style="background: #6f42c1;">&#128202; Ver Historial</a>
+                <a href="/admin/monitoring-list" class="nav-btn" style="background: #20c997;">&#128260; Ver Monitoreo</a>
+            </div>
+            <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
+                &#9889; Esta página muestra las URLs que están siendo monitoreadas actualmente
+            </p>
+        </div>
+    </div>
+</body>
+</html>

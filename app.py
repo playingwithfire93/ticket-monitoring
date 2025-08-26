@@ -52,194 +52,20 @@ def send_telegram_message(text, chat_id=None):
     print(f"DEBUG: Chat ID: {chat_id}")
     
     if not token or not chat_id:
-        print("ERROR: Telegram token or chat_id not set")
-        return
-    
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
-    
-    print(f"DEBUG: Sending to URL: {url}")
-    print(f"DEBUG: Payload: {payload}")
-    
-    try:
-        r = requests.post(url, data=payload, timeout=5)
-        print(f"Telegram response: {r.status_code} - {r.text}")
-    except Exception as e:
-        print(f"Telegram notification failed: {e}")
+        # Get current URLs from memory
+        current_urls = URLS.copy()
+        # Also load from urls.json
+        try:
+          with open('urls.json', 'r') as f:
+            urls_data = json.load(f)
+        except FileNotFoundError:
+          urls_data = []
 
-def send_to_admin_group(text):
-    """Send message specifically to the admin Telegram bot"""
-    print(f"DEBUG: send_to_admin_group called with text: {text[:50]}...")
-    
-    admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
-    admin_chat_id = os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
-    
-    print(f"DEBUG: Admin Token: {admin_token[:10]}...{admin_token[-5:] if admin_token else 'None'}")
-    print(f"DEBUG: Admin Chat ID: {admin_chat_id}")
-    
-    if not admin_token or not admin_chat_id:
-        print("ERROR: Admin Telegram bot token or chat ID not configured - skipping admin notification")
-        return
-    
-    url = f"https://api.telegram.org/bot{admin_token}/sendMessage"
-    payload = {"chat_id": admin_chat_id, "text": text, "parse_mode": "HTML"}
-    
-    print(f"DEBUG: Admin sending to URL: {url}")
-    print(f"DEBUG: Admin payload: {payload}")
-    
-    try:
-        r = requests.post(url, data=payload, timeout=5)
-        print(f"Admin Telegram response: {r.status_code} - {r.text}")
-    except Exception as e:
-        print(f"Admin Telegram notification failed: {e}")
-
-# Real ticket monitoring URLs
-URLS = [
-    #{"label": "ddf", "url": "https://httpbin.org/get"},
-    {"label": "Wicked", "url": "https://wickedelmusical.com/"},
-    {"label": "Wicked elenco", "url": "https://wickedelmusical.com/elenco"},
-    {"label": "Wicked entradas", "url": "https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01"},
-    {"label": "Los Miserables", "url": "https://miserableselmusical.es/"},
-    {"label": "Los Miserables elenco", "url": "https://miserableselmusical.es/elenco"},
-    {"label": "Los Miserables entradas", "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"},
-    {"label": "The Book of Mormon", "url": "https://thebookofmormonelmusical.es"},
-    {"label": "The Book of Mormon elenco", "url": "https://thebookofmormonelmusical.es/elenco/"},
-    {"label": "The Book of Mormon entradas", "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"},
-    {"label": "Buscando a Audrey", "url": "https://buscandoaaudrey.com"},
-    {"label": "Houdini", "url": "https://www.houdinielmusical.com"}
-]
-
-def hash_url_content(url):
-    try:
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.content, "html.parser")
-        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
-            tag.decompose()
-        for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-            comment.extract()
-        dynamic_selectors = [
-            ".date_info", ".timestamp", "#ad", ".ads", ".cookie-banner", "#cookies", ".tracker"
-        ]
-        for selector in dynamic_selectors:
-            for tag in soup.select(selector):
-                tag.decompose()
-        content_text = soup.get_text(separator=" ", strip=True)
-        normalized_text = " ".join(content_text.split())
-        return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
-    except Exception as e:
-        return f"ERROR: {str(e)}"
-
-def extract_normalized_date_info(url):
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException:
-        return None
-    soup = BeautifulSoup(response.text, 'html.parser')
-    date_info = soup.select_one('.date_info')
-    if not date_info:
-        return None
-    text = date_info.get_text(strip=True)
-    return ' '.join(text.split()).lower()
-
-def find_differences(old_text, new_text):
-    diff = difflib.unified_diff(
-        old_text.splitlines(),
-        new_text.splitlines(),
-        fromfile='anterior',
-        tofile='actual',
-        lineterm=""
-    )
-    return "\n".join(diff)
-
-def hash_audrey_content(url):
-    try:
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.content, "html.parser")
-        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link", "svg"]):
-            tag.decompose()
-        for tag in soup.select(".banner, .dynamic, .cookie-banner, .ads, .date, .timestamp"):
-            tag.decompose()
-        content_text = soup.get_text(separator=" ", strip=True)
-        normalized_text = " ".join(content_text.split())
-        return hashlib.md5(normalized_text.encode("utf-8")).hexdigest()
-    except Exception as e:
-        return f"ERROR: {str(e)}"
-
-app = Flask(__name__)
-socketio = SocketIO(app)
-
-def broadcast_change(url, data):
-    socketio.emit('update', {'url': url, 'data': data})
-
-latest_changes = []
-def get_simple_content(url):
-    
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
-        
-        # Only remove truly dynamic/irrelevant content
-        for tag in soup(["script", "style", "noscript", "meta", "iframe", "link"]):
-            tag.decompose()
-            
-        # Get clean text
-        content_text = soup.get_text(separator=" ", strip=True)
-        normalized_text = " ".join(content_text.split())
-        return normalized_text
-    except Exception as e:
-        print(f"Error fetching {url}: {str(e)}")
-        return f"ERROR: {str(e)}"
-
-def scrape_all_sites():
-    global previous_contents, change_counts
-    changes_list = []
-    now = datetime.now(UTC).isoformat()
-    
-    for item in URLS:
-        label = item["label"]
-        url = item["url"]
-        
-        # Get current content using simplified method
-        current_content = get_simple_content(url)
-        
-        # Get previous content
-        last_content = previous_contents.get(url, "")
-        
-        # Determine status
-        if not last_content:  # First check
-            status = "Primer chequeo 👀"
-            change_details = "Primera vez que se monitorea este sitio web"
-            differences = "No hay contenido anterior para comparar"
-            change_counts[url] = 0
-        elif current_content != last_content and len(current_content) > 100:
-            status = "¡Actualizado! 🎉"
-            change_details = "Se detectaron cambios en el contenido del sitio web"
-            change_counts[url] = change_counts.get(url, 0) + 1
-            differences = find_differences(last_content, current_content)
-            
-            # Send notifications
-            try:
-                send_whatsapp_message(label, url, '+34602502302')
-                send_telegram_message(f"🎟 <b>{label}</b> ha cambiado!\n🔗 <a href='{url}'>{url}</a>")
-            except Exception as e:
-                print("Notification failed:", e)
-        else:
-            status = "Sin cambios ✨"
-            change_details = "El contenido permanece igual desde la última verificación"
-            differences = "Sin diferencias detectadas"
-            if url not in change_counts:
-                change_counts[url] = 0
-        
-        # Update previous content
-        previous_contents[url] = current_content
-        
-        # Add to changes list
-        changes_list.append({
-            "label": label,
-            "url": url,
-            "status": status,
+        return render_template(
+          'monitoring_list.html',
+          current_urls=current_urls,
+          urls_data=urls_data
+        )
             "timestamp": now,
             "hash_actual": hashlib.md5(current_content.encode("utf-8")).hexdigest(),
             "hash_anterior": hashlib.md5(last_content.encode("utf-8")).hexdigest() if last_content else None,
@@ -280,194 +106,20 @@ HTML_TEMPLATE = """
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ticket Monitor Dashboard</title>
-  <style>
-    body {
-      font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-      font-weight: 600;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    * {cursor: url(https://cur.cursors-4u.net/special/spe-3/spe302.ani), url(https://cur.cursors-4u.net/special/spe-3/spe302.png), auto !important;}
-    .animated-bg {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: -2;
-      background: linear-gradient(120deg, #ffb6e6 0%, #fecfef 50%, #ffb6e6 100%);
-      background-size: 200% 200%;
-      animation: bgMove 10s ease-in-out infinite alternate;
-    }
-    @keyframes bgMove {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
-    .floating-sparkle {
-      position: absolute;
-      font-size: 2em;
-      pointer-events: none;
-      opacity: 0.7;
-      animation: floatSparkle 8s linear infinite;
-    }
-    .floating-sparkle.s1 { left: 10vw; top: 20vh; animation-delay: 0s; }
-    .floating-sparkle.s2 { left: 80vw; top: 30vh; animation-delay: 2s; }
-    .floating-sparkle.s3 { left: 50vw; top: 70vh; animation-delay: 4s; }
-    .floating-sparkle.s4 { left: 30vw; top: 80vh; animation-delay: 1s; }
-    .floating-sparkle.s5 { left: 70vw; top: 10vh; animation-delay: 3s; }
-    @keyframes floatSparkle {
-      0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.7; }
-      50% { transform: translateY(-40px) scale(1.2) rotate(10deg); opacity: 1; }
-      100% { transform: translateY(0) scale(1) rotate(-10deg); opacity: 0.7; }
-    }
-    h1 {
-      text-align: center;
-      color: #d63384;
-      font-size: 2.5em;
-      text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
-      margin: 20px 0;
-      font-weight: 900;
-    }
-    .slideshow-container {
-      max-width: 1100px;
-      margin: 30px auto;
-      position: relative;
-      border-radius: 28px;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(214, 51, 132, 0.3);
-      border: 3px solid #ff69b4;
-      background: linear-gradient(
-        120deg,
-        #ffe0f7 0%,
-        #ffb6e6 25%,
-        #ff69b4 50%,
-        #ffc0cb 75%,
-        #ffe0f7 100%
-      );
-      background-size: 400% 400%;
-      animation: sliderMove 8s linear infinite alternate;
-    }
-    @keyframes sliderMove {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
-    .slide {
-      display: none;
-      width: 100%;
-    }
-    .slide img {
-      width: 100%;
-      height: 520px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-    }
-    table {
-      width: 98%;
-      margin: 30px auto;
-      border-collapse: collapse;
-      table-layout: auto; /* Changed from 'fixed' to 'auto' to allow content-based sizing */
-      background: linear-gradient(
-        45deg,
-        rgba(255, 182, 193, 0.9) 0%,   
-        rgba(255, 240, 245, 0.95) 25%, 
-        rgba(255, 228, 240, 0.95) 50%, 
-        rgba(255, 192, 203, 0.9) 75%,  
-        rgba(255, 218, 235, 0.95) 100% 
-      );
-      background-size: 400% 400%;
-      animation: tableGradient 12s ease-in-out infinite alternate;
-      border-radius: 25px;
-      overflow: hidden;
-      box-shadow: 
-        0 15px 35px rgba(255, 105, 180, 0.4),
-        0 5px 15px rgba(255, 182, 193, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
-      border: 4px solid transparent;
-      background-clip: padding-box;
-      position: relative;
-    }
-    table::before {
-      content: '';
-      position: absolute;
-      top: -4px; left: -4px; right: -4px; bottom: -4px;
-      background: linear-gradient(45deg,
-        #ff69b4, #ff1493, #ff69b4, #ffc0cb,
-        #ffb6e6, #ff69b4, #d63384, #ff69b4);
-      background-size: 400% 400%;
-      border-radius: 25px;
-      z-index: -1;
-      animation: sparklyBorder 8s linear infinite;
-    }
-    @keyframes sparklyBorder {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes tableGradient {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
-    th, td {
-      padding: 15px;
-      text-align: left;
-      font-weight: 500;
-    }
-    th {
-      background: linear-gradient(135deg,
-        #ff69b4 0%,
-        #ff1493 25%,
-        #d63384 50%,
-        #b83dba 75%,
-        #8b2c5c 100%);
-      color: #fff;
-      font-weight: 900;
-      text-shadow:
-        2px 2px 4px rgba(0,0,0,0.3),
-        0 0 10px rgba(255, 255, 255, 0.5);
-      padding: 25px 20px;
-      font-size: 1.15em;
-      position: relative;
-      text-align: center;
-    }
-    th::after {
-      content: '✨';
-      position: absolute;
-      top: 5px;
-      right: 10px;
-      font-size: 0.8em;
-      animation: sparkle 2s infinite;
-      opacity: 0.8;
-    }
-    th:nth-child(1) {
-      text-align: left;
-      width: 180px;
-      max-width: 180px;
-    }
-    th:nth-child(2) {
-      text-align: center;
-      width: 50px;
-      max-width: none;
-    }
-    th:nth-child(3) {
-      text-align: left;
-      width: 350px;
-      max-width: 350px;
-    }
-    th:nth-child(4) {
-      text-align: center;
-      width: 160px;
-      max-width: 160px;
-    }
-    th:nth-child(5) {
-      text-align: center;
-      width: 140px;
-      max-width: 140px;
-    }
-    th:nth-child(1)::before { content: "🎭 "; }
-    th:nth-child(2)::before { content: "📊 "; }
-    th:nth-child(3)::before { content: "🔗 "; }
-    th:nth-child(4)::before { content: "📋 "; }
+    # Get current URLs from memory
+    current_urls = URLS.copy()
+    # Also load from urls.json
+    try:
+      with open('urls.json', 'r') as f:
+        urls_data = json.load(f)
+    except FileNotFoundError:
+      urls_data = []
+
+    return render_template(
+      'monitoring_list.html',
+      current_urls=current_urls,
+      urls_data=urls_data
+    )
     th:nth-child(5)::before { content: "⏰ "; }
     td:nth-child(1) {
       text-align: left;
@@ -1285,7 +937,6 @@ def suggest_site():
         
         # Send enhanced notification to admin bot
         try:
-            admin_message = f"""
 &#128680; <b>¡NUEVA SUGERENCIA RECIBIDA!</b> &#128680;
 
 🆔 <b>Sugerencia #{ len(suggestions)}</b>
@@ -1304,6 +955,20 @@ def suggest_site():
 
 ⚡ <i>¡Revisar y aprobar lo antes posible!</i>
             """.strip()
+      admin_message = (
+        "&#128680; <b>¡NUEVA SUGERENCIA RECIBIDA!</b> &#128680;<br>"
+        f"<b>Sugerencia # {len(suggestions)}</b><br>"
+        "<hr>"
+        f"<b>Sitio:</b> {site_name}<br>"
+        f"<b>URL:</b> <a href='{site_url}'>{site_url}</a><br>"
+        f"<b>Razón:</b> {reason or 'No especificada'}<br>"
+        f"<b>Recibida:</b> {suggestion['fecha_legible']}<br>"
+        "<hr>"
+        "<b>ACCIONES DISPONIBLES:</b><br>"
+        f"<a href='{site_url}'>Ver sitio web sugerido</a><br>"
+        "<a href='http://localhost:5000/admin/approval-panel'>Panel de Aprobación</a><br>"
+        "<i>¡Revisar y aprobar lo antes posible!</i>"
+      )
             
             print("DEBUG: Sending enhanced notification to admin bot...")
             send_to_admin_group(admin_message)
@@ -1322,238 +987,26 @@ def suggest_site():
       
 @app.route('/admin/monitoring-list')
 def monitoring_list():
-    """Mostrar la lista actual de URLs que están siendo monitoreadas"""
+  """Mostrar la lista actual de URLs que están siendo monitoreadas"""
+  try:
+    # Get current URLs from memory
+    current_urls = URLS.copy()
+    # Also load from urls.json
     try:
-        # Get current URLS from memory
-        current_urls = URLS.copy();
-        
-        // Also load from urls.json
-        try {
-            with open('urls.json', 'r') as f:
-                urls_data = json.load(f);
-        } catch (FileNotFoundError) {
-            urls_data = [];
-        }
-        
-        html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Lista de Monitoreo</title>
-            <style>
-                body {
-                    font-family: system-ui, -apple-system, sans-serif;
-                    background: linear-gradient(120deg, #ffb6e6 0%, #fecfef 50%, #ffb6e6 100%);
-                    margin: 0;
-                    padding: 20px;
-                    min-height: 100vh;
-                }
-                .container {
-                    max-width: 1000px;
-                    margin: 0 auto;
-                    background: rgba(255, 255, 255, 0.95);
-                    border-radius: 20px;
-                    padding: 30px;
-                    box-shadow: 0 10px 30px rgba(214, 51, 132, 0.3);
-                }
-                h1 {
-                    color: #d63384;
-                    text-align: center;
-                    margin-bottom: 30px;
-                    font-size: 2.5em;
-                    text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.3);
-                }
-                .stats {
-                    background: linear-gradient(135deg, #ff69b4, #d63384);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 15px;
-                    text-align: center;
-                    margin-bottom: 30px;
-                }
-                .section {
-                    margin: 30px 0;
+      with open('urls.json', 'r') as f:
+        urls_data = json.load(f)
+    except FileNotFoundError:
+      urls_data = []
+
+    return render_template(
+      'monitoring_list.html',
+      current_urls=current_urls,
+      urls_data=urls_data
+    )
                     background: white;
                     border: 2px solid #ff69b4;
                     border-radius: 15px;
-                    padding: 20px;
-                    box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
-                }
-                .section h2 {
-                    color: #d63384;
-                    border-bottom: 2px solid #ffe0f7;
-                    padding-bottom: 10px;
-                }
-                .url-item {
-                    background: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 8px;
-                    padding: 15px;
-                    margin: 10px 0;
-                }
-                .url-link {
-                    color: #ff69b4;
-                    text-decoration: none;
-                    font-weight: bold;
-                }
-                .url-link:hover { text-decoration: underline; }
-                .musical-group {
-                    border-left: 4px solid #ff69b4;
-                    padding-left: 15px;
-                    margin: 15px 0;
-                }
-                .navigation {
-                    text-align: center;
-                    margin-top: 40px;
-                    padding-top: 30px;
-                    border-top: 2px solid #ffe0f7;
-                }
-                .nav-buttons {
-                    display: flex;
-                    gap: 15px;
-                    justify-content: center;
-                    flex-wrap: wrap;
-                }
-                .nav-btn {
-                    padding: 15px 30px;
-                    text-decoration: none;
-                    border-radius: 25px;
-                    font-weight: bold;
-                    color: white;
-                    transition: transform 0.2s;
-                }
-                .nav-btn:hover { transform: translateY(-2px); }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🔄 Lista de Monitoreo Activa</h1>
-                
-                <div class="stats">
-                    <strong>📊 Total de URLs monitoreadas: ${current_urls.length}</strong><br>
-                    <strong>🎭 Musicales en urls.json: ${urls_data.length}</strong>
-                </div>
-                
-                <div class="section">
-                    <h2>📋 URLs Activas en Memoria (URLS array)</h2>
-        `;
-        
-        if (!current_urls.length) {
-            html += "<p>No hay URLs configuradas en el array URLS.</p>";
-        } else {
-            current_urls.forEach((url_item, i) => {
-                html += `
-                <div class="url-item">
-                    <strong>#{i+1}: ${url_item.get('label', 'Sin nombre')}</strong><br>
-                    <a href="${url_item.get('url', '#')}" target="_blank" class="url-link">${url_item.get('url', 'Sin URL')}</a>
-                </div>
-                `;
-            });
-        }
-        
-        html += `
-                </div>
-                
-                <div class="section">
-                    <h2>📁 URLs en archivo urls.json</h2>
-        `;
-        
-        if (!urls_data.length) {
-            html += "<p>No hay datos en urls.json.</p>";
-        } else {
-            urls_data.forEach(musical => {
-                const musical_name = musical.get('musical', 'Sin nombre');
-                const urls = musical.get('urls', []);
-                
-                html += `
-                <div class="musical-group">
-                    <h3 style="color: #ff69b4;">${musical_name} (${urls.length} URLs)</h3>
-                `;
-                
-                urls.forEach(url => {
-                    html += `
-                    <div class="url-item">
-                        <a href="${url}" target="_blank" class="url-link">${url}</a>
-                    </div>
-                    `;
-                });
-                
-                html += "</div>";
-            });
-        }
-        
-        html += `
-                </div>
-                
-                <div class="navigation">
-                    <div class="nav-buttons">
-                        <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);" class="nav-btn">🏠 Página Principal</a>
-                        <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);" class="nav-btn">📋 Panel de Aprobación</a>
-                        <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);" class="nav-btn">📊 Ver Historial</a>
-                        <a href="/admin/monitoring-list" style="background: #20c997; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);" class="nav-btn">🔄 Ver Monitoreo</a>
-                    </div>
-                    <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
-                        ⚡ Esta página muestra las URLs que están siendo monitoreadas actualmente
-                    </p>
-                </div>
-            </div>
-        </body>
-        </html>
-        `;
-        
-        return html;
-        
-    } catch (Exception e) {
-        return `
-        <html><body style="font-family: system-ui; text-align: center; padding: 50px; background: #ffe6e6;">
-            <h1 style="color: #dc3545;">❌ Error</h1>
-            <p>Error al cargar la lista de monitoreo: ${e.message}</p>
-            <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">🏠 Página Principal</a>
-        </body></html>
-        `, 500;
-}
-
-@app.route('/debug/suggestions')
-def debug_suggestions():
-    """Debug endpoint to check suggestions file"""
-    try:
-        with open('suggestions.json', 'r') as f:
-            suggestions = json.load(f)
-        
-        html = """
-        <html><head><title>Debug Suggestions</title></head>
-        <body style="font-family: monospace; padding: 20px; background: #f0f0f0;">
-        <h1>🐛 Debug: Suggestions File</h1>
-        """
-        
-        for i, suggestion in enumerate(suggestions):
-            status = suggestion.get('status', 'Pendiente')
-            html += f"""
-            <div style="border: 1px solid #ccc; margin: 10px 0; padding: 15px; background: white;">
-                <h3>Suggestion #{i}</h3>
-                <p><strong>Name:</strong> {suggestion.get('siteName', 'N/A')}</p>
-                <p><strong>URL:</strong> {suggestion.get('siteUrl', 'N/A')}</p>
-                <p><strong>Status:</strong> {status}</p>
-                <p><strong>Date:</strong> {suggestion.get('fecha_legible', 'N/A')}</p>
-                <p><strong>Actions:</strong> 
-                    <a href="/admin/approve/{i}" style="color: green;">Approve</a> | 
-                    <a href="/admin/reject/{i}" style="color: red;">Reject</a>
-                </p>
-            </div>
-            """
-        
-        html += `
-        <p><strong>Total suggestions:</strong> ${suggestions.length}</p>
-        <div style="text-align: center; margin: 30px;">
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="/" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">🏠 Página Principal</a>
-                <a href="/admin/approval-panel" style="background: #ff69b4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);">📋 Panel de Aprobación</a>
-                <a href="/admin/suggestions" style="background: #6f42c1; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">📊 Ver Historial</a>
-            </div>
-        </div>
-        `;
-        
+              # ...existing code...
         return html;
         
            
@@ -1753,67 +1206,19 @@ def view_suggestions():
         return render_template('suggestions.html', suggestions=[])
 
 @app.route('/telegram-webhook', methods=['POST'])
-def telegram_webhook():
-    """Handle Telegram webhook for button callbacks"""
-    from flask import request
-    try:
-        data = request.get_json()
-        
-        # Check if this is a callback query (button press)
-        if 'callback_query' in data:
-            callback_query = data['callback_query']
-            callback_data = callback_query['data']
-            message_id = callback_query['message']['message_id']
-            chat_id = callback_query['message']['chat']['id']
-            
-            # Parse callback data
-            if callback_data.startsWith('approve_'):
-                suggestion_id = int(callback_data.replace('approve_', ''))
-                handle_approval(suggestion_id, true, message_id, chat_id)
-            } else if (callback_data.startsWith('reject_')) {
-                suggestion_id = int(callback_data.replace('reject_', ''))
-                handle_approval(suggestion_id, false, message_id, chat_id)
-            }
-            
-            return jsonify({"ok": true})
-        
-        return jsonify({"ok": true})
-        
-    } catch (Exception e) {
-        print(`Webhook error: ${e}`)
-        return jsonify({"error": str(e)}), 500
-    }
+  try:
+    with open('suggestions.json', 'r') as f:
+      suggestions = json.load(f)
+  except FileNotFoundError:
+    suggestions = []
 
-function handle_approval(suggestion_id, approved, message_id, chat_id) {
-    """Handle suggestion approval/rejection"""
-    try {
-        // Load suggestions
-        with open('suggestions.json', 'r') as f:
-            suggestions = json.load(f)
-        
-        if (suggestion_id >= suggestions.length) {
-            console.log(`Invalid suggestion ID: ${suggestion_id}`);
-            return;
-        }
-        
-        suggestion = suggestions[suggestion_id];
-        status = approved ? "Aprobada" : "Rechazada";
-        suggestion['status'] = status;
-        suggestion['approved_at'] = datetime.now(UTC).isoformat();
-        
-        // Save updated suggestions
-        with open('suggestions.json', 'w') as f:
-            json.dump(suggestions, f, indent=2, ensure_ascii=False)
-        
-        // Update the admin message
-        admin_token = os.environ.get("ADMIN_TELEGRAM_BOT_TOKEN")
-        edit_url = `https://api.telegram.org/bot${admin_token}/editMessageText`;
-        
-        updated_text = `
-🆕 <b>Sugerencia de Sitio Web - ${status}</b>
+  # Filter pending suggestions
+  pending_suggestions = [s for s in suggestions if s.get('status', 'Pendiente') == 'Pendiente']
 
-📝 <b>Nombre:</b> ${suggestion['siteName']}
-🔗 <b>URL:</b> ${suggestion['siteUrl']}
+  return render_template(
+    'approval_panel.html',
+    pending_suggestions=pending_suggestions
+  )
 💭 <b>Razón:</b> ${suggestion.get('reason', 'No especificada')}
 📅 <b>Fecha:</b> ${suggestion['fecha_legible']}
 ✅ <b>Estado:</b> ${status}
