@@ -1,3 +1,7 @@
+# ...existing code...
+@app.route('/')
+def index():
+  return render_template('index.html')
 
 import os
 import json
