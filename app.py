@@ -19,9 +19,6 @@ def send_to_admin_group(message):
 def send_telegram_message(message):
   print(f"Telegram message: {message}")
 
-app = Flask(__name__)
-socketio = SocketIO(app)
-
 @app.route('/')
 def index():
   return render_template('index.html')
