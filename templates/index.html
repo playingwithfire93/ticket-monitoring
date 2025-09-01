@@ -1,18 +1,28 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>🎟️ Ticket Monitor Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="dashboard">
-    <div class="header">
-      <h1>🎭 Ticket Monitor Dashboard</h1>
-      <button class="refresh-btn" id="auto-refresh">Auto-refreshing</button>
+  <header class="topbar">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo">
+      <h1>Ticket Monitor</h1>
+      <small class="subtitle">Cute & dynamic musical watcher</small>
     </div>
 
-    <!-- Slideshow Section -->
+    <div class="controls">
+      <input id="search" type="search" placeholder="Buscar musical..." aria-label="Buscar musical">
+      <button id="toggle-refresh" class="btn soft">Auto-refresh: <span id="ar-state">OFF</span></button>
+      <div class="last-checked">Last Checked: <span id="last-checked">--</span></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Slideshow (kept in HTML as requested) -->
     <div class="slideshow-container">
       <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
       <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
@@ -37,44 +47,37 @@
       <a class="next" onclick="plusSlides(1)">&#10095;</a>
     </div>
 
-    <div class="status" id="status">
-      <span>Last Checked: ...</span>
-    </div>
-    <div class="notification" id="notification">
-      <span>Loading updates...</span>
-    </div>
+    <section class="hero">
+      <div class="hero-inner">
+        <h2>Keep an eye on ticket pages</h2>
+        <p class="muted">Live checks, friendly UI, and quick links to ticket pages.</p>
+      </div>
+    </section>
 
-    <h2>Sitios Monitorizados</h2>
-   <table>
-  <thead>
-    <tr>
-      <th>Musical</th>
-      <th>URL(s)</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for musical, urls in grouped_urls.items() %}
-      <tr>
-        <td>{{ musical }}</td>
-        <td>
-          {% for url in urls %}
-            <a href="{{ url }}" target="_blank">{{ url }}</a><br>
-          {% endfor %}
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <section class="grid-wrap" id="grid-wrap">
+      <!-- cards populated by JS -->
+    </section>
 
-    <h2>Sugerir Nuevo Sitio</h2>
-    <form id="suggestion-form">
-      <input type="text" name="siteName" placeholder="Nombre del sitio" required>
-      <input type="url" name="siteUrl" placeholder="URL del sitio" required>
-      <input type="text" name="reason" placeholder="Razón de la sugerencia">
-      <button type="submit">Enviar Sugerencia</button>
-    </form>
+    <section class="no-data" id="no-data" hidden>
+      <p>Ningún sitio monitorizado. Agrega entradas en <code>urls.json</code>.</p>
+    </section>
+  </main>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button id="modal-close" class="close">&times;</button>
+      <h3 id="modal-title"></h3>
+      <ul id="modal-list" class="url-list"></ul>
+    </div>
   </div>
 
+  <footer class="footer">
+    <small>Made with 💖 — dynamic cute monitor</small>
+  </footer>
+
+  <script>
+    const INITIAL_MUSICALS = {{ musicals|tojson }};
+  </script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
