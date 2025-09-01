@@ -1,10 +1,7 @@
-/* dynamic UI: render cards, search, auto-refresh (fetch /api/monitored-urls)
-   + keep slideshow markup in HTML and control it here */
+// Replace render logic with table + collapsible rows; keep slideshow and fetch logic.
 (() => {
   const api = '/api/monitored-urls';
-
-  // DOM elements
-  const wrap = document.getElementById('grid-wrap');
+  const tableBody = document.getElementById('table-body');
   const search = document.getElementById('search');
   const noData = document.getElementById('no-data');
   const lastCheckedEl = document.getElementById('last-checked');
@@ -15,103 +12,119 @@
   const modalList = document.getElementById('modal-list');
   const modalClose = document.getElementById('modal-close');
 
-  // slideshow elements (kept in HTML)
+  // slideshow pieces left unchanged (assume they exist)
   const slideElems = Array.from(document.querySelectorAll('.slide'));
-  const prevBtn = document.querySelector('.slide-nav.prev');
-  const nextBtn = document.querySelector('.slide-nav.next');
+  const prevBtn = document.querySelector('.prev');
+  const nextBtn = document.querySelector('.next');
   const dotsWrap = document.querySelector('.slide-dots');
 
-  // basic sanity: abort if required container missing
-  if (!wrap) {
-    console.error('Missing #grid-wrap — aborting main UI script');
-    return;
-  }
+  if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
 
-  // state
   let musicals = Array.isArray(window.INITIAL_MUSICALS) ? window.INITIAL_MUSICALS : [];
   let autoRefresh = false;
   let intervalId = null;
+  let currentIndex = 0;
+  let slideAutoId = null;
 
-  // ---- cards UI ----
-  function buildCard(item) {
-    const card = document.createElement('article');
-    card.className = 'card';
+  function buildSummaryRow(item, idx) {
+    const tr = document.createElement('tr');
+    tr.className = 'summary';
+    tr.dataset.idx = idx;
 
-    const title = document.createElement('div');
-    title.className = 'title';
-    const h4 = document.createElement('h4');
-    h4.textContent = item.musical || item.name || 'Sin nombre';
-    const badge = document.createElement('div');
-    badge.className = 'badge';
-    badge.textContent = (item.urls && item.urls.length) ? `${item.urls.length} URL(s)` : '0';
-    title.appendChild(h4);
-    title.appendChild(badge);
+    const expTd = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'expand-btn';
+    btn.textContent = '+';
+    btn.title = 'Expandir';
+    expTd.appendChild(btn);
 
-    const urlList = document.createElement('div');
-    urlList.className = 'url-list';
-    if (item.urls && item.urls.length) {
-      item.urls.slice(0, 3).forEach(u => {
-        const a = document.createElement('a');
-        a.href = u;
-        try { a.textContent = new URL(u).hostname + (u.length > 40 ? '…' : ''); }
-        catch (e) { a.textContent = u; }
-        a.target = '_blank';
-        urlList.appendChild(a);
-      });
-      if (item.urls.length > 3) {
-        const more = document.createElement('button');
-        more.className = 'link-btn';
-        more.textContent = `Ver ${item.urls.length - 3} más`;
-        more.onclick = () => openModal(item);
-        urlList.appendChild(more);
-      }
-    } else {
-      const p = document.createElement('div');
-      p.className = 'muted';
-      p.textContent = 'No URLs';
-      urlList.appendChild(p);
-    }
+    const nameTd = document.createElement('td');
+    nameTd.textContent = item.musical || item.name || 'Sin nombre';
 
-    const footer = document.createElement('div');
-    footer.className = 'footer';
-    const checkBtn = document.createElement('button');
-    checkBtn.className = 'btn soft';
-    checkBtn.textContent = 'Check now';
-    checkBtn.onclick = () => checkNow(item);
-    footer.appendChild(checkBtn);
+    const urlsTd = document.createElement('td');
+    const count = (item.urls && item.urls.length) ? item.urls.length : 0;
+    const span = document.createElement('span');
+    span.className = 'count-badge';
+    span.textContent = `${count} URL(s)`;
+    urlsTd.appendChild(span);
 
-    card.appendChild(title);
-    card.appendChild(urlList);
-    card.appendChild(footer);
-    return card;
+    const actionsTd = document.createElement('td');
+    const openAll = document.createElement('button');
+    openAll.className = 'btn soft';
+    openAll.textContent = 'Abrir 1ª';
+    openAll.onclick = (e) => { e.stopPropagation(); if (item.urls && item.urls[0]) window.open(item.urls[0], '_blank'); };
+    actionsTd.appendChild(openAll);
+
+    // click anywhere on summary toggles
+    tr.appendChild(expTd);
+    tr.appendChild(nameTd);
+    tr.appendChild(urlsTd);
+    tr.appendChild(actionsTd);
+
+    // toggle handler
+    tr.addEventListener('click', () => toggleDetails(idx, btn));
+
+    return tr;
   }
 
-  function render(list) {
-    wrap.innerHTML = '';
+  function buildDetailsRow(item, idx) {
+    const tr = document.createElement('tr');
+    tr.className = 'details-row hidden';
+    tr.dataset.idx = idx;
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    const inner = document.createElement('div');
+    inner.className = 'details-inner';
+    if (item.urls && item.urls.length) {
+      item.urls.forEach(u => {
+        const a = document.createElement('a');
+        a.href = u;
+        a.textContent = u;
+        a.target = '_blank';
+        inner.appendChild(a);
+      });
+    } else {
+      const p = document.createElement('div');
+      p.textContent = 'No URLs';
+      inner.appendChild(p);
+    }
+    td.appendChild(inner);
+    tr.appendChild(td);
+    return tr;
+  }
+
+  function renderTable(list) {
+    tableBody.innerHTML = '';
     if (!list || list.length === 0) {
       if (noData) noData.hidden = false;
       return;
     }
     if (noData) noData.hidden = true;
-    list.forEach(item => wrap.appendChild(buildCard(item)));
+
+    list.forEach((item, i) => {
+      const summary = buildSummaryRow(item, i);
+      const details = buildDetailsRow(item, i);
+      tableBody.appendChild(summary);
+      tableBody.appendChild(details);
+    });
   }
 
-  function openModal(item) {
-    if (!modal || !modalTitle || !modalList) return;
-    modalTitle.textContent = item.musical || item.name || 'Sin nombre';
-    modalList.innerHTML = '';
-    (item.urls || []).forEach(u => {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = u;
-      a.textContent = u;
-      a.target = '_blank';
-      li.appendChild(a);
-      modalList.appendChild(li);
-    });
-    modal.setAttribute('aria-hidden', 'false');
+  function toggleDetails(idx, btn) {
+    const details = tableBody.querySelector(`tr.details-row[data-idx="${idx}"]`);
+    const summary = tableBody.querySelector(`tr.summary[data-idx="${idx}"]`);
+    if (!details || !summary) return;
+    const isHidden = details.classList.contains('hidden');
+    // collapse any open rows first (optional behavior: single open row)
+    Array.from(tableBody.querySelectorAll('tr.details-row')).forEach(r => r.classList.add('hidden'));
+    Array.from(tableBody.querySelectorAll('button.expand-btn')).forEach(b => b.textContent = '+');
+    if (isHidden) {
+      details.classList.remove('hidden');
+      if (btn) btn.textContent = '–';
+    } else {
+      details.classList.add('hidden');
+      if (btn) btn.textContent = '+';
+    }
   }
-  function closeModal() { if (modal) modal.setAttribute('aria-hidden', 'true'); }
 
   function updateLastChecked() {
     if (lastCheckedEl) lastCheckedEl.textContent = new Date().toLocaleString();
@@ -123,7 +136,7 @@
       if (!res.ok) throw new Error('Network response not ok');
       const data = await res.json();
       musicals = Array.isArray(data) ? data : musicals;
-      render(filter(musicals));
+      renderTable(filter(musicals));
       updateLastChecked();
     } catch (e) {
       console.error('fetchData', e);
@@ -136,43 +149,19 @@
     return list.filter(it => (it.musical || it.name || '').toLowerCase().includes(q));
   }
 
-  function checkNow(item) {
-    if (item.urls && item.urls[0]) window.open(item.urls[0], '_blank');
-  }
-
-  // ---- slideshow logic ----
-  let currentIndex = 0;
-  let slideAutoId = null;
+  // slideshow minimal control (keeps your existing HTML slides)
   function showSlide(index) {
     if (!slideElems.length) return;
     currentIndex = (index + slideElems.length) % slideElems.length;
     slideElems.forEach((s, i) => s.style.display = i === currentIndex ? 'block' : 'none');
-    updateDots();
   }
   function nextSlide() { showSlide(currentIndex + 1); }
   function prevSlide() { showSlide(currentIndex - 1); }
   function startSlideAuto() { stopSlideAuto(); slideAutoId = setInterval(nextSlide, 5000); }
   function stopSlideAuto() { if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
 
-  function createDots() {
-    if (!dotsWrap) return;
-    dotsWrap.innerHTML = '';
-    slideElems.forEach((_, i) => {
-      const d = document.createElement('button');
-      d.className = 'dot';
-      d.setAttribute('aria-label', `Go to slide ${i + 1}`);
-      d.onclick = () => { showSlide(i); stopSlideAuto(); };
-      dotsWrap.appendChild(d);
-    });
-    updateDots();
-  }
-  function updateDots() {
-    if (!dotsWrap) return;
-    Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('active', i === currentIndex));
-  }
-
-  // ---- attach events (safe checks) ----
-  if (search) search.addEventListener('input', () => render(filter(musicals)));
+  // events
+  if (search) search.addEventListener('input', () => renderTable(filter(musicals)));
 
   if (arToggle) {
     arToggle.addEventListener('click', () => {
@@ -187,23 +176,20 @@
     });
   }
 
-  if (modalClose) modalClose.addEventListener('click', closeModal);
-  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  if (modalClose) modalClose.addEventListener('click', () => modal.setAttribute('aria-hidden','true'));
+  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.setAttribute('aria-hidden','true'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.setAttribute('aria-hidden','true'); });
 
   if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); stopSlideAuto(); });
   if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); stopSlideAuto(); });
 
-  // ---- initialize UI ----
-  render(musicals);
+  // init
+  renderTable(musicals);
   updateLastChecked();
-
-  // slideshow init
   showSlide(0);
-  createDots();
   startSlideAuto();
-
-  // background fetch to refresh data shortly after load
   window.addEventListener('load', () => { setTimeout(fetchData, 600); });
 
+  // expose simple slide controls for inline HTML arrows (kept from your template)
+  window.plusSlides = (n) => { showSlide(currentIndex + n); stopSlideAuto(); };
 })();

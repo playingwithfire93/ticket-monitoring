@@ -22,7 +22,7 @@
   </header>
 
   <main class="container">
-    <!-- Slideshow (kept in HTML as requested) -->
+    <!-- Slideshow (kept in HTML) -->
     <div class="slideshow-container">
       <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
       <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
@@ -54,12 +54,25 @@
       </div>
     </section>
 
-    <section class="grid-wrap" id="grid-wrap">
-      <!-- cards populated by JS -->
-    </section>
+    <!-- Table with collapsible rows -->
+    <section class="table-wrap" id="table-wrap">
+      <table id="musicals-table" class="musicals-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Musical</th>
+            <th>URLs</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- populated by main.js -->
+        </tbody>
+      </table>
 
-    <section class="no-data" id="no-data" hidden>
-      <p>Ningún sitio monitorizado. Agrega entradas en <code>urls.json</code>.</p>
+      <div class="no-data" id="no-data" hidden>
+        <p>Ningún sitio monitorizado. Agrega entradas en <code>urls.json</code>.</p>
+      </div>
     </section>
   </main>
 
@@ -75,8 +88,9 @@
     <small>Made with 💖 — dynamic cute monitor</small>
   </footer>
 
+  <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
   <script>
-    const INITIAL_MUSICALS = {{ musicals|tojson }};
+    const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');
   </script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
