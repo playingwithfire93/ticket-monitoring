@@ -1,113 +1,118 @@
-/* Modern pink theme: cleaner spacing, transitions, card-like rows, animated collapse */
-
+/* M/* Tabla clásica moderna, tema rosa */
 :root{
-  --bg-1: #fff6fb;
+  --bg: #fff6fb;
   --panel: #fff;
-  --accent: #ff4aa3;
-  --accent-2: #ff8fc1;
+  --accent: #ff3f92;
+  --accent-2: #ff86b8;
   --muted: #7b5a6f;
-  --text: #2b2130;
-  --glass: rgba(255,255,255,0.75);
-  --shadow-1: 0 8px 28px rgba(203,54,122,0.08);
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  --text: #222;
+  --line: rgba(230,210,220,0.8);
+  --radius: 12px;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
 body{
-  background: linear-gradient(180deg,var(--bg-1), #fff 60%);
+  background: linear-gradient(180deg,var(--bg), #fff 60%);
   color:var(--text);
   min-height:100vh;
-  display:flex;
-  flex-direction:column;
   font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-/* topbar */
-.topbar{
-  position:sticky; top:0; z-index:40;
-  display:flex; justify-content:space-between; align-items:center;
-  gap:18px; padding:14px 20px;
-  backdrop-filter: blur(6px);
-  background: linear-gradient(90deg, rgba(255,250,253,0.92), rgba(255,248,250,0.86));
-  border-bottom: 1px solid rgba(255,200,230,0.45);
-}
-.brand{display:flex;align-items:center;gap:14px}
-.logo{width:48px;height:48px;border-radius:12px;object-fit:cover;box-shadow:var(--shadow-1)}
-.brand h1{font-size:18px;color:var(--accent);letter-spacing:0.2px}
-.subtitle{font-size:12px;color:var(--muted)}
-
-/* controls */
-.controls{display:flex;align-items:center;gap:12px}
-#search{border:1px solid rgba(220,190,210,0.7);padding:10px 14px;border-radius:999px;min-width:220px;background:transparent;transition:box-shadow .12s}
-#search:focus{box-shadow:0 8px 24px rgba(255,120,170,0.08)}
-.btn{border:0;padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600}
-.btn.soft{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;box-shadow:var(--shadow-1)}
-.last-checked{font-size:13px;color:var(--muted)}
-
-/* container */
+/* Container / header kept as before */
 .container{width:100%;max-width:1150px;margin:26px auto;padding:0 20px 60px}
 
-/* slideshow */
-.slideshow-container{position:relative;border-radius:var(--radius-lg);overflow:hidden;background:linear-gradient(180deg,#fff,#fff7fb);box-shadow:var(--shadow-1);margin-bottom:18px}
-.slides{position:relative}
-.slide{display:none}
-.slide-img{width:100%;height:340px;object-fit:cover;display:block}
+/* Table: classic rows with subtle pink accents */
+.musicals-table{
+  width:100%;
+  border-collapse:collapse;
+  background:transparent;
+  margin-top:18px;
+  box-shadow: 0 6px 20px rgba(203,54,122,0.04);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.musicals-table thead{
+  background: linear-gradient(90deg, rgba(255,240,250,0.9), rgba(255,255,255,0.95));
+}
+.musicals-table thead th{
+  text-align:left;
+  padding:14px 16px;
+  font-weight:700;
+  color:var(--muted);
+  font-size:13px;
+  border-bottom:1px solid var(--line);
+}
 
-/* slide nav */
-.slide-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.85);border-radius:999px;border:1px solid rgba(255,200,230,0.6);width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:22px;cursor:pointer}
-.slide-nav.prev{left:12px} .slide-nav.next{right:12px}
-
-/* hero */
-.hero{margin-top:12px;background:linear-gradient(180deg,#fff,#fff7fb);padding:18px;border-radius:14px;box-shadow:var(--shadow-1)}
-.hero-inner h2{color:var(--accent);margin-bottom:6px}
-
-/* table wrap */
-.table-wrap{margin-top:22px}
-
-/* table: modern card-like rows */
-.musicals-table{width:100%;border-collapse:separate;border-spacing:0 14px}
-.musicals-table thead th{padding:10px 16px;font-weight:600;color:var(--muted);text-align:left}
+/* Summary row: single flat row (no card look) */
 .musicals-table tbody tr.summary{
-  display:table; width:100%;
-  background:linear-gradient(180deg,var(--panel), #fff);
-  border-radius:12px; box-shadow:var(--shadow-1);
-  transition:transform .12s ease, box-shadow .12s ease;
+  background: var(--panel);
+  transition: background .12s ease, transform .12s ease;
 }
-.musicals-table tbody tr.summary:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(203,54,122,0.10)}
-.musicals-table tbody tr.summary td{padding:14px 16px;vertical-align:middle;border:none}
+.musicals-table tbody tr.summary:hover{
+  background: linear-gradient(90deg,#fff,#fffefc);
+  transform: translateY(-2px);
+}
+.musicals-table td{
+  padding:12px 16px;
+  vertical-align:middle;
+  border-bottom:1px solid var(--line);
+  color:var(--text);
+}
+
+/* Expand button (compact) */
 .expand-btn{
-  width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(255,200,230,0.6);
+  width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:8px;border:1px solid rgba(255,200,230,0.6);
   background:#fff;color:var(--accent);font-weight:700;cursor:pointer;
-  transition:transform .12s;
 }
-.expand-btn:active{transform:scale(.98)}
-.count-badge{background:linear-gradient(90deg,#fff6fb,#fff);padding:6px 10px;border-radius:999px;color:var(--muted);border:1px solid rgba(255,200,230,0.6);font-weight:600}
+.count-badge{
+  display:inline-block;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#fff6fb,#fff);border:1px solid rgba(255,200,230,0.6);color:var(--muted);font-weight:600;
+}
 
-/* details row & animated collapse */
-.details-row{display:table;width:100%;background:transparent;border:none}
-.details-row td{padding:0;border:none}
+/* Actions */
+.btn.small{padding:8px 12px;border-radius:999px;background:rgba(255,63,146,0.08);color:var(--accent);border:1px solid rgba(255,63,146,0.08)}
+
+/* Details row: full-width cell with animated collapse */
+.details-row td{
+  padding:0;
+  background:transparent;
+  border-bottom:1px solid var(--line);
+}
 .details-inner{
-  margin:12px 16px; padding:12px; border-radius:10px;
-  background:linear-gradient(180deg,#fff,#fffaf7); display:flex;gap:10px;flex-wrap:wrap;
-  max-height:0; overflow:hidden; opacity:0; transform:translateY(-8px);
-  transition:max-height .28s cubic-bezier(.2,.9,.2,1), opacity .18s ease, transform .22s cubic-bezier(.2,.9,.2,1);
+  margin:8px 16px 16px 16px;
+  padding:12px;
+  border-radius:8px;
+  background:linear-gradient(180deg,#fff,#fffaf7);
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  max-height:0;
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(-6px);
+  transition: max-height .32s ease, opacity .18s ease, transform .24s ease;
 }
-/* when row is visible (main.js removes .hidden) */
-.details-row:not(.hidden) .details-inner{ max-height:600px; opacity:1; transform:translateY(0); }
+/* visible state controlled by removing .hidden */
+.details-row:not(.hidden) .details-inner{
+  max-height:600px;
+  opacity:1;
+  transform:translateY(0);
+}
 
-/* url chips */
-.details-inner a{display:inline-block;padding:10px 14px;border-radius:10px;background:#fff;border:1px solid rgba(220,190,210,0.6);text-decoration:none;color:var(--accent);font-weight:600;transition:transform .12s,box-shadow .12s}
-.details-inner a:hover{transform:translateY(-4px);box-shadow:0 8px 20px rgba(203,54,122,0.06)}
+/* URL chips */
+.details-inner a{
+  display:inline-block;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid rgba(220,190,210,0.6);text-decoration:none;color:var(--accent);font-weight:600;
+}
+.details-inner a:hover{box-shadow:0 8px 18px rgba(203,54,122,0.06);transform:translateY(-3px)}
 
-/* small screens */
-@media (max-width:900px){
-  .slide-img{height:220px}
-  #search{min-width:140px}
+/* Responsive: keep table readable on small screens */
+@media (max-width:860px){
   .musicals-table thead{display:none}
-  .musicals-table tbody tr.summary{display:block;padding:8px}
-  .musicals-table tbody tr.summary td{display:block}
+  .musicals-table tbody tr.summary td{display:block;width:100%}
+  .musicals-table tbody tr.summary td + td{margin-top:8px}
   .details-inner{flex-direction:column;align-items:flex-start;max-height:none}
 }

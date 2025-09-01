@@ -26,6 +26,7 @@
   let currentIndex = 0;
   let slideAutoId = null;
 
+  // ...existing code...
   function buildSummaryRow(item, idx) {
     const tr = document.createElement('tr');
     tr.className = 'summary';
@@ -36,6 +37,7 @@
     btn.className = 'expand-btn';
     btn.textContent = '+';
     btn.title = 'Expandir';
+    btn.setAttribute('aria-expanded', 'false');
     expTd.appendChild(btn);
 
     const nameTd = document.createElement('td');
@@ -50,81 +52,47 @@
 
     const actionsTd = document.createElement('td');
     const openAll = document.createElement('button');
-    openAll.className = 'btn soft';
+    openAll.className = 'btn small';
     openAll.textContent = 'Abrir 1ª';
     openAll.onclick = (e) => { e.stopPropagation(); if (item.urls && item.urls[0]) window.open(item.urls[0], '_blank'); };
     actionsTd.appendChild(openAll);
 
-    // click anywhere on summary toggles
+    // assemble row
     tr.appendChild(expTd);
     tr.appendChild(nameTd);
     tr.appendChild(urlsTd);
     tr.appendChild(actionsTd);
 
-    // toggle handler
-    tr.addEventListener('click', () => toggleDetails(idx, btn));
-
-    return tr;
-  }
-
-  function buildDetailsRow(item, idx) {
-    const tr = document.createElement('tr');
-    tr.className = 'details-row hidden';
-    tr.dataset.idx = idx;
-    const td = document.createElement('td');
-    td.colSpan = 4;
-    const inner = document.createElement('div');
-    inner.className = 'details-inner';
-    if (item.urls && item.urls.length) {
-      item.urls.forEach(u => {
-        const a = document.createElement('a');
-        a.href = u;
-        a.textContent = u;
-        a.target = '_blank';
-        inner.appendChild(a);
-      });
-    } else {
-      const p = document.createElement('div');
-      p.textContent = 'No URLs';
-      inner.appendChild(p);
-    }
-    td.appendChild(inner);
-    tr.appendChild(td);
-    return tr;
-  }
-
-  function renderTable(list) {
-    tableBody.innerHTML = '';
-    if (!list || list.length === 0) {
-      if (noData) noData.hidden = false;
-      return;
-    }
-    if (noData) noData.hidden = true;
-
-    list.forEach((item, i) => {
-      const summary = buildSummaryRow(item, i);
-      const details = buildDetailsRow(item, i);
-      tableBody.appendChild(summary);
-      tableBody.appendChild(details);
+    // toggle only when expand button clicked (prevents accidental opens)
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      btn.textContent = open ? '+' : '–';
+      toggleDetails(idx);
     });
+
+    return tr;
   }
 
-  function toggleDetails(idx, btn) {
+  // modify toggleDetails to not rely on passed btn (main.js already finds and updates button via selector)
+  function toggleDetails(idx) {
     const details = tableBody.querySelector(`tr.details-row[data-idx="${idx}"]`);
-    const summary = tableBody.querySelector(`tr.summary[data-idx="${idx}"]`);
-    if (!details || !summary) return;
+    const btn = tableBody.querySelector(`tr.summary[data-idx="${idx}"] .expand-btn`);
+    if (!details) return;
     const isHidden = details.classList.contains('hidden');
-    // collapse any open rows first (optional behavior: single open row)
+    // collapse any open rows first
     Array.from(tableBody.querySelectorAll('tr.details-row')).forEach(r => r.classList.add('hidden'));
-    Array.from(tableBody.querySelectorAll('button.expand-btn')).forEach(b => b.textContent = '+');
+    Array.from(tableBody.querySelectorAll('.expand-btn')).forEach(b => { b.textContent = '+'; b.setAttribute('aria-expanded','false'); });
     if (isHidden) {
       details.classList.remove('hidden');
-      if (btn) btn.textContent = '–';
+      if (btn) { btn.textContent = '–'; btn.setAttribute('aria-expanded','true'); }
     } else {
       details.classList.add('hidden');
-      if (btn) btn.textContent = '+';
+      if (btn) { btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
     }
   }
+// ...existing code...
 
   function updateLastChecked() {
     if (lastCheckedEl) lastCheckedEl.textContent = new Date().toLocaleString();
