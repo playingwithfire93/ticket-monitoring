@@ -9,8 +9,15 @@ from flask import Flask, render_template, render_template_string, jsonify, reque
 from flask_socketio import SocketIO
 
 URLS = []
+# filepath: c:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\app.py
 def group_urls_by_musical(urls):
-  return {}
+    grouped = {}
+    for item in urls:
+        name = item.get('name', 'Sin nombre')
+        grouped[name] = item.get('urls', [])
+    return grouped
+  
+
 HTML_TEMPLATE = ""
 UTC = timezone.utc
 def send_to_admin_group(message):
@@ -21,11 +28,11 @@ def send_telegram_message(message):
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+# filepath: c:\Users\Blanca\Desktop\ticket-monitor\bom-ticket-monitoring\app.py
 @app.route('/')
 def index():
-  grouped_urls = group_urls_by_musical(URLS)
-  return render_template('index.html', grouped_urls=grouped_urls)
-
+    grouped_urls = group_urls_by_musical(URLS)
+    return render_template('index.html', grouped_urls=grouped_urls)
 def scrape_all_sites():
   """Scrape all URLs from urls.json and return their status and timestamp."""
   results = []
