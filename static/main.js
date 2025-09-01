@@ -76,49 +76,47 @@
     return tr;
   }
 
-// ...existing code...
-function buildDetailsRow(item, idx) {
-  const tr = document.createElement('tr');
-  tr.className = 'details-row hidden';
-  tr.dataset.idx = idx;
+  function buildDetailsRow(item, idx) {
+    const tr = document.createElement('tr');
+    tr.className = 'details-row hidden';
+    tr.dataset.idx = idx;
 
-  const td = document.createElement('td');
-  td.colSpan = 4;
+    const td = document.createElement('td');
+    td.colSpan = 4;
 
-  const inner = document.createElement('div');
-  inner.className = 'details-inner';
+    const inner = document.createElement('div');
+    inner.className = 'details-inner';
 
-  if (item.urls && item.urls.length) {
-    item.urls.forEach(u => {
-      const a = document.createElement('a');
-      a.className = 'url-chip';
-      a.href = u;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.title = u;
+    if (item.urls && item.urls.length) {
+      item.urls.forEach(u => {
+        const a = document.createElement('a');
+        a.className = 'url-chip';
+        a.href = u;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.title = u;
 
-      const hostSpan = document.createElement('span');
-      hostSpan.className = 'url-host';
-      try {
-        hostSpan.textContent = new URL(u).hostname + (u.length > 60 ? '…' : '');
-      } catch (e) {
-        hostSpan.textContent = u;
-      }
+        const hostSpan = document.createElement('span');
+        hostSpan.className = 'url-host';
+        try {
+          hostSpan.textContent = new URL(u).hostname + (u.length > 60 ? '…' : '');
+        } catch (e) {
+          hostSpan.textContent = u;
+        }
 
-      a.appendChild(hostSpan);
-      inner.appendChild(a);
-    });
-  } else {
-    const p = document.createElement('div');
-    p.textContent = 'No URLs';
-    inner.appendChild(p);
+        a.appendChild(hostSpan);
+        inner.appendChild(a);
+      });
+    } else {
+      const p = document.createElement('div');
+      p.textContent = 'No URLs';
+      inner.appendChild(p);
+    }
+
+    td.appendChild(inner);
+    tr.appendChild(td);
+    return tr;
   }
-
-  td.appendChild(inner);
-  tr.appendChild(td);
-  return tr;
-}
-// ...existing code...
 
   function renderTable(list) {
     tableBody.innerHTML = '';
@@ -135,10 +133,25 @@ function buildDetailsRow(item, idx) {
     const btn = tableBody.querySelector(`tr.summary[data-idx="${idx}"] .expand-btn`);
     if (!details) return;
     const isHidden = details.classList.contains('hidden');
+
+    // collapse any open rows first
     Array.from(tableBody.querySelectorAll('tr.details-row')).forEach(r => r.classList.add('hidden'));
     Array.from(tableBody.querySelectorAll('.expand-btn')).forEach(b => { b.textContent = '+'; b.setAttribute('aria-expanded','false'); });
-    if (isHidden) { details.classList.remove('hidden'); if (btn) { btn.textContent = '–'; btn.setAttribute('aria-expanded','true'); } }
-    else { details.classList.add('hidden'); if (btn) { btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); } }
+
+    if (isHidden) {
+      details.classList.remove('hidden');
+      if (btn) { btn.textContent = '–'; btn.setAttribute('aria-expanded','true'); }
+      // sparkle effect
+      const inner = details.querySelector('.details-inner');
+      if (inner) {
+        inner.classList.add('sparkle');
+        // remove sparkle after animation finishes
+        setTimeout(() => inner.classList.remove('sparkle'), 900);
+      }
+    } else {
+      details.classList.add('hidden');
+      if (btn) { btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
+    }
   }
 
   // helpers
@@ -159,9 +172,48 @@ function buildDetailsRow(item, idx) {
     return list.filter(it => (it.musical || it.name || '').toLowerCase().includes(q));
   }
   function showToast(msg, ms = 1300) {
+    // small inline toast (keeps existing behaviour)
     let t = document.querySelector('.toast');
     if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
-    t.textContent = msg; t.classList.add('show'); clearTimeout(t._hideId); t._hideId = setTimeout(()=> t.classList.remove('show'), ms);
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._hideId);
+    t._hideId = setTimeout(()=> t.classList.remove('show'), ms);
+
+    // also show persistent bottom-right popup notification
+    showNotificationPopup(msg, ms + 800);
+  }
+
+  function showNotificationPopup(message, ms = 2200) {
+    let np = document.querySelector('.notification-popup');
+    if (!np) {
+      np = document.createElement('div');
+      np.className = 'notification-popup';
+      np.innerHTML = '<div><span class="np-title">Notification</span><div class="np-body"></div></div><button class="np-close" aria-label="Close">✕</button>';
+      document.body.appendChild(np);
+      np.querySelector('.np-close').addEventListener('click', () => hidePopup(np));
+    }
+    const body = np.querySelector('.np-body');
+    body.textContent = message;
+    // show
+    np.classList.add('show');
+    // auto-hide
+    clearTimeout(np._hideId);
+    np._hideId = setTimeout(() => hidePopup(np), ms);
+    // click the popup to dismiss immediately
+    np.addEventListener('click', (e) => {
+      if (e.target === np || e.target.classList.contains('np-body') || e.target.classList.contains('np-title')) {
+        hidePopup(np);
+      }
+    }, { once: true });
+  }
+
+  function hidePopup(el) {
+    if (!el) el = document.querySelector('.notification-popup');
+    if (!el) return;
+    el.classList.remove('show');
+    clearTimeout(el._hideId);
+    // keep element in DOM for reuse (no removal)
   }
 
   // slideshow
