@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
+  <!-- your app stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -106,6 +107,7 @@
   <script>
     const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');
   </script>
+  <!-- main script -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
