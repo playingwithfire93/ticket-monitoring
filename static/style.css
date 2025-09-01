@@ -298,3 +298,19 @@ body{
 @media (max-width:860px){
   .url-chip{ width:100%; box-sizing:border-box; }
 }
+
+/* Quitar hueco entre filas: ocultar tr.details-row cuando está .hidden */
+.musicals-table tbody tr.details-row.hidden {
+  display: none;
+}
+
+/* Asegurar que la celda de detalles no deje bordes ni padding cuando esté visible/invisible */
+.musicals-table tbody tr.details-row td {
+  padding: 0;
+  border: none;
+}
+
+/* (Opcional) mantener animación al abrir: la .details-inner seguirá animando cuando la fila se muestre */
+.details-row:not(.hidden) .details-inner {
+  /* ya definidas: margin/padding/max-height/opacity/transform */
+}
