@@ -185,7 +185,7 @@
   }
 
   // Toggleable flag: set to true to also send notifications to Telegram
-  window.SEND_TELEGRAM_ON_NOTIFY = false; // change to true in console if desired
+  window.SEND_TELEGRAM_ON_NOTIFY = true; // enable forwarding to server
 
   function showNotificationPopup(message, ms = 2200) {
     let np = document.querySelector('.notification-popup');
