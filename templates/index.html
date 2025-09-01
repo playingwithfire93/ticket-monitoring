@@ -14,24 +14,28 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo">
-      <div>
+    <div class="container topbar-inner">
+      <div class="brand">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo" />
         <h1>Ticket Monitor</h1>
-        <div class="subtitle">Cute & dynamic musical watcher</div>
+        <p class="subtitle">Cute & dynamic musical watcher</p>
       </div>
-    </div>
 
-    <div class="controls">
-      <input id="search" type="search" placeholder="Buscar musical..." aria-label="Buscar musical">
-      <button id="toggle-refresh" class="btn soft">Auto-refresh: <span id="ar-state">OFF</span></button>
-      <div class="last-checked">Last Checked: <span id="last-checked">--</span></div>
+      <div class="controls">
+        <input id="search" placeholder="Buscar musical..." />
+        <label class="auto-refresh">
+          Auto-refresh:
+          <button id="toggle-refresh" class="btn soft">OFF</button>
+        </label>
+        <div class="last-checked">Last Checked: <span id="last-checked">--</span></div>
+      </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- Slideshow (kept in HTML) -->
-    <div class="slideshow-container">
+    <!-- Hero / Slideshow -->
+    <section class="hero">
+      <div class="slideshow-container">
       <div class="slides">
         <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
         <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
@@ -61,42 +65,59 @@
       <button class="slide-nav next" onclick="plusSlides(1)">&#10095;</button>
       <div class="slide-dots" aria-hidden="true"></div>
     </div>
-
-    <section class="hero">
-      <div class="hero-inner">
+      <div class="hero-cta">
         <h2>Keep an eye on ticket pages</h2>
-        <p class="muted">Live checks, friendly UI, and quick links to ticket pages.</p>
+        <p class="hero-sub">Live checks, friendly UI, and quick links to ticket pages.</p>
+        <div class="hero-buttons">
+          <a class="btn primary" href="#list">See musicals</a>
+          <a class="btn ghost" href="#add">Add URL</a>
+        </div>
       </div>
     </section>
 
-    <!-- Table with collapsible rows -->
-    <section class="table-wrap" id="table-wrap" aria-live="polite">
-      <table id="musicals-table" class="musicals-table" role="table" aria-label="Sitios monitorizados">
+    <!-- Decorative product-like cards (girly) -->
+    <section class="promo-grid">
+      <article class="promo-card">
+        <div class="promo-badge">New</div>
+        <h3>Featured Picks</h3>
+        <p>Quick access to popular ticket pages — pink, pretty, instant.</p>
+        <a class="btn small" href="#list">Browse</a>
+      </article>
+
+      <article class="promo-card">
+        <div class="promo-badge">Tips</div>
+        <h3>Buying Guide</h3>
+        <p>Save search filters, open favourite links fast.</p>
+        <a class="btn small" href="#help">Learn</a>
+      </article>
+
+      <article class="promo-card">
+        <div class="promo-badge">Glam</div>
+        <h3>Notifications</h3>
+        <p>Enable popups & Telegram to never miss a drop.</p>
+        <a class="btn small" href="#notif">Setup</a>
+      </article>
+    </section>
+
+    <!-- Table / List -->
+    <section id="list" class="list-section">
+      <table class="musicals-table" aria-label="Monitored musicals">
         <thead>
-          <tr>
-            <th aria-hidden="true"></th>
-            <th>Musical</th>
-            <th>URLs</th>
-            <th>Actions</th>
-          </tr>
+          <tr><th></th><th>Musical</th><th>URLs</th><th>Actions</th></tr>
         </thead>
         <tbody id="table-body">
           <!-- populated by main.js -->
         </tbody>
       </table>
 
-      <div class="no-data" id="no-data" hidden>
-        <p>Ningún sitio monitorizado. Agrega entradas en <code>urls.json</code>.</p>
-      </div>
+      <div id="no-data" class="no-data" hidden>No musicals yet — add one ✨</div>
     </section>
   </main>
 
   <div id="modal" class="modal" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button id="modal-close" class="close" aria-label="Cerrar">&times;</button>
-      <h3 id="modal-title"></h3>
-      <ul id="modal-list" class="url-list"></ul>
-    </div>
+    <div id="modal-title"></div>
+    <div id="modal-list"></div>
+    <button id="modal-close" aria-label="Close">Close</button>
   </div>
 
   <footer class="footer">
