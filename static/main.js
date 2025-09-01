@@ -184,6 +184,9 @@
     showNotificationPopup(msg, ms + 800);
   }
 
+  // Toggleable flag: set to true to also send notifications to Telegram
+  window.SEND_TELEGRAM_ON_NOTIFY = false; // change to true in console if desired
+
   function showNotificationPopup(message, ms = 2200) {
     let np = document.querySelector('.notification-popup');
     if (!np) {
@@ -195,12 +198,21 @@
     }
     const body = np.querySelector('.np-body');
     body.textContent = message;
-    // show
     np.classList.add('show');
-    // auto-hide
     clearTimeout(np._hideId);
     np._hideId = setTimeout(() => hidePopup(np), ms);
-    // click the popup to dismiss immediately
+
+    // Optional: fire-and-forget POST to server endpoint to forward to Telegram
+    if (window.SEND_TELEGRAM_ON_NOTIFY) {
+      try {
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        }).catch(()=>{/* ignore network errors */});
+      } catch (e) { /* ignore */ }
+    }
+
     np.addEventListener('click', (e) => {
       if (e.target === np || e.target.classList.contains('np-body') || e.target.classList.contains('np-title')) {
         hidePopup(np);

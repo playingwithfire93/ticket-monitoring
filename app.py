@@ -1,5 +1,6 @@
-# ...existing code...
 import json
+import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request
@@ -139,7 +140,47 @@ def reload_urls():
     return jsonify({"loaded": len(loaded)})
 
 
+# Simple Telegram sender helper (uses TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from env)
+TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TG_CHAT = os.getenv('TELEGRAM_CHAT_ID')
+
+# basic rate-limit to avoid spamming (per-process, in-memory)
+_last_sent = {'ts': 0, 'msg': None}
+_MIN_INTERVAL = 3.0  # seconds
+
+def send_telegram_message(text):
+    if not TG_TOKEN or not TG_CHAT:
+        app.logger.debug('Telegram token/chat not configured, skipping send.')
+        return {'ok': False, 'reason': 'not-configured'}
+    # avoid repeating same message too quickly
+    now = time.time()
+    if now - _last_sent['ts'] < _MIN_INTERVAL and _last_sent['msg'] == text:
+        app.logger.debug('Telegram rate limit: skipping duplicate message')
+        return {'ok': False, 'reason': 'rate-limited'}
+    url = f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage'
+    payload = {'chat_id': TG_CHAT, 'text': text, 'parse_mode': 'HTML'}
+    try:
+        r = requests.post(url, json=payload, timeout=6)
+        _last_sent['ts'] = now
+        _last_sent['msg'] = text
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        app.logger.exception('Failed sending Telegram message')
+        return {'ok': False, 'reason': str(e)}
+
+# allow frontend or server code to trigger a Telegram notification
+@app.route('/api/notify', methods=['POST'])
+def api_notify():
+    data = request.get_json(silent=True) or {}
+    message = data.get('message') or data.get('msg') or ''
+    if not message:
+        return jsonify({'ok': False, 'error': 'missing message'}), 400
+    resp = send_telegram_message(message)
+    status = 200 if resp.get('ok') else 500
+    return jsonify({'ok': resp.get('ok', False), 'resp': resp}), status
+
+
 if __name__ == "__main__":
     # Development friendly: auto-reload and run socketio
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
-# ...existing code...
