@@ -13,7 +13,7 @@ URLS = []
 def group_urls_by_musical(urls):
     grouped = {}
     for item in urls:
-        name = item.get('name', 'Sin nombre')
+        name = item.get('musical', 'Sin nombre')
         grouped[name] = item.get('urls', [])
     return grouped
   
