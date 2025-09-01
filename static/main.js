@@ -76,12 +76,15 @@
     return tr;
   }
 
-  function buildDetailsRow(item, idx) {
+// ...existing code...
+function buildDetailsRow(item, idx) {
   const tr = document.createElement('tr');
   tr.className = 'details-row hidden';
   tr.dataset.idx = idx;
+
   const td = document.createElement('td');
   td.colSpan = 4;
+
   const inner = document.createElement('div');
   inner.className = 'details-inner';
 
@@ -114,6 +117,8 @@
   td.appendChild(inner);
   tr.appendChild(td);
   return tr;
+}
+// ...existing code...
 
   function renderTable(list) {
     tableBody.innerHTML = '';
