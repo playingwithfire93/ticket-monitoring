@@ -150,7 +150,84 @@
 
   if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); stopSlideAuto(); });
   if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); stopSlideAuto(); });
+// ...existing code...
+function buildDetailsRow(item, idx) {
+  const tr = document.createElement('tr');
+  tr.className = 'details-row hidden';
+  tr.dataset.idx = idx;
+  const td = document.createElement('td');
+  td.colSpan = 4;
+  const inner = document.createElement('div');
+  inner.className = 'details-inner';
 
+  if (item.urls && item.urls.length) {
+    item.urls.forEach(u => {
+      const chip = document.createElement('div');
+      chip.className = 'url-chip';
+      chip.title = u;
+
+      const hostSpan = document.createElement('span');
+      hostSpan.className = 'url-host';
+      try {
+        hostSpan.textContent = new URL(u).hostname + (u.length > 60 ? '…' : '');
+      } catch (e) {
+        hostSpan.textContent = u;
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'url-actions';
+
+      const openBtn = document.createElement('button');
+      openBtn.className = 'open-btn';
+      openBtn.type = 'button';
+      openBtn.textContent = 'Abrir';
+      openBtn.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(u, '_blank'); });
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.type = 'button';
+      copyBtn.textContent = 'Copiar';
+      copyBtn.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(u);
+          showToast('URL copiada');
+        } catch (err) {
+          showToast('Error copiando');
+        }
+      });
+
+      actions.appendChild(openBtn);
+      actions.appendChild(copyBtn);
+      chip.appendChild(hostSpan);
+      chip.appendChild(actions);
+      inner.appendChild(chip);
+    });
+  } else {
+    const p = document.createElement('div');
+    p.textContent = 'No URLs';
+    inner.appendChild(p);
+  }
+
+  td.appendChild(inner);
+  tr.appendChild(td);
+  return tr;
+}
+
+// simple toast helper (append once)
+function showToast(msg, ms = 1300){
+  let t = document.querySelector('.toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._hideId);
+  t._hideId = setTimeout(()=> t.classList.remove('show'), ms);
+}
+// ...existing code...
   // init
   renderTable(musicals);
   updateLastChecked();
