@@ -233,9 +233,10 @@ body{
 }
 
 /* animated collapsing inner container */
+/* collapsed state: no margin para que no deje hueco */
 .details-inner{
-  margin:8px 16px 16px 16px;
-  padding:0 12px;              /* padding interior cuando abierto (se aplica en el estado abierto) */
+  margin:0;                     /* <- quitar margen en estado colapsado */
+  padding:0;                    /* padding añadido solo cuando esté visible */
   border-radius:8px;
   background:linear-gradient(180deg,#fff,#fffaf7);
   display:block;
@@ -246,10 +247,11 @@ body{
   transition: max-height .36s cubic-bezier(.2,.9,.2,1), opacity .18s ease, transform .22s ease, padding .22s ease;
 }
 
-/* estado visible: mayor max-height + padding */
+/* estado visible: añadir margen y padding (solo aquí ocupa espacio) */
 .details-row:not(.hidden) .details-inner{
+  margin:8px 16px 16px 16px;   /* margen solo cuando está abierto */
   padding:12px;
-  max-height:800px; /* suficientemente grande para contenido */
+  max-height:800px;
   opacity:1;
   transform:translateY(0);
 }
