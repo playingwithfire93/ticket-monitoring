@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>🎟️ Ticket Monitor Dashboard</title>
 
-  <!-- Modern font + subtle icon fallback -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -16,8 +15,10 @@
   <header class="topbar">
     <div class="brand">
       <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo">
-      <h1>Ticket Monitor</h1>
-      <small class="subtitle">Cute & dynamic musical watcher</small>
+      <div>
+        <h1>Ticket Monitor</h1>
+        <div class="subtitle">Cute & dynamic musical watcher</div>
+      </div>
     </div>
 
     <div class="controls">
@@ -30,27 +31,14 @@
   <main class="container">
     <!-- Slideshow (kept in HTML) -->
     <div class="slideshow-container">
-      <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='AUDREY1.jpg') }}" alt="AUDREY1" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='HOUDINI1.jpg') }}" alt="HOUDINI1" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS1.jpg') }}" alt="LESMIS1" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS2.jpg') }}" alt="LESMIS2" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS3.png') }}" alt="LESMIS3" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS4.jpg') }}" alt="LESMIS4" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS5.jpg') }}" alt="LESMIS5" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS6.jpg') }}" alt="LESMIS6" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS7.jpg') }}" alt="LESMIS7" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED1.jpg') }}" alt="WICKED1" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED2.jpg') }}" alt="WICKED2" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED3.jpg') }}" alt="WICKED3" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED4.jpg') }}" alt="WICKED4" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED5.jpg') }}" alt="WICKED5" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED6.jpg') }}" alt="WICKED6" class="slide-img"></div>
-      <div class="slide fade"><img src="{{ url_for('static', filename='WICKED7.jpg') }}" alt="WICKED7" class="slide-img"></div>
-      <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-      <a class="next" onclick="plusSlides(1)">&#10095;</a>
+      <div class="slides">
+        <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
+        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED1.jpg') }}" alt="WICKED1" class="slide-img"></div>
+        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS1.jpg') }}" alt="LESMIS1" class="slide-img"></div>
+      </div>
+      <button class="slide-nav prev" onclick="plusSlides(-1)" aria-label="previous">‹</button>
+      <button class="slide-nav next" onclick="plusSlides(1)" aria-label="next">›</button>
+      <div class="slide-dots" aria-hidden="true"></div>
     </div>
 
     <section class="hero">
@@ -61,11 +49,11 @@
     </section>
 
     <!-- Table with collapsible rows -->
-    <section class="table-wrap" id="table-wrap">
-      <table id="musicals-table" class="musicals-table">
+    <section class="table-wrap" id="table-wrap" aria-live="polite">
+      <table id="musicals-table" class="musicals-table" role="table" aria-label="Sitios monitorizados">
         <thead>
           <tr>
-            <th></th>
+            <th aria-hidden="true"></th>
             <th>Musical</th>
             <th>URLs</th>
             <th>Actions</th>
@@ -83,8 +71,8 @@
   </main>
 
   <div id="modal" class="modal" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true">
-      <button id="modal-close" class="close">&times;</button>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button id="modal-close" class="close" aria-label="Cerrar">&times;</button>
       <h3 id="modal-title"></h3>
       <ul id="modal-list" class="url-list"></ul>
     </div>
