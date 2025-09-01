@@ -1,6 +1,8 @@
-// Replace render logic with table + collapsible rows; keep slideshow and fetch logic.
+/* ...existing code... */
 (() => {
   const api = '/api/monitored-urls';
+
+  // DOM
   const tableBody = document.getElementById('table-body');
   const search = document.getElementById('search');
   const noData = document.getElementById('no-data');
@@ -12,21 +14,22 @@
   const modalList = document.getElementById('modal-list');
   const modalClose = document.getElementById('modal-close');
 
-  // slideshow pieces left unchanged (assume they exist)
+  // slideshow DOM (single declaration)
   const slideElems = Array.from(document.querySelectorAll('.slide'));
-  const prevBtn = document.querySelector('.prev');
-  const nextBtn = document.querySelector('.next');
+  const prevBtn = document.querySelector('.slide-nav.prev') || document.querySelector('.prev');
+  const nextBtn = document.querySelector('.slide-nav.next') || document.querySelector('.next');
   const dotsWrap = document.querySelector('.slide-dots');
 
   if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
 
+  // state
   let musicals = Array.isArray(window.INITIAL_MUSICALS) ? window.INITIAL_MUSICALS : [];
   let autoRefresh = false;
   let intervalId = null;
   let currentIndex = 0;
   let slideAutoId = null;
 
-  // ...existing code...
+  // ---- table rows ----
   function buildSummaryRow(item, idx) {
     const tr = document.createElement('tr');
     tr.className = 'summary';
@@ -57,13 +60,11 @@
     openAll.onclick = (e) => { e.stopPropagation(); if (item.urls && item.urls[0]) window.open(item.urls[0], '_blank'); };
     actionsTd.appendChild(openAll);
 
-    // assemble row
     tr.appendChild(expTd);
     tr.appendChild(nameTd);
     tr.appendChild(urlsTd);
     tr.appendChild(actionsTd);
 
-    // toggle only when expand button clicked (prevents accidental opens)
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
@@ -75,166 +76,39 @@
     return tr;
   }
 
-  // modify toggleDetails to not rely on passed btn (main.js already finds and updates button via selector)
-  function toggleDetails(idx) {
-    const details = tableBody.querySelector(`tr.details-row[data-idx="${idx}"]`);
-    const btn = tableBody.querySelector(`tr.summary[data-idx="${idx}"] .expand-btn`);
-    if (!details) return;
-    const isHidden = details.classList.contains('hidden');
-    // collapse any open rows first
-    Array.from(tableBody.querySelectorAll('tr.details-row')).forEach(r => r.classList.add('hidden'));
-    Array.from(tableBody.querySelectorAll('.expand-btn')).forEach(b => { b.textContent = '+'; b.setAttribute('aria-expanded','false'); });
-    if (isHidden) {
-      details.classList.remove('hidden');
-      if (btn) { btn.textContent = '–'; btn.setAttribute('aria-expanded','true'); }
-    } else {
-      details.classList.add('hidden');
-      if (btn) { btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
-    }
-  }
-// ...existing code...
+  function buildDetailsRow(item, idx) {
+    const tr = document.createElement('tr');
+    tr.className = 'details-row hidden';
+    tr.dataset.idx = idx;
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    const inner = document.createElement('div');
+    inner.className = 'details-inner';
 
-  function updateLastChecked() {
-    if (lastCheckedEl) lastCheckedEl.textContent = new Date().toLocaleString();
-  }
+    if (item.urls && item.urls.length) {
+      item.urls.forEach(u => {
+        const chip = document.createElement('div');
+        chip.className = 'url-chip';
+        chip.title = u;
 
-  async function fetchData() {
-    try {
-      const res = await fetch(api);
-      if (!res.ok) throw new Error('Network response not ok');
-      const data = await res.json();
-      musicals = Array.isArray(data) ? data : musicals;
-      renderTable(filter(musicals));
-      updateLastChecked();
-    } catch (e) {
-      console.error('fetchData', e);
-    }
-  }
-
-  function filter(list) {
-    const q = (search && search.value ? search.value : '').trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(it => (it.musical || it.name || '').toLowerCase().includes(q));
-  }
-
-  // slideshow minimal control (keeps your existing HTML slides)
-  function showSlide(index) {
-    if (!slideElems.length) return;
-    currentIndex = (index + slideElems.length) % slideElems.length;
-    slideElems.forEach((s, i) => s.style.display = i === currentIndex ? 'block' : 'none');
-  }
-  function nextSlide() { showSlide(currentIndex + 1); }
-  function prevSlide() { showSlide(currentIndex - 1); }
-  function startSlideAuto() { stopSlideAuto(); slideAutoId = setInterval(nextSlide, 5000); }
-  function stopSlideAuto() { if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
-
-  // events
-  if (search) search.addEventListener('input', () => renderTable(filter(musicals)));
-
-  if (arToggle) {
-    arToggle.addEventListener('click', () => {
-      autoRefresh = !autoRefresh;
-      if (arState) arState.textContent = autoRefresh ? 'ON' : 'OFF';
-      if (autoRefresh) {
-        intervalId = setInterval(fetchData, 8000);
-        fetchData();
-      } else {
-        clearInterval(intervalId);
-      }
-    });
-  }
-
-  if (modalClose) modalClose.addEventListener('click', () => modal.setAttribute('aria-hidden','true'));
-  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.setAttribute('aria-hidden','true'); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.setAttribute('aria-hidden','true'); });
-
-  if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); stopSlideAuto(); });
-  if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); stopSlideAuto(); });
-// ...existing code...
-function buildDetailsRow(item, idx) {
-  const tr = document.createElement('tr');
-  tr.className = 'details-row hidden';
-  tr.dataset.idx = idx;
-  const td = document.createElement('td');
-  td.colSpan = 4;
-  const inner = document.createElement('div');
-  inner.className = 'details-inner';
-
-  if (item.urls && item.urls.length) {
-    item.urls.forEach(u => {
-      const chip = document.createElement('div');
-      chip.className = 'url-chip';
-      chip.title = u;
-
-      const hostSpan = document.createElement('span');
-      hostSpan.className = 'url-host';
-      try {
-        hostSpan.textContent = new URL(u).hostname + (u.length > 60 ? '…' : '');
-      } catch (e) {
-        hostSpan.textContent = u;
-      }
-
-      const actions = document.createElement('div');
-      actions.className = 'url-actions';
-
-      const openBtn = document.createElement('button');
-      openBtn.className = 'open-btn';
-      openBtn.type = 'button';
-      openBtn.textContent = 'Abrir';
-      openBtn.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(u, '_blank'); });
-
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'copy-btn';
-      copyBtn.type = 'button';
-      copyBtn.textContent = 'Copiar';
-      copyBtn.addEventListener('click', async (ev) => {
-        ev.stopPropagation();
+        const hostSpan = document.createElement('span');
+        hostSpan.className = 'url-host';
         try {
-          await navigator.clipboard.writeText(u);
-          showToast('URL copiada');
-        } catch (err) {
-          showToast('Error copiando');
+          hostSpan.textContent = new URL(u).hostname + (u.length > 60 ? '…' : '');
+        } catch (e) {
+          hostSpan.textContent = u;
         }
-      });
 
-      actions.appendChild(openBtn);
-      actions.appendChild(copyBtn);
-      chip.appendChild(hostSpan);
-      chip.appendChild(actions);
-      inner.appendChild(chip);
-    });
-  } else {
-    const p = document.createElement('div');
-    p.textContent = 'No URLs';
-    inner.appendChild(p);
-  }
+        const actions = document.createElement('div');
+        actions.className = 'url-actions';
 
-  td.appendChild(inner);
-  tr.appendChild(td);
-  return tr;
-}
+        const openBtn = document.createElement('button');
+        openBtn.className = 'open-btn';
+        openBtn.type = 'button';
+        openBtn.textContent = 'Abrir';
+        openBtn.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(u, '_blank'); });
 
-// simple toast helper (append once)
-function showToast(msg, ms = 1300){
-  let t = document.querySelector('.toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.className = 'toast';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._hideId);
-  t._hideId = setTimeout(()=> t.classList.remove('show'), ms);
-}
-// ...existing code...
-  // init
-  renderTable(musicals);
-  updateLastChecked();
-  showSlide(0);
-  startSlideAuto();
-  window.addEventListener('load', () => { setTimeout(fetchData, 600); });
-
-  // expose simple slide controls for inline HTML arrows (kept from your template)
-  window.plusSlides = (n) => { showSlide(currentIndex + n); stopSlideAuto(); };
-})();
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.type = 'button';
+        copyBtn.textContent = 'Copiar';
