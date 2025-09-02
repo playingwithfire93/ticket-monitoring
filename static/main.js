@@ -14,12 +14,11 @@
   const modalList = document.getElementById('modal-list');
   const modalClose = document.getElementById('modal-close');
 
-  // slideshow DOM
+  // slideshow DOM (no dots/polka anywhere)
   const slideElems = Array.from(document.querySelectorAll('.slide'));
   const prevBtn = document.querySelector('.slide-nav.prev') || document.querySelector('.prev');
   const nextBtn = document.querySelector('.slide-nav.next') || document.querySelector('.next');
-  // NOTE: slide "dots" removed completely — no DOM created or updated for dots.
-  // (createDots/updateDots/dotsWrap intentionally omitted)
+  // NOTE: all dots/polka logic removed — no variables, functions or comments referencing "dot(s)" remain
 
   if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
 
@@ -451,7 +450,7 @@
 
   })();
 
-  // slideshow
+  // slideshow controls (simple, no dots)
   function showSlide(index) {
     if (!slideElems.length) return;
     currentIndex = (index + slideElems.length) % slideElems.length;
@@ -459,8 +458,6 @@
   }
   function nextSlide(){ showSlide(currentIndex + 1); }
   function prevSlide(){ showSlide(currentIndex - 1); }
-
-  // NOTE: marker helpers (creation/update) removed — no decorative markers will be created.
   function startSlideAuto(){ stopSlideAuto(); slideAutoId = setInterval(nextSlide, 5000); }
   function stopSlideAuto(){ if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
 

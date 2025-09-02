@@ -533,10 +533,28 @@ body::after, body::before,
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
+}
+
+/* FINAL OVERRIDE: remove any polka/dot overlays or pseudo-element patterns */
+*::before,
+*::after {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background-image: none !important;
+  background: none !important;
+  content: none !important;
   pointer-events: none !important;
 }
 
-/* eliminar backgrounds repetidos que actúen como puntos */
+/* hide known classes if present */
+.slide-dots, .slide-dots *, .dot, .dot *, .pizzazz-sparkle, .polka, .overlay-dots, .sparkle-layer, .slideshow-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* ensure no repeated tiny backgrounds remain */
 body, .container, .slideshow-container, .hero {
   background-image: none !important;
 }
