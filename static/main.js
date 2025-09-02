@@ -659,3 +659,54 @@
     } catch (e) { /* ignore if socket.io not configured */ }
   }
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Idempotent init for suggestion modal — safe to add without touching index.html
+  const modal = document.getElementById('suggest-modal');
+  const form = document.getElementById('suggest-form');
+  if (!modal || !form) return;
+  if (modal.dataset.suggestInit === '1') return; // already initialized
+  modal.dataset.suggestInit = '1';
+
+  const openBtn = document.getElementById('open-suggest');
+  const closeBtn = document.getElementById('suggest-close');
+  const cancelBtn = document.getElementById('suggest-cancel');
+  const status = document.getElementById('suggest-status');
+
+  function show(v = true) {
+    modal.style.display = v ? 'block' : 'none';
+    modal.setAttribute('aria-hidden', v ? 'false' : 'true');
+  }
+  if (openBtn) openBtn.addEventListener('click', () => show(true));
+  if (closeBtn) closeBtn.addEventListener('click', () => show(false));
+  if (cancelBtn) cancelBtn.addEventListener('click', () => show(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') show(false); });
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (status) status.textContent = 'Enviando…';
+    const fd = new FormData(form);
+    const payload = {
+      name: (fd.get('name') || '').trim(),
+      email: (fd.get('email') || '').trim(),
+      message: (fd.get('message') || '').trim()
+    };
+    if (!payload.message) { if (status) status.textContent = 'Escribe un mensaje.'; return; }
+    try {
+      const res = await fetch('/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const j = await res.json().catch(() => ({ ok: false }));
+      if (res.ok && j.ok) {
+        if (status) status.textContent = '¡Gracias! Enviado.';
+        setTimeout(() => { if (status) status.textContent = ''; show(false); form.reset(); }, 1200);
+      } else {
+        if (status) status.textContent = 'Error: ' + (j.error || j.body || res.statusText);
+      }
+    } catch (e) {
+      if (status) status.textContent = 'Error de red';
+    }
+  });
+});

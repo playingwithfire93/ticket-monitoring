@@ -107,8 +107,12 @@ body{
 .no-data{ color:#6d4a5b; padding:18px 12px; }
 
 /* Modal */
-.modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.25); padding:28px; z-index:99999; }
-.modal[aria-hidden="true"]{ display:none; }
+.modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.35); z-index:1200; }
+.modal-inner { background: #fff; border-radius:12px; padding:16px; width:min(680px,94%); box-shadow:0 10px 40px rgba(0,0,0,0.18); position:relative; }
+.modal-close { position:absolute; right:10px; top:8px; border:0; background:transparent; font-size:20px; cursor:pointer; }
+#suggest-form label { display:block; margin-bottom:8px; font-size:14px; }
+#suggest-form input, #suggest-form textarea { width:100%; padding:.5rem; border:1px solid #eee; border-radius:6px; font-size:14px; }
+#open-suggest { cursor: pointer; }
 
 /* Decorative background frame (more pizzaz) */
 body{
