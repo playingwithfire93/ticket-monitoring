@@ -1,11 +1,11 @@
 import json
 import os
 import time
+import requests
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
-import requests
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -144,21 +144,15 @@ def reload_urls():
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TG_CHAT = os.getenv('TELEGRAM_CHAT_ID')
 
-# basic rate-limit to avoid spamming (per-process, in-memory)
 _last_sent = {'ts': 0, 'msg': None}
-_MIN_INTERVAL = 3.0  # seconds
+_MIN_INTERVAL = 3.0  # seconds between identical messages
 
 def send_telegram_message(text):
-    """
-    Send a message to the configured TELEGRAM_CHAT using TELEGRAM_BOT_TOKEN.
-    Returns Telegram JSON on success or a dict with error info.
-    """
     if not TG_TOKEN or not TG_CHAT:
         app.logger.warning('Telegram not configured: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing')
         return {'ok': False, 'reason': 'not-configured'}
 
     now = time.time()
-    # simple duplicate-rate guard
     if now - _last_sent['ts'] < _MIN_INTERVAL and _last_sent['msg'] == text:
         app.logger.info('Telegram rate limit: skipping duplicate message')
         return {'ok': False, 'reason': 'rate-limited'}
@@ -167,7 +161,6 @@ def send_telegram_message(text):
     payload = {'chat_id': TG_CHAT, 'text': text, 'parse_mode': 'HTML'}
     try:
         r = requests.post(url, json=payload, timeout=8)
-        # try to decode JSON response (Telegram returns JSON)
         try:
             data = r.json()
         except Exception:
@@ -175,7 +168,6 @@ def send_telegram_message(text):
         app.logger.info('Telegram send: status=%s resp=%s', r.status_code, data)
         if not r.ok or not data.get('ok', False):
             return {'ok': False, 'status_code': r.status_code, 'resp': data}
-        # success — update last-sent
         _last_sent['ts'] = now
         _last_sent['msg'] = text
         return data
@@ -185,14 +177,10 @@ def send_telegram_message(text):
 
 @app.route('/admin/test-telegram', methods=['GET', 'POST'])
 def admin_test_telegram():
-    """
-    Simple admin route to trigger a Telegram test send and return the full response.
-    GET -> sends a default test message, POST -> accepts JSON { "message": "..."}
-    """
-    data = request.get_json(silent=True) or {}
-    message = data.get('message') if data else None
+    payload = request.get_json(silent=True) or {}
+    message = payload.get('message') if payload else None
     if not message:
-        message = f'Test notification from ticket-monitor — {datetime.now(UTC).isoformat()}'
+        message = f'Test from ticket-monitor — {datetime.now(timezone.utc).isoformat()}'
     resp = send_telegram_message(message)
     status = 200 if resp.get('ok') else 500
     return jsonify({'ok': resp.get('ok', False), 'resp': resp}), status
