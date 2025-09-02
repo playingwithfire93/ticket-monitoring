@@ -639,3 +639,55 @@
     } catch (e) { /* ignore if socket.io not configured */ }
   }
 })();
+
+/* Forzar eliminación de overlays/polka/dots que quedan visibles */
+(function removeDecorativeDots() {
+  // 1) Inject strong CSS to hide pseudo-elements and common selectors
+  const css = `
+    /* hide any pseudo-element patterns and known dot classes */
+    body::after, body::before,
+    .slideshow-container::before, .slideshow-container::after,
+    .slide-dots, .dot, .pizzazz-sparkle, .polka, .overlay-dots,
+    .sparkle-layer, .slideshow-overlay {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  `;
+  const s = document.createElement('style');
+  s.setAttribute('data-tm-hide-dots', '1');
+  s.appendChild(document.createTextNode(css));
+  document.head.appendChild(s);
+
+  // 2) Remove any existing DOM nodes that look like dot overlays
+  const selectors = [
+    '.slide-dots', '.dot', '.pizzazz-sparkle', '.polka', '.overlay-dots',
+    '.sparkle-layer', '.slideshow-overlay', '.slides .dots'
+  ];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(n => n.remove());
+  });
+
+  // 3) Triage: scan all fixed/absolute elements with radial-gradient or small SVG backgrounds and hide them
+  document.querySelectorAll('body *').forEach(el => {
+    try {
+      const style = window.getComputedStyle(el);
+      if (!style) return;
+      const bg = style.getPropertyValue('background-image') || '';
+      const pos = style.getPropertyValue('position') || '';
+      const z = parseInt(style.getPropertyValue('z-index')) || 0;
+      // hide if background contains radial-gradient or tiny repeated SVG dots and is overlay-like
+      if ((/radial-gradient/i.test(bg) || /data:image\/svg/i.test(bg) || /url\("/i.test(bg) && bg.length < 400) && (pos === 'fixed' || pos === 'absolute' || z <= 2)) {
+        el.style.display = 'none';
+        el.style.pointerEvents = 'none';
+      }
+      // also hide elements that are clearly decorative rows of circles (many inline children with small size)
+      if (el.children && el.children.length > 8 && Array.from(el.children).every(c => c.clientWidth <= 28 && c.clientHeight <= 28)) {
+        el.remove();
+      }
+    } catch (e) { /* ignore cross-origin computedStyle errors */ }
+  });
+
+  // 4) ensure slideshow dots won't be re-created by our code (no-op createDots)
+  window.TM_DISABLE_DOTS = true;
+})();
