@@ -7,9 +7,6 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-  <!-- your app stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -129,11 +126,55 @@
     <small>Made with 💖 — dynamic cute monitor</small>
   </footer>
 
+  <div id="telegram-popup" class="notification-popup" role="dialog" aria-modal="true" aria-hidden="true" style="display:block;opacity:0;pointer-events:none;">
+    <div>
+      <strong class="np-title">Únete a nuestro Telegram</strong>
+      <div class="np-body" style="margin-top:6px;font-weight:600">Recibe alertas y novedades en tiempo real.</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
+      <a id="telegram-join" class="btn primary" href="https://t.me/TheBookOfMormonTicketsbot" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:8px 12px">Unirme</a>
+      <button id="telegram-dismiss" class="btn ghost" style="padding:8px 10px">No, gracias</button>
+    </div>
+    <button class="np-close" aria-label="Cerrar" id="telegram-close" style="position:absolute;top:8px;right:10px;background:transparent;border:0;font-size:18px;color:var(--accent)">×</button>
+  </div>
+
   <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
   <script>
     const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');
   </script>
   <!-- main script -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    // show Telegram popup on first visit (remember choice in localStorage)
+    (function(){
+      const KEY = 'telegramPopupSeen_v1';
+      if (localStorage.getItem(KEY)) return;
+      const popup = document.getElementById('telegram-popup');
+      if (!popup) return;
+      // show with small delay so it doesn't feel abrupt
+      setTimeout(() => {
+        popup.classList.add('show');
+        popup.style.opacity = 1;
+        popup.style.pointerEvents = 'auto';
+        popup.setAttribute('aria-hidden','false');
+      }, 700);
+
+      function hideAndRemember() {
+        try { localStorage.setItem(KEY, '1'); } catch(e){}
+        popup.classList.remove('show');
+        popup.style.opacity = 0;
+        popup.style.pointerEvents = 'none';
+        popup.setAttribute('aria-hidden','true');
+      }
+
+      document.getElementById('telegram-join').addEventListener('click', () => {
+        hideAndRemember();
+        // allow anchor to open in new tab (already target="_blank")
+      });
+      document.getElementById('telegram-dismiss').addEventListener('click', (e) => { e.preventDefault(); hideAndRemember(); });
+      document.getElementById('telegram-close').addEventListener('click', (e) => { e.preventDefault(); hideAndRemember(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideAndRemember(); });
+    })();
+  </script>
 </body>
 </html>

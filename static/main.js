@@ -91,37 +91,48 @@
     tr.className = 'summary';
     tr.dataset.idx = idx;
 
+    // modern expand button with inline url-count badge
     const expTd = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'expand-btn';
-    btn.textContent = '+';
-    btn.title = 'Expandir';
+    btn.type = 'button';
     btn.setAttribute('aria-expanded', 'false');
+    btn.title = 'Expandir detalles';
+
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = '+'; // toggled in event listener
+
+    const urlCount = document.createElement('span');
+    urlCount.className = 'url-count';
+    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
+    urlCount.textContent = urlNum;
+
+    btn.appendChild(icon);
+    btn.appendChild(urlCount);
     expTd.appendChild(btn);
 
     const nameTd = document.createElement('td');
     nameTd.textContent = item.musical || item.name || 'Sin nombre';
 
     const urlsTd = document.createElement('td');
-    const count = (item.urls && item.urls.length) ? item.urls.length : 0;
     const span = document.createElement('span');
     span.className = 'count-badge';
-    span.textContent = `${count} URL(s)`;
+    span.textContent = `${urlNum} URL(s)`;
     urlsTd.appendChild(span);
 
-    // changes column (shows added/removed totals since session baseline)
+    // changes column
     const changesTd = document.createElement('td');
     const k = keyForItem(item);
-    const ch = changesMap[k];
+    const ch = changesMap && changesMap[k];
     if (ch && ch.total > 0) {
       const badge = document.createElement('button');
       badge.className = 'btn small change-badge';
       badge.type = 'button';
       badge.title = `Ver cambios: +${ch.added} / -${ch.removed}`;
-      badge.textContent = `${ch.total} cambios`; 
+      badge.textContent = `${ch.total} cambios`;
       badge.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        // mark as seen and re-render
         markItemAsSeen(item);
         showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
       });
@@ -133,17 +144,25 @@
       changesTd.appendChild(none);
     }
 
-    // assemble row (no open-all action column)
     tr.appendChild(expTd);
     tr.appendChild(nameTd);
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
+    // toggle behaviour (keeps rest of UI logic)
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
       btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-      btn.textContent = open ? '+' : '–';
+      icon.textContent = open ? '+' : '–';
+      toggleDetails(idx);
+    });
+
+    // allow row click to toggle too
+    tr.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      icon.textContent = open ? '+' : '–';
       toggleDetails(idx);
     });
 
@@ -190,28 +209,40 @@
     tr.className = 'summary';
     tr.dataset.idx = idx;
 
+    // modern expand button with inline url-count badge
     const expTd = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'expand-btn';
-    btn.textContent = '+';
-    btn.title = 'Expandir';
+    btn.type = 'button';
     btn.setAttribute('aria-expanded', 'false');
+    btn.title = 'Expandir detalles';
+
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = '+'; // toggled in event listener
+
+    const urlCount = document.createElement('span');
+    urlCount.className = 'url-count';
+    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
+    urlCount.textContent = urlNum;
+
+    btn.appendChild(icon);
+    btn.appendChild(urlCount);
     expTd.appendChild(btn);
 
     const nameTd = document.createElement('td');
     nameTd.textContent = item.musical || item.name || 'Sin nombre';
 
     const urlsTd = document.createElement('td');
-    const count = (item.urls && item.urls.length) ? item.urls.length : 0;
     const span = document.createElement('span');
     span.className = 'count-badge';
-    span.textContent = `${count} URL(s)`;
+    span.textContent = `${urlNum} URL(s)`;
     urlsTd.appendChild(span);
 
-    // changes column (shows added/removed totals since session baseline)
+    // changes column
     const changesTd = document.createElement('td');
     const k = keyForItem(item);
-    const ch = changesMap[k];
+    const ch = changesMap && changesMap[k];
     if (ch && ch.total > 0) {
       const badge = document.createElement('button');
       badge.className = 'btn small change-badge';
@@ -236,11 +267,20 @@
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
+    // toggle behaviour (keeps rest of UI logic)
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
       btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-      btn.textContent = open ? '+' : '–';
+      icon.textContent = open ? '+' : '–';
+      toggleDetails(idx);
+    });
+
+    // allow row click to toggle too
+    tr.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      icon.textContent = open ? '+' : '–';
       toggleDetails(idx);
     });
 
