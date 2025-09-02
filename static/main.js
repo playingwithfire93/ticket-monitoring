@@ -713,66 +713,49 @@
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('inline-suggest-form');
-  if (!form || form.dataset.inited) return;
-  form.dataset.inited = '1';
-  const status = document.getElementById('inline-suggest-status');
-
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    status.textContent = 'Enviando…';
-    const fd = new FormData(form);
-    const payload = {
-      name: (fd.get('name') || '').trim(),
-      email: (fd.get('email') || '').trim(),
-      message: (fd.get('message') || '').trim()
-    };
-    if (!payload.message) { status.textContent = 'Escribe un mensaje.'; return; }
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      const res = await fetch('/suggest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const j = await res.json().catch(() => ({ ok: false }));
-      if (res.ok && j.ok) {
-        status.textContent = '¡Gracias! Enviado.';
-        form.reset();
-      } else {
-        status.textContent = 'Error: ' + (j.error || j.body || res.statusText || 'no enviado');
-      }
-    } catch (e) {
-      status.textContent = 'Error de red';
-    } finally {
-      submitBtn.disabled = false;
-      setTimeout(() => { status.textContent = ''; }, 2500);
-    }
-  });
-
-  // Reveal elements with .fade-in using IntersectionObserver
+  // Reveal .fade-in elements with IntersectionObserver (graceful fallback)
   try {
-    const io = new IntersectionObserver((entries) => {
+    const io = new IntersectionObserver((entries, obs) => {
       entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          io.unobserve(e.target);
-        }
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
       });
     }, { threshold: 0.08 });
     document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
   } catch (err) {
-    // fallback: reveal all immediately
     document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
   }
 
-  // Small usability: focus first input in inline suggestion when visible
-  const inlineSuggest = document.getElementById('inline-suggest');
-  if (inlineSuggest) {
-    inlineSuggest.addEventListener('transitionend', () => {
-      const first = inlineSuggest.querySelector('input, textarea');
-      if (first) first.setAttribute('autocomplete','on');
+  // Wire inline suggestion form (if present)
+  const form = document.getElementById('inline-suggest-form');
+  if (form && !form.dataset.inited) {
+    form.dataset.inited = '1';
+    const status = document.getElementById('inline-suggest-status');
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      status.textContent = 'Enviando…';
+      const fd = new FormData(form);
+      const payload = {
+        name: (fd.get('name') || '').trim(),
+        email: (fd.get('email') || '').trim(),
+        musical: (fd.get('musical') || '').trim(),
+        url: (fd.get('url') || '').trim(),
+        comment: (fd.get('comment') || '').trim()
+      };
+      if (!payload.comment && !payload.musical && !payload.url) {
+        status.textContent = 'Escribe un comentario o indica el musical/link.';
+        return;
+      }
+      payload.message = [ payload.musical ? `Musical: ${payload.musical}`:null, payload.url ? `Link: ${payload.url}`:null, payload.comment ? `Comentario:\n${payload.comment}`:null ].filter(Boolean).join('\n\n');
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch('/suggest', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const j = await res.json().catch(()=>({ok:false}));
+        if (res.ok && j.ok) { status.textContent = '¡Gracias! Enviado.'; form.reset(); }
+        else { status.textContent = 'Error: ' + (j.error || j.body || res.statusText || 'no enviado'); }
+      } catch(e) {
+        status.textContent = 'Error de red';
+      } finally { if (btn) btn.disabled = false; setTimeout(()=>status.textContent='',2500); }
     });
   }
 });
