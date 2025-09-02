@@ -30,33 +30,27 @@
       </div>
     </div>
 
-    <section class="admin-table-wrap">
-      <table class="musicals-table" aria-label="Monitoreo admin">
+    <!-- REPLACE promo-grid + list sections with the collapsible table below -->
+    <section id="list" class="list-section admin-table-wrap">
+      <table class="musicals-table" aria-label="Monitored musicals">
         <thead>
           <tr>
             <th aria-hidden="true"></th>
             <th>Musical</th>
             <th>URLs</th>
-            <th>Acciones</th>
+            <th>Cambios</th>
           </tr>
         </thead>
-        <tbody id="admin-table-body">
+        <tbody id="table-body">
           {% if not musicals %}
-            <tr><td colspan="4" class="no-data">No hay musicales en urls.json</td></tr>
+            <tr><td colspan="4" class="no-data">No hay musicales configurados</td></tr>
           {% else %}
             {% for item in musicals %}
               <tr class="summary" data-idx="{{ loop.index0 }}">
-                <td>
-                  <button class="expand-btn" aria-expanded="false">+</button>
-                </td>
+                <td><button class="expand-btn" aria-expanded="false">+</button></td>
                 <td>{{ item.musical or item.name or 'Sin nombre' }}</td>
-                <td>
-                  <span class="count-badge">{{ (item.urls|length) or 0 }} URL(s)</span>
-                </td>
-                <td>
-                  <a class="btn ghost" href="/api/monitored-status?musical={{ (item.musical or '')|urlencode }}">Comprobar ahora</a>
-                  <a class="btn" href="/admin/reload-urls" onclick="event.preventDefault(); reloadUrls();">Recargar</a>
-                </td>
+                <td><span class="count-badge">{{ (item.urls|length) or 0 }} URL(s)</span></td>
+                <td><span class="no-changes">—</span></td>
               </tr>
 
               <tr class="details-row hidden" data-idx="{{ loop.index0 }}">
@@ -64,7 +58,9 @@
                   <div class="details-inner" aria-hidden="true">
                     {% if item.urls %}
                       {% for u in item.urls %}
-                        <a class="url-chip" href="{{ u }}" target="_blank" rel="noopener noreferrer">{{ u if u|length < 80 else u[:77] ~ '…' }}</a>
+                        <a class="url-chip" href="{{ u }}" target="_blank" rel="noopener noreferrer">
+                          {{ u if u|length < 80 else u[:77] ~ '…' }}
+                        </a>
                       {% endfor %}
                     {% else %}
                       <div>No URLs configuradas</div>
@@ -76,6 +72,8 @@
           {% endif %}
         </tbody>
       </table>
+
+      <div id="no-data" class="no-data" {% if musicals %}hidden{% endif %}>No musicals yet — add one ✨</div>
     </section>
 
     <div style="margin-top:22px; display:flex; gap:12px; justify-content:center;">
