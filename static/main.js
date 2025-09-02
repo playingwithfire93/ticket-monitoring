@@ -764,3 +764,11 @@ document.addEventListener('DOMContentLoaded', () => {
 document.querySelectorAll('#suggest-modal, .modal, .modal-backdrop, .notification-popup, .toast, #tm-test-popup').forEach(el=>el.remove());
 document.body.style.pointerEvents = 'auto';
 document.body.style.overflow = 'auto';
+
+// Safe helper (do NOT run automatically). Call from the console only if you need to force-remove overlays.
+window.cleanupSuggestionOverlays = function cleanupSuggestionOverlays(){
+  document.querySelectorAll('#suggest-modal, .modal, .modal-backdrop, .notification-popup, .toast, #tm-test-popup')
+    .forEach(el => el.remove());
+  document.body.style.pointerEvents = 'auto';
+  document.body.style.overflow = 'auto';
+};

@@ -4,96 +4,293 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>🎟️ Ticket Monitor Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="container">
-    <header class="topbar fade-in">
-      <div class="topbar-inner">
-        <div class="brand"><img class="logo" src="{{ url_for('static', filename='logo.png') }}" alt="logo"><h1>Ticket Monitor</h1></div>
-        <div class="controls">
-          <input id="search" placeholder="Buscar musical..." />
-          <button onclick="reloadUrls()" class="btn">Recargar URLs</button>
-          <button id="open-suggest" class="btn small">Sugerencias</button>
-        </div>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo" />
+        <h1>Ticket Monitor</h1>
+        <p class="subtitle">Cute & dynamic musical watcher</p>
       </div>
-    </header>
 
-    <section class="hero fade-in" aria-label="hero">
-      <div class="slideshow-container promo-card">
-        <!-- existing slides preserved by server-side or static assets -->
-        <div class="slide active"><img class="slide-img" src="{{ url_for('static', filename='hero1.jpg') }}" alt=""></div>
+      <div class="controls">
+        <input id="search" placeholder="Buscar musical..." />
+        <label class="auto-refresh" aria-live="polite">
+          Auto-refresh:
+          <button id="toggle-refresh" class="btn soft" type="button" aria-pressed="false">ON</button>
+          <span id="ar-state" style="margin-left:8px;font-weight:600;color:#7b5a6f">ON</span>
+        </label>
+        <div class="last-checked">Last Checked: <span id="last-checked">--</span></div>
+        <button id="test-telegram-btn" class="btn small">Test Telegram</button>
       </div>
-      <aside class="hero-cta card">
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero / Slideshow -->
+    <section class="hero fade-in">
+      <div class="slideshow-container">
+        <div class="slides">
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM4" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM5" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM6" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM7" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='AUDREY1.jpg') }}" alt="AUDREY1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='HOUDINI1.jpg') }}" alt="HOUDINI1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS1.jpg') }}" alt="LESMIS1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS2.jpg') }}" alt="LESMIS2" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS3.png') }}" alt="LESMIS3" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS4.jpg') }}" alt="LESMIS4" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS5.jpg') }}" alt="LESMIS5" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS6.jpg') }}" alt="LESMIS6" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS7.jpg') }}" alt="LESMIS7" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED1.jpg') }}" alt="WICKED1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED2.jpg') }}" alt="WICKED2" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED3.jpg') }}" alt="WICKED3" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED4.jpg') }}" alt="WICKED4" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED5.jpg') }}" alt="WICKED5" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED6.jpg') }}" alt="WICKED6" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED7.jpg') }}" alt="WICKED7" class="slide-img"></div>
+        </div>
+        <button class="slide-nav prev" onclick="plusSlides(-1)">&#10094;</button>
+        <button class="slide-nav next" onclick="plusSlides(1)">&#10095;</button>
+      </div>
+      <div class="hero-cta">
         <h2>Keep an eye on ticket pages</h2>
-        <p class="hero-sub">Live checks, friendly UI, quick links to ticket pages.</p>
+        <p class="hero-sub">Live checks, friendly UI, and quick links to ticket pages.</p>
         <div class="hero-buttons">
           <a class="btn primary" href="#list">See musicals</a>
-          <a class="btn" href="#inline-suggest">Add URL</a>
+          <a class="btn ghost" href="#add">Add URL</a>
         </div>
-      </aside>
+      </div>
     </section>
 
-    <section class="promo-grid fade-in" aria-label="features">
-      <div class="promo-card card"><span class="promo-badge">New</span><h4>Featured Picks</h4><p>Quick access to popular ticket pages.</p></div>
-      <div class="promo-card card"><span class="promo-badge">Tips</span><h4>Buying Guide</h4><p>Save filters, open favorite links fast.</p></div>
-      <div class="promo-card card"><span class="promo-badge">Glam</span><h4>Notifications</h4><p>Enable popups & Telegram to never miss a drop.</p></div>
+    <!-- Decorative product-like cards (girly) -->
+    <section class="promo-grid fade-in">
+      <article class="promo-card">
+        <div class="promo-badge">New</div>
+        <h3>Featured Picks</h3>
+        <p>Quick access to popular ticket pages — pink, pretty, instant.</p>
+        <a class="btn small" href="#list">Browse</a>
+      </article>
+
+      <article class="promo-card">
+        <div class="promo-badge">Tips</div>
+        <h3>Buying Guide</h3>
+        <p>Save search filters, open favourite links fast.</p>
+        <a class="btn small" href="#help">Learn</a>
+      </article>
+
+      <article class="promo-card">
+        <div class="promo-badge">Glam</div>
+        <h3>Notifications</h3>
+        <p>Enable popups & Telegram to never miss a drop.</p>
+        <a class="btn small" href="#notif">Setup</a>
+      </article>
     </section>
 
+    <!-- Table / List -->
+    <section id="list" class="list-section fade-in">
+      <table class="musicals-table" aria-label="Monitored musicals">
+        <thead>
+          <tr>
+            <th aria-hidden="true"></th>
+            <th>Musical</th>
+            <th>URLs</th>
+            <th>Cambios</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- populated by main.js -->
+        </tbody>
+      </table>
+
+      <div id="no-data" class="no-data" hidden>No musicals yet — add one ✨</div>
+    </section>
+
+    <!-- Inline suggestion card (non-overlay) -->
     <section id="inline-suggest" class="suggestion-card fade-in" aria-labelledby="suggest-inline-title">
       <h3 id="suggest-inline-title">Enviar sugerencia</h3>
       <form id="inline-suggest-form" class="suggestion-form" novalidate>
-        <div class="row" style="display:flex;gap:12px;">
+        <div class="row">
           <label>Nombre (opcional)<br><input name="name" type="text" placeholder="Tu nombre"></label>
           <label>Email (opcional)<br><input name="email" type="email" placeholder="tu@correo.com"></label>
         </div>
-        <div class="row" style="display:flex;gap:12px;">
-          <label>Musical (opcional)<br><input name="musical" type="text" placeholder="Ej. Wicked"></label>
-          <label>Link (opcional)<br><input name="url" type="url" placeholder="https://tickets..."></label>
+
+        <div class="row">
+          <label>Musical<br><input name="musical" type="text" placeholder="Ej. The Book of Mormon"></label>
+          <label>Link<br><input name="url" type="url" placeholder="https://tickets.ejemplo.com/..."></label>
         </div>
-        <label>Comentario / mensaje<br><textarea name="comment" rows="4" required placeholder="Escribe tu sugerencia..."></textarea></label>
-        <div class="suggest-controls" style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+
+        <label>Comentario / mensaje<br><textarea name="comment" rows="4" required placeholder="Escribe tu sugerencia o comentario..."></textarea></label>
+
+        <div class="suggest-controls">
           <button type="submit" class="btn primary">Enviar</button>
           <button type="reset" class="btn ghost">Limpiar</button>
           <div id="inline-suggest-status" class="suggest-status" aria-live="polite"></div>
         </div>
       </form>
     </section>
-
-    <section id="list" class="list-section fade-in" aria-label="monitored musicals">
-      <table class="musicals-table">
-        <thead>
-          <tr><th></th><th>Musical</th><th>URLs</th><th>Cambios</th></tr>
-        </thead>
-        <tbody id="table-body">
-          {% for item in musicals %}
-          <tr class="summary" data-idx="{{ loop.index0 }}">
-            <td><button class="expand-btn" type="button" aria-expanded="false">+</button></td>
-            <td>{{ item.musical or item.name or 'Sin nombre' }}</td>
-            <td>{{ (item.urls|length) }} URL(s)</td>
-            <td>—</td>
-          </tr>
-          <tr class="details-row hidden" data-idx="{{ loop.index0 }}">
-            <td colspan="4">
-              <div class="details-inner">
-                {% if item.urls %}
-                  {% for u in item.urls %}
-                    <a class="url-chip" href="{{ u }}" target="_blank" rel="noopener noreferrer">{{ u }}</a>
-                  {% endfor %}
-                {% else %}
-                  <div>No URLs configuradas</div>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-
   </main>
 
-  <script src="/socket.io/socket.io.js"></script>
+  <div id="modal" class="modal" aria-hidden="true">
+    <div id="modal-title"></div>
+    <div id="modal-list"></div>
+    <button id="modal-close" aria-label="Close">Close</button>
+  </div>
+
+  <footer class="footer">
+    <small>Made with 💖 — dynamic cute monitor</small>
+  </footer>
+
+  <div id="telegram-popup" class="notification-popup" role="dialog" aria-modal="true" aria-hidden="true" style="display:block;opacity:0;pointer-events:none;">
+    <div>
+      <strong class="np-title">Únete a nuestro Telegram</strong>
+      <div class="np-body" style="margin-top:6px;font-weight:600">Recibe alertas y novedades en tiempo real.</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
+      <a id="telegram-join" class="btn primary" href="https://t.me/TheBookOfMormonTicketsbot" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:8px 12px">Unirme</a>
+      <button id="telegram-dismiss" class="btn ghost" style="padding:8px 10px">No, gracias</button>
+    </div>
+    <button class="np-close" aria-label="Cerrar" id="telegram-close" style="position:absolute;top:8px;right:10px;background:transparent;border:0;font-size:18px;color:var(--accent)">×</button>
+  </div>
+
+  <button id="open-suggest" class="btn small">Sugerencias</button>
+
+  <!-- Suggestion modal (paste once inside <body>) -->
+  <div id="suggest-modal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="suggest-title">
+      <button class="modal-close" id="suggest-close" aria-label="Cerrar" onclick="document.getElementById('suggest-modal').style.display='none'">×</button>
+      <h3 id="suggest-title">Enviar sugerencia</h3>
+      <form id="suggest-form">
+        <label>Nombre (opcional)<br><input name="name" type="text" placeholder="Tu nombre"></label>
+        <label>Email (opcional)<br><input name="email" type="email" placeholder="tu@correo.com"></label>
+        <label>Mensaje<br><textarea name="message" rows="4" required placeholder="Escribe tu sugerencia..."></textarea></label>
+        <div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem">
+          <button type="submit" class="btn primary">Enviar</button>
+          <button type="button" class="btn ghost" id="suggest-cancel" onclick="document.getElementById('suggest-modal').style.display='none'">Cancelar</button>
+          <div id="suggest-status" style="margin-left:auto;font-size:.9rem"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
+  <script>
+    const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');
+  </script>
+  <!-- main script -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    // show Telegram popup on first visit (remember choice in localStorage)
+    (function(){
+      const KEY = 'telegramPopupSeen_v1';
+      if (localStorage.getItem(KEY)) return;
+      const popup = document.getElementById('telegram-popup');
+      if (!popup) return;
+      // show with small delay so it doesn't feel abrupt
+      setTimeout(() => {
+        popup.classList.add('show');
+        popup.style.opacity = 1;
+        popup.style.pointerEvents = 'auto';
+        popup.setAttribute('aria-hidden','false');
+      }, 700);
+
+      function hideAndRemember() {
+        try { localStorage.setItem(KEY, '1'); } catch(e){}
+        popup.classList.remove('show');
+        popup.style.opacity = 0;
+        popup.style.pointerEvents = 'none';
+        popup.setAttribute('aria-hidden','true');
+      }
+
+      document.getElementById('telegram-join').addEventListener('click', () => {
+        hideAndRemember();
+        // allow anchor to open in new tab (already target="_blank")
+      });
+      document.getElementById('telegram-dismiss').addEventListener('click', (e) => { e.preventDefault(); hideAndRemember(); });
+      document.getElementById('telegram-close').addEventListener('click', (e) => { e.preventDefault(); hideAndRemember(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideAndRemember(); });
+    })();
+  </script>
+  <script>
+  (function(){
+    // safe init: test-telegram (if existe) y control del modal de sugerencias (idempotente)
+    try {
+      // Test Telegram button (safe)
+      const testBtn = document.getElementById('test-telegram-btn');
+      if (testBtn && !testBtn.dataset.init) {
+        testBtn.dataset.init = '1';
+        testBtn.addEventListener('click', async () => {
+          try {
+            const res = await fetch('/admin/test-telegram', { method: 'POST' });
+            const j = await res.json().catch(()=>({ok:false}));
+            alert('Telegram test: ' + (j.ok ? 'OK' : JSON.stringify(j)));
+          } catch (e) {
+            alert('Error: ' + e);
+          }
+        });
+      }
+
+      // Suggestion modal controls (ensure close works even if main.js crashed)
+      const modal = document.getElementById('suggest-modal');
+      if (modal && !modal.dataset.safeInit) {
+        modal.dataset.safeInit = '1';
+        const openBtn = document.getElementById('open-suggest');
+        const closeBtn = document.getElementById('suggest-close');
+        const cancelBtn = document.getElementById('suggest-cancel');
+        const form = document.getElementById('suggest-form');
+        const status = document.getElementById('suggest-status');
+
+        const show = (v = true) => {
+          modal.style.display = v ? 'block' : 'none';
+          modal.setAttribute('aria-hidden', v ? 'false' : 'true');
+        };
+        if (openBtn) openBtn.addEventListener('click', () => show(true));
+        if (closeBtn) closeBtn.addEventListener('click', () => show(false));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => show(false));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') show(false); });
+
+        // Basic submit fallback (in case main.js handler not attached)
+        if (form && !form.dataset.safeSubmit) {
+          form.dataset.safeSubmit = '1';
+          form.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            if (status) status.textContent = 'Enviando…';
+            const fd = new FormData(form);
+            const payload = {
+              name: (fd.get('name') || '').trim(),
+              email: (fd.get('email') || '').trim(),
+              message: (fd.get('message') || '').trim()
+            };
+            if (!payload.message) { if (status) status.textContent = 'Escribe un mensaje.'; return; }
+            try {
+              const res = await fetch('/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+              const j = await res.json().catch(()=>({ok:false}));
+              if (res.ok && j.ok) {
+                if (status) status.textContent = '¡Gracias! Enviado.';
+                setTimeout(()=>{ if (status) status.textContent=''; show(false); form.reset(); }, 1200);
+              } else {
+                if (status) status.textContent = 'Error: ' + (j.error || j.body || res.statusText);
+              }
+            } catch (e) {
+              if (status) status.textContent = 'Error de red';
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Safe inline init failed', err);
+    }
+  })();
+  </script>
 </body>
 </html>
