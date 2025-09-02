@@ -139,6 +139,34 @@
     <button class="np-close" aria-label="Cerrar" id="telegram-close" style="position:absolute;top:8px;right:10px;background:transparent;border:0;font-size:18px;color:var(--accent)">×</button>
   </div>
 
+  <div id="suggest-modal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <button class="modal-close" id="suggest-close" aria-label="Cerrar" onclick="document.getElementById('suggest-modal').style.display='none'">×</button>
+      <h2>Sugerencias y comentarios</h2>
+      <form id="suggest-form" class="suggest-form">
+        <div class="form-group">
+          <label for="suggest-name">Tu nombre</label>
+          <input type="text" id="suggest-name" name="name" placeholder="Nombre (opcional)" />
+        </div>
+        <div class="form-group">
+          <label for="suggest-email">Tu email</label>
+          <input type="email" id="suggest-email" name="email" placeholder="Email (opcional)" />
+        </div>
+        <div class="form-group">
+          <label for="suggest-message">Mensaje</label>
+          <textarea id="suggest-message" name="message" rows="4" placeholder="Escribe tu sugerencia o comentario aquí..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Enviar sugerencia</button>
+          <button type="button" class="btn ghost" id="suggest-cancel" onclick="document.getElementById('suggest-modal').style.display='none'">Cancelar</button>
+        </div>
+        <div id="suggest-status" class="suggest-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <button id="open-suggest" class="btn small" onclick="document.getElementById('suggest-modal').style.display='block'">Sugerencias</button>
+
   <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
   <script>
     const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');

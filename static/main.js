@@ -710,3 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// Ejecutar en la consola del navegador
+document.querySelectorAll('#suggest-modal, .notification-popup, .toast').forEach(el=>el.remove());
+document.body.style.pointerEvents = 'auto';
+document.body.style.overflow = 'auto';
