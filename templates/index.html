@@ -178,16 +178,75 @@
     })();
   </script>
   <script>
-document.getElementById('test-telegram-btn').addEventListener('click', () => {
-  fetch('/admin/test-telegram', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: 'Prueba desde UI — Ticket Monitor' })
-  })
-  .then(r => r.json())
-  .then(j => alert('Telegram test: ' + (j.ok ? 'OK' : JSON.stringify(j))))
-  .catch(e => alert('Error: ' + e));
-});
-</script>
+  (function(){
+    // safe init: test-telegram (if existe) y control del modal de sugerencias (idempotente)
+    try {
+      // Test Telegram button (safe)
+      const testBtn = document.getElementById('test-telegram-btn');
+      if (testBtn && !testBtn.dataset.init) {
+        testBtn.dataset.init = '1';
+        testBtn.addEventListener('click', async () => {
+          try {
+            const res = await fetch('/admin/test-telegram', { method: 'POST' });
+            const j = await res.json().catch(()=>({ok:false}));
+            alert('Telegram test: ' + (j.ok ? 'OK' : JSON.stringify(j)));
+          } catch (e) {
+            alert('Error: ' + e);
+          }
+        });
+      }
+
+      // Suggestion modal controls (ensure close works even if main.js crashed)
+      const modal = document.getElementById('suggest-modal');
+      if (modal && !modal.dataset.safeInit) {
+        modal.dataset.safeInit = '1';
+        const openBtn = document.getElementById('open-suggest');
+        const closeBtn = document.getElementById('suggest-close');
+        const cancelBtn = document.getElementById('suggest-cancel');
+        const form = document.getElementById('suggest-form');
+        const status = document.getElementById('suggest-status');
+
+        const show = (v = true) => {
+          modal.style.display = v ? 'block' : 'none';
+          modal.setAttribute('aria-hidden', v ? 'false' : 'true');
+        };
+        if (openBtn) openBtn.addEventListener('click', () => show(true));
+        if (closeBtn) closeBtn.addEventListener('click', () => show(false));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => show(false));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') show(false); });
+
+        // Basic submit fallback (in case main.js handler not attached)
+        if (form && !form.dataset.safeSubmit) {
+          form.dataset.safeSubmit = '1';
+          form.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            if (status) status.textContent = 'Enviando…';
+            const fd = new FormData(form);
+            const payload = {
+              name: (fd.get('name') || '').trim(),
+              email: (fd.get('email') || '').trim(),
+              message: (fd.get('message') || '').trim()
+            };
+            if (!payload.message) { if (status) status.textContent = 'Escribe un mensaje.'; return; }
+            try {
+              const res = await fetch('/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+              const j = await res.json().catch(()=>({ok:false}));
+              if (res.ok && j.ok) {
+                if (status) status.textContent = '¡Gracias! Enviado.';
+                setTimeout(()=>{ if (status) status.textContent=''; show(false); form.reset(); }, 1200);
+              } else {
+                if (status) status.textContent = 'Error: ' + (j.error || j.body || res.statusText);
+              }
+            } catch (e) {
+              if (status) status.textContent = 'Error de red';
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Safe inline init failed', err);
+    }
+  })();
+  </script>
 </body>
 </html>
