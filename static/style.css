@@ -627,3 +627,20 @@ body, .container, .slideshow-container, .hero {
   margin: 0 !important;
   border: none !important;
 }
+
+/* Inline suggestion card (non-overlay) */
+.suggestion-card {
+  border: 1px solid rgba(255,210,230,0.6);
+  background: linear-gradient(180deg,#fff,#fffaf7);
+  padding: 18px;
+  border-radius: 12px;
+  margin: 18px 0;
+  box-shadow: var(--gloss-shadow, 0 12px 30px rgba(255,96,160,0.06));
+}
+.suggestion-card h3 { margin: 0 0 10px; color: var(--elle-pink); }
+.suggestion-form .row { display:flex; gap:12px; margin-bottom:8px; }
+.suggestion-form label { display:block; font-size:14px; color:var(--muted); }
+.suggestion-form input, .suggestion-form textarea { width:100%; padding:.5rem; border:1px solid rgba(230,210,220,0.8); border-radius:8px; box-sizing:border-box; }
+.suggest-controls { display:flex; gap:8px; align-items:center; margin-top:10px; }
+.suggest-status { margin-left:auto; font-size:13px; color:var(--muted); }
+@media (max-width:860px){ .suggestion-form .row { flex-direction:column; } }
