@@ -29,6 +29,161 @@
   let currentIndex = 0;
   let slideAutoId = null;
 
+  // session snapshot key (keeps baseline for "since you logged in")
+  const SESSION_SNAP_KEY = 'tm_session_snapshot_v1';
+
+  // load session baseline (taken at first full data load)
+  function loadSessionSnapshot(){
+    try {
+      const raw = sessionStorage.getItem(SESSION_SNAP_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function saveSessionSnapshot(obj){
+    try { sessionStorage.setItem(SESSION_SNAP_KEY, JSON.stringify(obj)); } catch(e){/*ignore*/ }
+  }
+
+  // compute a simple key for an item
+  function keyForItem(item){
+    return (item.id !== undefined ? String(item.id) : (item.musical || item.name || 'unnamed')).toLowerCase();
+  }
+
+  // compute changes map comparing baseline -> current
+  function computeChangesMap(baselineList = [], currentList = []){
+    const baseMap = new Map();
+    baselineList.forEach(it => baseMap.set(keyForItem(it), (it.urls || []).slice()));
+    const changes = {};
+    currentList.forEach(it => {
+      const k = keyForItem(it);
+      const curUrls = (it.urls || []).slice();
+      const prevUrls = baseMap.get(k) || [];
+      // detect adds/removes (simple set diff)
+      const prevSet = new Set(prevUrls);
+      const curSet = new Set(curUrls);
+      let added = 0, removed = 0;
+      curUrls.forEach(u => { if (!prevSet.has(u)) added++; });
+      prevUrls.forEach(u => { if (!curSet.has(u)) removed++; });
+      const total = added + removed;
+      if (total > 0) changes[k] = { added, removed, total };
+    });
+    return changes; // keyed by item key
+  }
+
+  // mark a single item as seen: update session snapshot for that key
+  function markItemAsSeen(item){
+    const snap = loadSessionSnapshot() || [];
+    const k = keyForItem(item);
+    // replace or add
+    const newSnap = snap.filter(it => keyForItem(it) !== k);
+    newSnap.push(item);
+    saveSessionSnapshot(newSnap);
+    // recompute changesMap for UI refresh
+    changesMap = computeChangesMap(newSnap, musicals);
+    renderTable(filter(musicals));
+  }
+
+  // global changes map (key -> {added,removed,total})
+  let changesMap = {};
+
+  // --- replace buildSummaryRow to show changes badge instead of actions ---
+  function buildSummaryRow(item, idx) {
+    const tr = document.createElement('tr');
+    tr.className = 'summary';
+    tr.dataset.idx = idx;
+
+    const expTd = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'expand-btn';
+    btn.textContent = '+';
+    btn.title = 'Expandir';
+    btn.setAttribute('aria-expanded', 'false');
+    expTd.appendChild(btn);
+
+    const nameTd = document.createElement('td');
+    nameTd.textContent = item.musical || item.name || 'Sin nombre';
+
+    const urlsTd = document.createElement('td');
+    const count = (item.urls && item.urls.length) ? item.urls.length : 0;
+    const span = document.createElement('span');
+    span.className = 'count-badge';
+    span.textContent = `${count} URL(s)`;
+    urlsTd.appendChild(span);
+
+    // changes cell (replaces previous Actions column)
+    const changesTd = document.createElement('td');
+    const k = keyForItem(item);
+    const ch = changesMap[k];
+    if (ch && ch.total > 0) {
+      const badge = document.createElement('button');
+      badge.className = 'btn small change-badge';
+      badge.type = 'button';
+      badge.title = `Ver cambios: +${ch.added} / -${ch.removed}`;
+      badge.textContent = `${ch.total} cambios`;
+      // clicking marks as seen (removes from baseline)
+      badge.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        markItemAsSeen(item);
+      });
+      changesTd.appendChild(badge);
+    } else {
+      const none = document.createElement('span');
+      none.className = 'no-changes';
+      none.textContent = '—';
+      changesTd.appendChild(none);
+    }
+
+    // assemble row
+    tr.appendChild(expTd);
+    tr.appendChild(nameTd);
+    tr.appendChild(urlsTd);
+    tr.appendChild(changesTd);
+
+    // toggle only when expand button clicked
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      btn.textContent = open ? '+' : '–';
+      toggleDetails(idx);
+    });
+
+    return tr;
+  }
+
+  // update fetchData to set baseline on first load and compute changes
+  async function fetchData() {
+    try {
+      const res = await fetch(api);
+      if (!res.ok) throw new Error('Network response not ok');
+      const data = await res.json();
+      musicals = Array.isArray(data) ? data : musicals;
+
+      // if no session baseline, take it now (first visit in this tab)
+      let sessionSnap = loadSessionSnapshot();
+      if (!sessionSnap) {
+        saveSessionSnapshot(musicals);
+        sessionSnap = loadSessionSnapshot();
+      }
+
+      // compute changes relative to session baseline
+      changesMap = computeChangesMap(sessionSnap || [], musicals);
+
+      renderTable(filter(musicals));
+      updateLastChecked();
+    } catch (e) {
+      console.error('fetchData', e);
+    }
+  }
+
+  // ensure initial render sets baseline if needed
+  (function initSessionBaseline(){
+    const sessionSnap = loadSessionSnapshot();
+    if (!sessionSnap && Array.isArray(musicals) && musicals.length) {
+      saveSessionSnapshot(musicals);
+    }
+    changesMap = computeChangesMap(loadSessionSnapshot() || [], musicals || []);
+  })();
+
   // ---- table rows ----
   function buildSummaryRow(item, idx) {
     const tr = document.createElement('tr');
@@ -171,62 +326,113 @@
     if (!q) return list;
     return list.filter(it => (it.musical || it.name || '').toLowerCase().includes(q));
   }
-  function showToast(msg, ms = 1300) {
-    // small inline toast (keeps existing behaviour)
-    let t = document.querySelector('.toast');
-    if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._hideId);
-    t._hideId = setTimeout(()=> t.classList.remove('show'), ms);
 
-    // also show persistent bottom-right popup notification
-    showNotificationPopup(msg, ms + 800);
-  }
+  // Notification popup + optional Telegram forwarder
+  (() => {
+    // toggle from console or set true here
+    window.SEND_TELEGRAM_ON_NOTIFY = false;
 
-  // Toggleable flag: set to true to also send notifications to Telegram
-  window.SEND_TELEGRAM_ON_NOTIFY = true; // enable forwarding to server
-
-  function showNotificationPopup(message, ms = 2200) {
-    let np = document.querySelector('.notification-popup');
-    if (!np) {
-      np = document.createElement('div');
-      np.className = 'notification-popup';
-      np.innerHTML = '<div><span class="np-title">Notification</span><div class="np-body"></div></div><button class="np-close" aria-label="Close">✕</button>';
-      document.body.appendChild(np);
-      np.querySelector('.np-close').addEventListener('click', () => hidePopup(np));
+    function createToastElement() {
+      let t = document.querySelector('.toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.className = 'toast';
+        t.style.position = 'fixed';
+        t.style.left = '50%';
+        t.style.transform = 'translateX(-50%)';
+        t.style.bottom = '22px';
+        t.style.padding = '8px 14px';
+        t.style.background = 'linear-gradient(90deg,#fff6fb,#fff0f6)';
+        t.style.border = '1px solid rgba(255,200,230,0.9)';
+        t.style.borderRadius = '10px';
+        t.style.boxShadow = '0 12px 36px rgba(255,80,150,0.08)';
+        t.style.zIndex = 99998;
+        document.body.appendChild(t);
+      }
+      return t;
     }
-    const body = np.querySelector('.np-body');
-    body.textContent = message;
-    np.classList.add('show');
-    clearTimeout(np._hideId);
-    np._hideId = setTimeout(() => hidePopup(np), ms);
 
-    // Optional: fire-and-forget POST to server endpoint to forward to Telegram
-    if (window.SEND_TELEGRAM_ON_NOTIFY) {
-      try {
+    function showToast(msg, ms = 1300) {
+      const t = createToastElement();
+      t.textContent = msg;
+      t.style.opacity = '1';
+      t.style.visibility = 'visible';
+      clearTimeout(t._hideId);
+      t._hideId = setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.visibility = 'hidden';
+      }, ms);
+      // also show bottom-right popup
+      showNotificationPopup(msg, ms + 800);
+    }
+
+    function showNotificationPopup(message, ms = 2200) {
+      let np = document.querySelector('.notification-popup');
+      if (!np) {
+        np = document.createElement('div');
+        np.className = 'notification-popup';
+        np.style.position = 'fixed';
+        np.style.right = '18px';
+        np.style.bottom = '18px';
+        np.style.zIndex = '99999';
+        np.style.maxWidth = '380px';
+        np.style.padding = '12px 14px';
+        np.style.borderRadius = '12px';
+        np.style.background = 'linear-gradient(90deg,#fff6fb,#fff0f6)';
+        np.style.border = '1px solid rgba(255,200,230,0.85)';
+        np.style.boxShadow = '0 18px 40px rgba(255,80,150,0.12)';
+        np.innerHTML = '<div style="font-weight:700;color:#ff2f8f;margin-bottom:6px">Notification</div><div class="np-body" style="color:#3b2b36"></div><button class="np-close" aria-label="Close" style="position:absolute;right:8px;top:8px;background:transparent;border:0;font-size:14px;cursor:pointer;color:#ff2f8f">✕</button>';
+        document.body.appendChild(np);
+        np.querySelector('.np-close').addEventListener('click', () => hidePopup(np));
+      }
+      np.querySelector('.np-body').textContent = message;
+      np.classList.add('show');
+      np.style.opacity = '1';
+      np.style.transform = 'translateY(0)';
+      clearTimeout(np._hideId);
+      np._hideId = setTimeout(() => hidePopup(np), ms);
+
+      // optional: forward to server to send Telegram
+      if (window.SEND_TELEGRAM_ON_NOTIFY) {
         fetch('/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message })
-        }).catch(()=>{/* ignore network errors */});
-      } catch (e) { /* ignore */ }
+        }).catch((err) => {
+          console.warn('Forward to /api/notify failed', err);
+        });
+      }
     }
 
-    np.addEventListener('click', (e) => {
-      if (e.target === np || e.target.classList.contains('np-body') || e.target.classList.contains('np-title')) {
-        hidePopup(np);
-      }
-    }, { once: true });
-  }
+    function hidePopup(el) {
+      if (!el) el = document.querySelector('.notification-popup');
+      if (!el) return;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(8px)';
+      clearTimeout(el._hideId);
+      setTimeout(() => {
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      }, 360);
+    }
 
-  function hidePopup(el) {
-    if (!el) el = document.querySelector('.notification-popup');
-    if (!el) return;
-    el.classList.remove('show');
-    clearTimeout(el._hideId);
-    // keep element in DOM for reuse (no removal)
-  }
+    // expose helpers for quick manual testing in console
+    window.showToast = showToast;
+    window.showNotificationPopup = showNotificationPopup;
+    window.hideNotificationPopup = hidePopup;
+    window.testNotify = (msg = 'Test notification') => {
+      showToast(msg);
+      // also try server test route (fire-and-forget)
+      try {
+        fetch('/admin/test-telegram', { method: 'GET' }).then(r => r.json()).then(j => console.log('admin/test-telegram:', j)).catch(e => console.warn(e));
+      } catch (e) { /* ignore */ }
+    };
+
+    // auto-log JS errors to console (helps debugging)
+    window.addEventListener('error', (ev) => {
+      console.error('Uncaught error:', ev.error || ev.message);
+    });
+
+  })();
 
   // slideshow
   function showSlide(index) {
