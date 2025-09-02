@@ -109,7 +109,7 @@
     span.textContent = `${count} URL(s)`;
     urlsTd.appendChild(span);
 
-    // changes cell (replaces previous Actions column)
+    // changes column (shows added/removed totals since session baseline)
     const changesTd = document.createElement('td');
     const k = keyForItem(item);
     const ch = changesMap[k];
@@ -118,11 +118,12 @@
       badge.className = 'btn small change-badge';
       badge.type = 'button';
       badge.title = `Ver cambios: +${ch.added} / -${ch.removed}`;
-      badge.textContent = `${ch.total} cambios`;
-      // clicking marks as seen (removes from baseline)
+      badge.textContent = `${ch.total} cambios`; 
       badge.addEventListener('click', (ev) => {
         ev.stopPropagation();
+        // mark as seen and re-render
         markItemAsSeen(item);
+        showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
       });
       changesTd.appendChild(badge);
     } else {
@@ -132,13 +133,12 @@
       changesTd.appendChild(none);
     }
 
-    // assemble row
+    // assemble row (no open-all action column)
     tr.appendChild(expTd);
     tr.appendChild(nameTd);
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
-    // toggle only when expand button clicked
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
@@ -539,6 +539,18 @@
   showSlide(0);
   createDots();
   startSlideAuto();
+
+  // ensure auto-refresh is ALWAYS ON
+  autoRefresh = true;
+  if (arState) arState.textContent = 'ON';
+  if (arToggle) { 
+    arToggle.disabled = true;          // prevent toggling
+    arToggle.title = 'Auto-refresh fixed ON';
+  }
+  if (!intervalId) intervalId = setInterval(fetchData, 8000);
+  // initial fetch immediately
+  setTimeout(fetchData, 200);
+
   window.addEventListener('load', () => { setTimeout(fetchData, 600); });
   window.plusSlides = (n) => { showSlide(currentIndex + n); stopSlideAuto(); };
 })();
