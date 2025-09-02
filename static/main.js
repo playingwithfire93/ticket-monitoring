@@ -461,6 +461,76 @@
   if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); stopSlideAuto(); });
   if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); stopSlideAuto(); });
 
+  // ----- Audio + new-change detection state -----
+  let prevChangeKeys = new Set();
+  let initialLoadDone = false;
+
+  // preload the provided bell sound
+  const notifierAudio = new Audio('/static/door-bell-sound-99933.mp3');
+  notifierAudio.preload = 'auto';
+  notifierAudio.volume = 0.9;
+
+  // attempt a one-time unlock on first user gesture (some browsers block autoplay)
+  document.addEventListener('click', () => {
+    // play briefly then stop so subsequent .play() is allowed
+    notifierAudio.play().then(() => {
+      notifierAudio.pause();
+      notifierAudio.currentTime = 0;
+    }).catch(() => {/* ignore if blocked */});
+  }, { once: true });
+
+  function notifyIfNewChanges(newChangesMap) {
+    const newKeys = new Set(Object.keys(newChangesMap || {}));
+    const added = [...newKeys].filter(k => !prevChangeKeys.has(k));
+    if (initialLoadDone && added.length > 0) {
+      // play bell and show popup
+      try { notifierAudio.play().catch(()=>{}); } catch(e){/*ignore*/ }
+      try { showNotificationPopup(`${added.length} cambios detectados ✨`, 3500); } catch(e){/*ignore*/ }
+    }
+    prevChangeKeys = newKeys;
+    initialLoadDone = true;
+  }
+
+  // ---- replace/ensure single fetchData that computes changes and triggers notify ----
+  async function fetchData() {
+    try {
+      const res = await fetch(api);
+      if (!res.ok) throw new Error('Network response not ok');
+      const data = await res.json();
+      musicals = Array.isArray(data) ? data : musicals;
+
+      // ensure session baseline exists for this tab
+      let sessionSnap = loadSessionSnapshot();
+      if (!sessionSnap) {
+        saveSessionSnapshot(musicals);
+        sessionSnap = loadSessionSnapshot();
+      }
+
+      // compute changes relative to session baseline
+      changesMap = computeChangesMap(sessionSnap || [], musicals);
+
+      // notify (sound + popup) if new changes since last fetch
+      notifyIfNewChanges(changesMap);
+
+      renderTable(filter(musicals));
+      updateLastChecked();
+    } catch (e) {
+      console.error('fetchData', e);
+    }
+  }
+
+  // ensure initial baseline state is respected on load
+  (function ensureInitialBaseline() {
+    const sessionSnap = loadSessionSnapshot();
+    if (!sessionSnap && Array.isArray(musicals) && musicals.length) {
+      saveSessionSnapshot(musicals);
+    }
+    changesMap = computeChangesMap(loadSessionSnapshot() || [], musicals || []);
+    // set prevChangeKeys to current keys so initial load doesn't trigger sound
+    prevChangeKeys = new Set(Object.keys(changesMap || {}));
+    initialLoadDone = true;
+  })();
+
   // init
   renderTable(musicals);
   updateLastChecked();
