@@ -14,6 +14,20 @@
   const modalList = document.getElementById('modal-list');
   const modalClose = document.getElementById('modal-close');
 
+  // Remove stray overlay "Close" controls that block UI (safe, idempotent)
+  try {
+    (function removeStrayCloseButtons(){
+      const selectors = ['#modal-close','.modal-close','#suggest-close','.np-close'];
+      selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => el.remove()));
+      // also remove any visible element whose text is exactly "Close"
+      document.querySelectorAll('button, a, div').forEach(el=>{
+        try { if ((el.textContent||'').trim().toLowerCase() === 'close') el.remove(); } catch(e){}
+      });
+      document.body.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'auto';
+    })();
+  } catch (err) { console.warn('cleanup overlay failed', err); }
+
   // slideshow DOM (no dots/polka anywhere)
   const slideElems = Array.from(document.querySelectorAll('.slide'));
   const prevBtn = document.querySelector('.slide-nav.prev') || document.querySelector('.prev');
