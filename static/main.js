@@ -661,52 +661,41 @@
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Idempotent init for suggestion modal — safe to add without touching index.html
-  const modal = document.getElementById('suggest-modal');
-  const form = document.getElementById('suggest-form');
-  if (!modal || !form) return;
-  if (modal.dataset.suggestInit === '1') return; // already initialized
-  modal.dataset.suggestInit = '1';
-
-  const openBtn = document.getElementById('open-suggest');
-  const closeBtn = document.getElementById('suggest-close');
-  const cancelBtn = document.getElementById('suggest-cancel');
-  const status = document.getElementById('suggest-status');
-
-  function show(v = true) {
-    modal.style.display = v ? 'block' : 'none';
-    modal.setAttribute('aria-hidden', v ? 'false' : 'true');
-  }
-  if (openBtn) openBtn.addEventListener('click', () => show(true));
-  if (closeBtn) closeBtn.addEventListener('click', () => show(false));
-  if (cancelBtn) cancelBtn.addEventListener('click', () => show(false));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') show(false); });
+  const form = document.getElementById('inline-suggest-form');
+  if (!form || form.dataset.inited) return;
+  form.dataset.inited = '1';
+  const status = document.getElementById('inline-suggest-status');
 
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
-    if (status) status.textContent = 'Enviando…';
+    status.textContent = 'Enviando…';
     const fd = new FormData(form);
     const payload = {
       name: (fd.get('name') || '').trim(),
       email: (fd.get('email') || '').trim(),
       message: (fd.get('message') || '').trim()
     };
-    if (!payload.message) { if (status) status.textContent = 'Escribe un mensaje.'; return; }
+    if (!payload.message) { status.textContent = 'Escribe un mensaje.'; return; }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
     try {
       const res = await fetch('/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const j = await res.json().catch(() => ({ ok: false }));
       if (res.ok && j.ok) {
-        if (status) status.textContent = '¡Gracias! Enviado.';
-        setTimeout(() => { if (status) status.textContent = ''; show(false); form.reset(); }, 1200);
+        status.textContent = '¡Gracias! Enviado.';
+        form.reset();
       } else {
-        if (status) status.textContent = 'Error: ' + (j.error || j.body || res.statusText);
+        status.textContent = 'Error: ' + (j.error || j.body || res.statusText || 'no enviado');
       }
     } catch (e) {
-      if (status) status.textContent = 'Error de red';
+      status.textContent = 'Error de red';
+    } finally {
+      submitBtn.disabled = false;
+      setTimeout(() => { status.textContent = ''; }, 2500);
     }
   });
 });
