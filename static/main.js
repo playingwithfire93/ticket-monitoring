@@ -470,3 +470,67 @@
   window.addEventListener('load', () => { setTimeout(fetchData, 600); });
   window.plusSlides = (n) => { showSlide(currentIndex + n); stopSlideAuto(); };
 })();
+
+/* quick test helper: call /admin/test-telegram and show a popup with the result */
+(() => {
+  function makePopup(text, ok = true, ms = 3500) {
+    let p = document.getElementById('tm-test-popup');
+    if (!p) {
+      p = document.createElement('div');
+      p.id = 'tm-test-popup';
+      p.style.position = 'fixed';
+      p.style.right = '18px';
+      p.style.bottom = '18px';
+      p.style.zIndex = 999999;
+      p.style.maxWidth = '360px';
+      p.style.padding = '12px 14px';
+      p.style.borderRadius = '12px';
+      p.style.boxShadow = '0 18px 40px rgba(0,0,0,0.08)';
+      p.style.fontWeight = '600';
+      p.style.fontSize = '14px';
+      p.style.backdropFilter = 'blur(4px)';
+      document.body.appendChild(p);
+    }
+    p.textContent = text;
+    p.style.background = ok ? 'linear-gradient(90deg,#fff6fb,#fff0f6)' : 'linear-gradient(90deg,#fff6f6,#ffecec)';
+    p.style.border = ok ? '1px solid rgba(255,200,230,0.9)' : '1px solid rgba(255,160,160,0.9)';
+    p.style.opacity = '1';
+    clearTimeout(p._hide);
+    p._hide = setTimeout(() => {
+      p.style.opacity = '0';
+      setTimeout(() => { if (p && p.parentNode) p.parentNode.removeChild(p); }, 300);
+    }, ms);
+  }
+
+  // call server test endpoint and show popup
+  window.sendTestPopup = async function(message = '') {
+    try {
+      const opts = message ? { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({message}) } : {};
+      const res = await fetch('/admin/test-telegram', opts);
+      const j = await res.json().catch(() => ({ ok: false, resp: { raw: 'invalid-json' } }));
+      if (res.ok && j.ok) {
+        makePopup('Telegram test sent ✓', true);
+      } else {
+        const errMsg = (j && j.resp && j.resp.description) ? j.resp.description : (j && j.resp ? JSON.stringify(j.resp) : 'Unknown error');
+        makePopup('Telegram test failed: ' + errMsg, false, 7000);
+      }
+      // also log full response for debugging
+      console.log('/admin/test-telegram =>', res.status, j);
+    } catch (e) {
+      console.error('test-telegram error', e);
+      makePopup('Network error when calling test endpoint', false, 7000);
+    }
+  };
+
+  // optional: listen to socketio telegram_test events if the page connects via Socket.IO
+  if (window.io) {
+    try {
+      const sock = io(); // requires socket.io client script to be loaded
+      sock.on('telegram_test', (data) => {
+        if (data && data.ok) makePopup('Telegram server says: sent ✓', true);
+        else makePopup('Telegram server reported error', false, 6000);
+        console.log('socket telegram_test', data);
+      });
+    } catch (e) { /* ignore if socket.io not configured */ }
+  }
+})();

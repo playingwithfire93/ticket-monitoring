@@ -183,6 +183,13 @@ def admin_test_telegram():
         message = f'Test from ticket-monitor — {datetime.now(timezone.utc).isoformat()}'
     resp = send_telegram_message(message)
     status = 200 if resp.get('ok') else 500
+
+    # emit over socketio so connected browsers can show immediate feedback
+    try:
+        socketio.emit('telegram_test', {'ok': resp.get('ok', False), 'resp': resp}, namespace='/admin')
+    except Exception:
+        app.logger.debug('socketio emit failed for telegram_test')
+
     return jsonify({'ok': resp.get('ok', False), 'resp': resp}), status
 
 
