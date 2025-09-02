@@ -816,5 +816,118 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
   .promo-grid { gap: 12px; }
 }
 
-/* End Fresh · Modern · Cute — Upgrades */
+/* Suggestion form — refreshed modern styles (inline form) */
+#suggest-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 18px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,250,253,0.96));
+  border: 1px solid rgba(255,220,235,0.6);
+  box-shadow: 0 12px 34px rgba(124,58,237,0.04), 0 6px 18px rgba(255,110,196,0.03);
+  max-width: 820px;
+}
+
+/* Form heading / full-row labels */
+#suggest-form legend,
+#suggest-form .form-title,
+#suggest-form h3 {
+  grid-column: 1 / -1;
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--elle-pink, #ff2f8f);
+  font-size: 15px;
+}
+
+/* Labels span full width and sit above controls */
+#suggest-form label {
+  display: block;
+  font-size: 13px;
+  color: rgba(43,33,48,0.72);
+  margin-bottom: 6px;
+}
+
+/* Inputs and selects */
+#suggest-form input[type="text"],
+#suggest-form input[type="email"],
+#suggest-form input[type="url"],
+#suggest-form textarea,
+#suggest-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(230,210,220,0.9);
+  background: rgba(255,255,255,0.98);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  font-size: 14px;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .12s ease;
+  color: #231827;
+}
+
+/* Larger textarea */
+#suggest-form textarea { min-height: 120px; resize: vertical; }
+
+/* Focus states (soft pastel glow) */
+#suggest-form input:focus,
+#suggest-form textarea:focus,
+#suggest-form select:focus {
+  outline: none;
+  border-color: rgba(255,110,196,0.9);
+  box-shadow: 0 8px 30px rgba(255,110,196,0.08);
+  transform: translateY(-1px);
+}
+
+/* Full-row elements */
+#suggest-form .full-row { grid-column: 1 / -1; }
+
+/* Buttons row */
+#suggest-form .suggest-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 6px;
+}
+
+/* Primary submit button */
+#suggest-form .btn.submit {
+  background: linear-gradient(135deg, #ff9ac2, #d57cff);
+  color: #fff;
+  padding: .55rem .9rem;
+  border-radius: 999px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(124,58,237,0.08);
+  transition: transform .15s ease, box-shadow .18s ease;
+}
+#suggest-form .btn.submit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 46px rgba(124,58,237,0.12), 0 0 20px rgba(255,110,196,0.06);
+}
+
+/* Secondary / reset button */
+#suggest-form .btn.reset {
+  background: transparent;
+  border: 1px solid rgba(200,170,200,0.18);
+  color: rgba(43,33,48,0.7);
+  padding: .46rem .8rem;
+  border-radius: 999px;
+}
+
+/* Helper text / optional labels */
+#suggest-form .hint {
+  font-size: 12px;
+  color: rgba(43,33,48,0.55);
+}
+
+/* Compact mobile layout */
+@media (max-width: 860px) {
+  #suggest-form { grid-template-columns: 1fr; padding: 14px; }
+  #suggest-form .suggest-buttons { justify-content: stretch; flex-direction: row; }
+}
+
+/* Small visual polish for inline placement */
+.suggestion-inline { margin-top: 18px; }
 
