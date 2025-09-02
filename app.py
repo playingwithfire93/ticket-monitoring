@@ -302,32 +302,9 @@ from flask import jsonify
 
 # Safe wrapper to ensure "Buscando a Audrey" is included in the API output
 @app.route("/api/monitored-urls", methods=["GET"])
-def api_monitored_urls_force_audrey():
+def api_monitored_urls():
     try:
         items = load_urls() or []
     except Exception:
         items = []
-
-    # load raw urls.json and ensure Audrey entry is present
-    try:
-        raw = json.loads(URLS_FILE.read_text(encoding="utf-8"))
-        for entry in raw:
-            name = (entry.get("musical") or entry.get("name") or "").strip().lower()
-            if name == "buscando a audrey":
-                # add if not already present (compare by musical or by any shared url)
-                found = False
-                for it in items:
-                    if (it.get("musical") or "").strip().lower() == "buscando a audrey":
-                        found = True
-                        break
-                    # also match by url overlap
-                    if any(u in (it.get("urls") or []) for u in (entry.get("urls") or [])):
-                        found = True
-                        break
-                if not found:
-                    items.append(entry)
-                break
-    except Exception:
-        app.logger.exception("Could not read urls.json to ensure Audrey")
-
     return jsonify(items)
