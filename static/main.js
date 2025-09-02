@@ -18,7 +18,8 @@
   const slideElems = Array.from(document.querySelectorAll('.slide'));
   const prevBtn = document.querySelector('.slide-nav.prev') || document.querySelector('.prev');
   const nextBtn = document.querySelector('.slide-nav.next') || document.querySelector('.next');
-  const dotsWrap = document.querySelector('.slide-dots');
+  // removed dotsWrap: we won't create or use slide dots anymore
+  const dotsWrap = null;
 
   if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
 
@@ -439,12 +440,14 @@
     if (!slideElems.length) return;
     currentIndex = (index + slideElems.length) % slideElems.length;
     slideElems.forEach((s, i) => s.classList.toggle('active', i === currentIndex));
-    updateDots();
+    // no updateDots() call any more — dots removed
   }
   function nextSlide(){ showSlide(currentIndex + 1); }
   function prevSlide(){ showSlide(currentIndex - 1); }
-  function createDots(){ if(!dotsWrap) return; dotsWrap.innerHTML = ''; slideElems.forEach((_, i) => { const d = document.createElement('button'); d.className = 'dot'; d.setAttribute('aria-label', `Go to slide ${i+1}`); d.addEventListener('click', () => { showSlide(i); stopSlideAuto(); }); dotsWrap.appendChild(d); }); updateDots(); }
-  function updateDots(){ if(!dotsWrap) return; Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('active', i === currentIndex)); }
+
+  // keep stubbed functions so other code doesn't break if called elsewhere
+  function createDots(){ /* dots removed intentionally */ }
+  function updateDots(){ /* dots removed intentionally */ }
   function startSlideAuto(){ stopSlideAuto(); slideAutoId = setInterval(nextSlide, 5000); }
   function stopSlideAuto(){ if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
 

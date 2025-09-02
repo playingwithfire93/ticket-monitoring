@@ -517,3 +517,9 @@ body {
   .brand .logo{ width:64px; }
   .slide-nav{ width:40px; height:40px; }
 }
+
+/* Remove all decorative dots/polka & slide nav dots */
+body::after { display: none !important; }        /* quita el patrón polka */
+.slide-dots, .dot, .slide-dots * { display: none !important; } /* oculta los dots del slideshow */
+.slideshow-container::before,
+.slideshow-container::after { display: none !important; } /* quita overlays decorativos si existen */
