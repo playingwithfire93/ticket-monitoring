@@ -8,6 +8,8 @@ from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 import hashlib
 from apscheduler.schedulers.background import BackgroundScheduler
+import smtplib
+from email.message import EmailMessage
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -308,3 +310,47 @@ def api_monitored_urls():
     except Exception:
         items = []
     return jsonify(items)
+
+import os, requests
+from flask import request, jsonify
+
+# Replace existing /suggest handler (SendGrid) with this Gmail/SMTP version
+@app.route('/suggest', methods=['POST'])
+def suggest_smtp():
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    sender = (data.get('email') or '').strip() or os.getenv('SUGGEST_SMTP_USER') or f'no-reply@{os.getenv("HOSTNAME","local")}'
+    message_body = (data.get('message') or '').strip()
+    if not message_body:
+        return jsonify({'ok': False, 'error': 'message required'}), 400
+
+    to_email = os.getenv('SUGGEST_TO_EMAIL')
+    smtp_host = os.getenv('SUGGEST_SMTP_HOST', 'smtp.gmail.com')
+    smtp_port = int(os.getenv('SUGGEST_SMTP_PORT', '587'))
+    smtp_user = os.getenv('SUGGEST_SMTP_USER')
+    smtp_pass = os.getenv('SUGGEST_SMTP_PASS')
+
+    if not to_email or not smtp_host or not smtp_user or not smtp_pass:
+        return jsonify({'ok': False, 'error': 'SMTP not configured (SUGGEST_TO_EMAIL,SUGGEST_SMTP_USER,SUGGEST_SMTP_PASS)'}), 500
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Sugerencia desde Ticket Monitor'
+    msg['From'] = f'{name or "Usuario"} <{smtp_user}>'
+    msg['To'] = to_email
+    msg.set_content(f'Nombre: {name}\nEmail: {sender}\n\nMensaje:\n{message_body}\n\nOrigen: {request.remote_addr}')
+
+    try:
+        if smtp_port == 465:
+            smtp = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+        else:
+            smtp = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+        smtp.login(smtp_user, smtp_pass)
+        smtp.send_message(msg)
+        smtp.quit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        app.logger.exception('Failed to send suggestion via SMTP')
+        return jsonify({'ok': False, 'error': str(e)}), 500
