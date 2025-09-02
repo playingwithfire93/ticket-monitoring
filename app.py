@@ -175,22 +175,23 @@ def send_telegram_message(text):
         app.logger.exception('Exception when sending Telegram message')
         return {'ok': False, 'reason': str(e)}
 
-@app.route('/admin/test-telegram', methods=['GET', 'POST'])
+@app.route('/admin/test-telegram', methods=['POST'])
 def admin_test_telegram():
-    payload = request.get_json(silent=True) or {}
-    message = payload.get('message') if payload else None
-    if not message:
-        message = f'Test from ticket-monitor — {datetime.now(timezone.utc).isoformat()}'
-    resp = send_telegram_message(message)
-    status = 200 if resp.get('ok') else 500
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    chat  = os.getenv('TELEGRAM_CHAT')  # acepta '@username' o chat_id numérico
+    if not token or not chat:
+        return jsonify({'ok': False, 'error': 'Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT env vars'}), 400
 
-    # emit over socketio so connected browsers can show immediate feedback
+    body = request.get_json(silent=True) or {}
+    text = body.get('text', 'Test desde Ticket Monitor ✅')
+
+    url = f'https://api.telegram.org/bot{token}/sendMessage'
     try:
-        socketio.emit('telegram_test', {'ok': resp.get('ok', False), 'resp': resp}, namespace='/admin')
-    except Exception:
-        app.logger.debug('socketio emit failed for telegram_test')
-
-    return jsonify({'ok': resp.get('ok', False), 'resp': resp}), status
+      res = requests.post(url, json={'chat_id': chat, 'text': text}, timeout=10)
+      res.raise_for_status()
+      return jsonify({'ok': True, 'result': res.json()})
+    except Exception as e:
+      return jsonify({'ok': False, 'error': str(e), 'status_code': getattr(e, "response", None) and e.response.status_code}), 500
 
 
 if __name__ == "__main__":

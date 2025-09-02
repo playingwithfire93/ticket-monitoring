@@ -26,6 +26,7 @@
           <span id="ar-state" style="margin-left:8px;font-weight:600;color:#7b5a6f">ON</span>
         </label>
         <div class="last-checked">Last Checked: <span id="last-checked">--</span></div>
+        <button id="test-telegram-btn" class="btn small">Test Telegram</button>
       </div>
     </div>
   </header>
@@ -176,5 +177,17 @@
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideAndRemember(); });
     })();
   </script>
+  <script>
+document.getElementById('test-telegram-btn').addEventListener('click', () => {
+  fetch('/admin/test-telegram', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: 'Prueba desde UI — Ticket Monitor' })
+  })
+  .then(r => r.json())
+  .then(j => alert('Telegram test: ' + (j.ok ? 'OK' : JSON.stringify(j))))
+  .catch(e => alert('Error: ' + e));
+});
+</script>
 </body>
 </html>
