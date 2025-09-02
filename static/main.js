@@ -633,32 +633,3 @@
     } catch (e) { /* ignore if socket.io not configured */ }
   }
 })();
-
-/* devuelve la lista de elementos encima del centro visual cerca de la zona de los círculos */
-Array.from(document.elementsFromPoint(window.innerWidth/2, 200))
-  .map(n => n.tagName + (n.id ? '#'+n.id : '') + (n.className ? '.'+String(n.className).replace(/\s+/g,'.') : '') )
-  .slice(0,12)
-
-// elimina nodos/contenedores conocidos y fuerza CSS para ocultar fondos radiales
-(() => {
-  document.querySelectorAll('.slide-dots, .dot, .pizzazz-sparkle, .polka, .overlay-dots, .sparkle-layer, .slideshow-overlay').forEach(n=>n.remove());
-  // hide pseudo-element visuals
-  const s = document.createElement('style');
-  s.id = 'tm-hide-dots-override';
-  s.textContent = `
-    body::after, body::before,
-    .slideshow-container::before, .slideshow-container::after,
-    .slide-dots, .dot, .pizzazz-sparkle, .polka, .overlay-dots,
-    .sparkle-layer, .slideshow-overlay { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
-    body, .container, .slideshow-container { background-image: none !important; }
-  `;
-  document.head.appendChild(s);
-  // try to hide any elements with tiny repeated SVG/radial backgrounds
-  document.querySelectorAll('*').forEach(el=>{
-    try {
-      const bg = getComputedStyle(el).backgroundImage || '';
-      if (/radial-gradient|data:image\\/svg|url\\(/i.test(bg) && bg.length < 800) el.style.display = 'none';
-    } catch(e){}
-  });
-  return 'override applied';
-})();
