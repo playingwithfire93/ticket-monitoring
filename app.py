@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
+import hashlib
+from apscheduler.schedulers.background import BackgroundScheduler
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -206,7 +208,91 @@ def admin_test_telegram():
             'response_text': resp.text if resp is not None else None
         }), 500
 
+# Monitor state (persist last seen content hashes)
+MONITOR_STATE_FILE = BASE / "monitor_state.json"
+try:
+    if MONITOR_STATE_FILE.exists():
+        with MONITOR_STATE_FILE.open("r", encoding="utf-8") as f:
+            _prev_hashes = json.load(f)
+    else:
+        _prev_hashes = {}
+except Exception:
+    _prev_hashes = {}
+
+def _save_state():
+    try:
+        with MONITOR_STATE_FILE.open("w", encoding="utf-8") as f:
+            json.dump(_prev_hashes, f, ensure_ascii=False, indent=2)
+    except Exception:
+        app.logger.exception("Could not save monitor state")
+
+def _hash_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()
+
+def check_all_urls(send_notifications=True):
+    """Fetch all monitored URLs, detect content changes and notify."""
+    app.logger.debug("Running check_all_urls")
+    changes = []
+    for item in load_urls():
+        musical = item.get("musical") or item.get("name") or "Sin nombre"
+        for url in item.get("urls", []) or []:
+            try:
+                r = requests.get(url, timeout=10)
+                body = r.text or ""
+                h = _hash_text(body)
+            except Exception as e:
+                app.logger.warning("Error fetching %s: %s", url, e)
+                body = ""
+                h = None
+
+            prev = _prev_hashes.get(url)
+            if h is None:
+                # fetch error — skip change detection but log
+                continue
+            if prev is None:
+                # first time seeing this URL — store and continue
+                _prev_hashes[url] = h
+                continue
+            if prev != h:
+                # Detected change
+                _prev_hashes[url] = h
+                change = {
+                    "musical": musical,
+                    "url": url,
+                    "when": datetime.now(UTC).isoformat()
+                }
+                changes.append(change)
+                # emit socketio event so UI updates immediately
+                try:
+                    socketio.emit("monitor_change", change, namespace="/")
+                except Exception:
+                    app.logger.exception("socketio emit failed")
+                # send Telegram notification if configured
+                if send_notifications:
+                    text = f"Nuevo cambio detectado: {musical}\n{url}"
+                    send_telegram_message(text)
+    if changes:
+        _save_state()
+    return {"checked": True, "changes": len(changes), "details": changes}
+
+# admin endpoint to force a check now (useful for testing)
+@app.route("/admin/check-now", methods=["POST"])
+def admin_check_now():
+    res = check_all_urls(send_notifications=True)
+    return jsonify(res)
+
+# background scheduler to run periodic checks
+POLL_INTERVAL_SECONDS = 5  # change to desired interval (beware rate limits)
+scheduler = BackgroundScheduler()
+scheduler.add_job(lambda: check_all_urls(send_notifications=True), "interval", seconds=POLL_INTERVAL_SECONDS, id="monitor_job")
+scheduler.start()
 
 if __name__ == "__main__":
     # Development friendly: auto-reload and run socketio
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    try:
+        socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    finally:
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass
