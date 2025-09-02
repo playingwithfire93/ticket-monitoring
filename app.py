@@ -178,20 +178,33 @@ def send_telegram_message(text):
 @app.route('/admin/test-telegram', methods=['POST'])
 def admin_test_telegram():
     token = os.getenv('TELEGRAM_BOT_TOKEN')
-    chat  = os.getenv('TELEGRAM_CHAT')  # acepta '@username' o chat_id numérico
+    # accept either TELEGRAM_CHAT or TELEGRAM_CHAT_ID (Render shows TELEGRAM_CHAT_ID)
+    chat = os.getenv('TELEGRAM_CHAT') or os.getenv('TELEGRAM_CHAT_ID') or os.getenv('TELEGRAM_CHAT_ID'.upper())
     if not token or not chat:
-        return jsonify({'ok': False, 'error': 'Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT env vars'}), 400
+        return jsonify({
+            'ok': False,
+            'error': 'Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT (or TELEGRAM_CHAT_ID) env vars',
+            'found_token': bool(token),
+            'found_chat': bool(chat)
+        }), 400
 
     body = request.get_json(silent=True) or {}
     text = body.get('text', 'Test desde Ticket Monitor ✅')
 
     url = f'https://api.telegram.org/bot{token}/sendMessage'
     try:
-      res = requests.post(url, json={'chat_id': chat, 'text': text}, timeout=10)
-      res.raise_for_status()
-      return jsonify({'ok': True, 'result': res.json()})
-    except Exception as e:
-      return jsonify({'ok': False, 'error': str(e), 'status_code': getattr(e, "response", None) and e.response.status_code}), 500
+        res = requests.post(url, json={'chat_id': chat, 'text': text}, timeout=10)
+        res.raise_for_status()
+        return jsonify({'ok': True, 'result': res.json()})
+    except requests.RequestException as e:
+        # include response body/status if available
+        resp = getattr(e, 'response', None)
+        return jsonify({
+            'ok': False,
+            'error': str(e),
+            'status_code': resp.status_code if resp is not None else None,
+            'response_text': resp.text if resp is not None else None
+        }), 500
 
 
 if __name__ == "__main__":
