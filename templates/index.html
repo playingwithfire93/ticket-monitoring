@@ -23,9 +23,10 @@
 
       <div class="controls">
         <input id="search" placeholder="Buscar musical..." />
-        <label class="auto-refresh">
+        <label class="auto-refresh" aria-live="polite">
           Auto-refresh:
-          <button id="toggle-refresh" class="btn soft">OFF</button>
+          <button id="toggle-refresh" class="btn soft" type="button" aria-pressed="false">ON</button>
+          <span id="ar-state" style="margin-left:8px;font-weight:600;color:#7b5a6f">ON</span>
         </label>
         <div class="last-checked">Last Checked: <span id="last-checked">--</span></div>
       </div>
@@ -36,35 +37,34 @@
     <!-- Hero / Slideshow -->
     <section class="hero">
       <div class="slideshow-container">
-      <div class="slides">
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM4" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM5" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM6" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM7" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='AUDREY1.jpg') }}" alt="AUDREY1" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='HOUDINI1.jpg') }}" alt="HOUDINI1" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS1.jpg') }}" alt="LESMIS1" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS2.jpg') }}" alt="LESMIS2" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS3.png') }}" alt="LESMIS3" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS4.jpg') }}" alt="LESMIS4" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS5.jpg') }}" alt="LESMIS5" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS6.jpg') }}" alt="LESMIS6" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS7.jpg') }}" alt="LESMIS7" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED1.jpg') }}" alt="WICKED1" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED2.jpg') }}" alt="WICKED2" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED3.jpg') }}" alt="WICKED3" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED4.jpg') }}" alt="WICKED4" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED5.jpg') }}" alt="WICKED5" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED6.jpg') }}" alt="WICKED6" class="slide-img"></div>
-        <div class="slide fade"><img src="{{ url_for('static', filename='WICKED7.jpg') }}" alt="WICKED7" class="slide-img"></div>
+        <div class="slides">
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM2" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM3" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM4" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM2.jpg') }}" alt="BOM5" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM3.jpg') }}" alt="BOM6" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='BOM1.jpg') }}" alt="BOM7" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='AUDREY1.jpg') }}" alt="AUDREY1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='HOUDINI1.jpg') }}" alt="HOUDINI1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS1.jpg') }}" alt="LESMIS1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS2.jpg') }}" alt="LESMIS2" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS3.png') }}" alt="LESMIS3" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS4.jpg') }}" alt="LESMIS4" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS5.jpg') }}" alt="LESMIS5" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS6.jpg') }}" alt="LESMIS6" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='LESMIS7.jpg') }}" alt="LESMIS7" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED1.jpg') }}" alt="WICKED1" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED2.jpg') }}" alt="WICKED2" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED3.jpg') }}" alt="WICKED3" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED4.jpg') }}" alt="WICKED4" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED5.jpg') }}" alt="WICKED5" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED6.jpg') }}" alt="WICKED6" class="slide-img"></div>
+          <div class="slide fade"><img src="{{ url_for('static', filename='WICKED7.jpg') }}" alt="WICKED7" class="slide-img"></div>
+        </div>
+        <button class="slide-nav prev" onclick="plusSlides(-1)">&#10094;</button>
+        <button class="slide-nav next" onclick="plusSlides(1)">&#10095;</button>
       </div>
-      <button class="slide-nav prev" onclick="plusSlides(-1)">&#10094;</button>
-      <button class="slide-nav next" onclick="plusSlides(1)">&#10095;</button>
-      <div class="slide-dots" aria-hidden="true"></div>
-    </div>
       <div class="hero-cta">
         <h2>Keep an eye on ticket pages</h2>
         <p class="hero-sub">Live checks, friendly UI, and quick links to ticket pages.</p>
@@ -103,7 +103,12 @@
     <section id="list" class="list-section">
       <table class="musicals-table" aria-label="Monitored musicals">
         <thead>
-          <tr><th></th><th>Musical</th><th>URLs</th><th>Actions</th></tr>
+          <tr>
+            <th aria-hidden="true"></th>
+            <th>Musical</th>
+            <th>URLs</th>
+            <th>Cambios</th>
+          </tr>
         </thead>
         <tbody id="table-body">
           <!-- populated by main.js -->

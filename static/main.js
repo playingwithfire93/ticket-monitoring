@@ -20,6 +20,8 @@
   const nextBtn = document.querySelector('.slide-nav.next') || document.querySelector('.next');
   // removed dotsWrap: we won't create or use slide dots anymore
   const dotsWrap = null;
+  function createDots(){ /* intentionally removed */ }
+  function updateDots(){ /* intentionally removed */ }
 
   if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
 
