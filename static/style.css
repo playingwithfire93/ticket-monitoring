@@ -523,3 +523,17 @@ body::after { display: none !important; }        /* quita el patrón polka */
 .slide-dots, .dot, .slide-dots * { display: none !important; } /* oculta los dots del slideshow */
 .slideshow-container::before,
 .slideshow-container::after { display: none !important; } /* quita overlays decorativos si existen */
+
+/* FINAL override — eliminar cualquier rastro de polka/dots */
+body::after, body::before,
+.slideshow-container::before, .slideshow-container::after,
+.slide-dots, .dot, .pizzazz-sparkle, .polka, .overlay-dots,
+.sparkle-layer, .slideshow-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body, .container, .slideshow-container {
+  background-image: none !important;
+}
