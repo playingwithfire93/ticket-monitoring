@@ -359,288 +359,82 @@ body::before{
   .slideshow-container::before{ display:none; }
 }
 
-/* ---------- GIRLY GLAM STYLE ADD-ON (append) ---------- */
+/* ------------------ Modern UI extras (glass, gradient, buttons, fade-in) ------------------ */
 
-/* extra font accent for scripty labels */
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap');
+/* Color tokens */
+:root{
+  --bg-gradient-1: #ffeff6;
+  --accent: #ff6ec4;
+  --accent-2: #7873f5;
+  --accent-3: #4ade80;
+  --card-bg: rgba(255,255,255,0.6);
+  --glass-border: rgba(255,255,255,0.18);
+  --muted: #7b5a6f;
+  --text: #2b2130;
+}
 
-/* overall paper texture + warmer gradient */
-body {
-  background-color: #fff6fb;
-  background-image:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23fff6fb"/><circle cx="6" cy="6" r="1" fill="%23fff" opacity="0.06"/></svg>'),
-    linear-gradient(180deg, rgba(255,240,246,0.9), rgba(255,250,255,0.98));
-  background-repeat: repeat, no-repeat;
-  background-attachment: fixed;
+/* Animated gradient background on body */
+html,body{
+  height:100%;
+  scroll-behavior:smooth;
+}
+body{
+  background: linear-gradient(270deg,var(--accent),var(--accent-2),var(--accent-3));
+  background-size: 600% 600%;
+  animation: gradientShift 18s ease infinite;
+  color: var(--text);
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+@keyframes gradientShift {
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+
+/* Glassmorphism cards (promo-card, suggestion-card, table container) */
+.promo-card, .suggestion-card, .list-section, .musicals-table, .hero-cta {
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.66), rgba(255,250,248,0.66));
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
   color: var(--text);
 }
 
-/* scalloped soft frame around container */
-.container {
-  border-radius: 22px;
-  padding: 34px;
-  border: 1px solid rgba(255,220,235,0.7);
-  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,248,251,0.95));
-  position: relative;
-  overflow: visible;
-}
-
-/* scallop pseudo-edge */
-.container::after{
-  content: "";
-  position: absolute;
-  left: -10px; right: -10px; bottom: -12px;
-  height: 26px;
-  background:
-    radial-gradient(circle at 12px 13px, rgba(255,255,255,0.95) 12px, transparent 13px),
-    radial-gradient(circle at 44px 13px, rgba(255,255,255,0.95) 12px, transparent 13px),
-    radial-gradient(circle at 76px 13px, rgba(255,255,255,0.95) 12px, transparent 13px);
-  background-size: 40px 26px;
-  background-repeat: repeat-x;
-  filter: blur(0.2px);
-  opacity: 0.95;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* header ribbon behind brand */
-.brand h1 {
-  position: relative;
-  display: inline-block;
-  padding: 6px 16px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255,220,235,0.95), rgba(255,240,250,0.85));
-  box-shadow: 0 8px 26px rgba(255,90,150,0.06);
-}
-
-/* subtitle script accent */
-.subtitle {
-  font-family: "Dancing Script", cursive;
-  color: #d95aa8;
-  margin-top: 4px;
-}
-
-/* glossy primary button */
+/* Hover glow buttons */
 .btn.primary {
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.18);
-  padding: 10px 16px;
-  border-radius: 999px;
-  box-shadow: 0 12px 30px rgba(255,96,160,0.10), inset 0 -6px 18px rgba(255,255,255,0.12);
+  background: linear-gradient(135deg,var(--accent),var(--accent-2));
+  color: white;
+  border: none;
+  box-shadow: 0 6px 18px rgba(135,86,160,0.12);
   transition: transform .18s ease, box-shadow .18s ease;
-  text-decoration: none;
 }
-.btn.primary:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(255,96,160,0.14); }
-
-/* ghost button */
-.btn.ghost {
-  background: rgba(255,255,255,0.9);
-  border: 1px solid rgba(255,200,230,0.7);
-  color: var(--elle-pink);
+.btn.primary:hover, .btn.primary:focus {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 18px 40px rgba(120,115,245,0.18);
 }
 
-/* pill badges: rose-gold gloss */
-.promo-badge, .count-badge {
-  background: linear-gradient(90deg,#fff6fb,#fff0f4);
-  border: 1px solid rgba(255,200,230,0.8);
-  color: #7b5a6f;
-  padding:6px 12px;
-  border-radius:999px;
-  font-weight:700;
-  box-shadow: 0 8px 22px rgba(255,90,150,0.06);
-}
+/* Small circular accent for small buttons */
+.btn.small { border-radius: 999px; padding:.4rem .6rem; }
 
-/* table row styling: pearl border + subtle lift */
-.musicals-table tbody tr.summary td {
-  border-radius: 12px;
-  border: 1px solid rgba(255,230,240,0.6);
-  background: linear-gradient(90deg,#fff,#fffaf7);
-}
-.musicals-table tbody tr.summary:hover td {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(255,92,150,0.06);
-}
+/* Suggestion card tweaks */
+.suggestion-card { padding: 16px; margin: 18px 0; }
+.suggestion-card h3 { color: var(--accent-2); margin-bottom:8px; }
+.suggestion-form label { display:block; font-size:14px; color:var(--muted); margin-bottom:8px; }
+.suggestion-form input, .suggestion-form textarea { width:100%; padding:.6rem; border-radius:8px; border:1px solid rgba(200,180,188,0.7); background:rgba(255,255,255,0.85); }
 
-/* url chips: pearl pills with hover bloom */
-.url-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 14px;
-  border-radius:16px;
-  border:1px solid rgba(255,210,230,0.6);
-  background: linear-gradient(180deg,#fff,#fff6fb);
-  text-decoration:none;
-  color:var(--elle-pink);
-  transition: transform .16s ease, box-shadow .16s ease;
-}
-.url-chip:hover{ transform: translateY(-8px); box-shadow: 0 18px 40px rgba(255,96,160,0.08); }
+/* Fade-in helpers */
+.fade-in { opacity:0; transform: translateY(12px); transition: opacity .6s ease, transform .6s ease; will-change: opacity, transform; }
+.fade-in.visible { opacity:1; transform: translateY(0); }
 
-/* sparkle accent when opening details (keeps it stylish) */
-.details-inner.sparkle {
-  box-shadow: 0 18px 40px rgba(255,96,160,0.04), inset 0 2px 8px rgba(255,255,255,0.6);
-  border-radius: 12px;
-}
-.details-inner.sparkle::before {
-  content: "✨";
-  position: absolute;
-  right: 14px; top: -8px;
-  font-size:18px;
-  opacity:0;
-  animation: sparklePop .9s ease forwards;
-}
-@keyframes sparklePop {
-  0% { opacity:0; transform: translateY(6px) scale(.9); }
-  40% { opacity:1; transform: translateY(-6px) scale(1.06); }
-  100% { opacity:0; transform: translateY(-20px) scale(1.3); }
-}
+/* Subtle card badges */
+.promo-badge { display:inline-block; padding:.25rem .5rem; border-radius:999px; background:rgba(255,255,255,0.6); color:var(--accent-2); font-weight:700; font-size:12px; }
 
-/* notification popup: make it glam */
-.notification-popup {
-  border-radius: 14px;
-  background: linear-gradient(90deg,#fff8fb,#fff3f7);
-  border: 1px solid rgba(255,200,235,0.85);
-  box-shadow: 0 20px 48px rgba(255,92,150,0.12);
-}
-
-/* slide nav buttons: tiny pearls */
-.slide-nav {
-  border-radius: 12px;
-  width:44px; height:44px;
-  background: linear-gradient(180deg,#fff,#fff7fb);
-  border:1px solid rgba(255,220,235,0.7);
-}
-
-/* dot hearts */
-.dot.active::after { content: "💗"; font-size:10px; }
-
-/* reduce heavy overlays on mobile for readability */
+/* Accessibility / small screens */
 @media (max-width:860px){
-  .container::after, .container::before { display:none; }
-  .brand .logo{ width:64px; }
-  .slide-nav{ width:40px; height:40px; }
+  .suggestion-form .row { flex-direction:column; }
+  .promo-grid { display:block; }
 }
-
-/* Remove all decorative dots/polka & slide nav dots */
-body::after { display: none !important; }        /* quita el patrón polka */
-.slide-dots, .dot, .slide-dots * { display: none !important; } /* oculta los dots del slideshow */
-.slideshow-container::before,
-.slideshow-container::after { display: none !important; } /* quita overlays decorativos si existen */
-
-/* FINAL override — eliminar cualquier rastro de polka/dots (no debería quedar nada) */
-body::after, body::before,
-.slideshow-container::before, .slideshow-container::after,
-.slide-dots, .slide-dots *, .dot, .dot *,
-.pizzazz-sparkle, .polka, .overlay-dots,
-.sparkle-layer, .slideshow-overlay {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
-
-/* FINAL OVERRIDE: remove any polka/dot overlays or pseudo-element patterns */
-*::before,
-*::after {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  background-image: none !important;
-  background: none !important;
-  content: none !important;
-  pointer-events: none !important;
-}
-
-/* hide known classes if present */
-.slide-dots, .slide-dots *, .dot, .dot *, .pizzazz-sparkle, .polka, .overlay-dots, .sparkle-layer, .slideshow-overlay {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-/* ensure no repeated tiny backgrounds remain */
-body, .container, .slideshow-container, .hero {
-  background-image: none !important;
-}
-
-/* Modern expand button (inline url-count) */
-.expand-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #fff6fb, #fff0f4);
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 4px 10px rgba(227,110,160,0.06);
-  cursor: pointer;
-  font-weight: 600;
-  color: #b84a85;
-  transition: transform .12s ease, box-shadow .12s ease;
-  min-width: 56px;
-  height: 36px;
-}
-
-.expand-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(227,110,160,0.08); }
-
-.expand-btn .icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width:20px;
-  height:20px;
-  border-radius:6px;
-  background: #ffffff;
-  color: #b84a85;
-  font-weight:700;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  transition: transform .18s ease;
-}
-
-/* small numeric badge inside button */
-.expand-btn .url-count {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.95);
-  border: 1px solid rgba(0,0,0,0.04);
-  color: #7b5a6f;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* visual state when expanded */
-.expand-btn[aria-expanded="true"] {
-  background: linear-gradient(90deg,#ffeef6,#fff6fb);
-  color: #a0346e;
-}
-.expand-btn[aria-expanded="true"] .icon {
-  transform: rotate(90deg);
-}
-
-/* Hide numeric badge inside expand button (if present) */
-.url-count {
-  display: none !important;
-  visibility: hidden !important;
-  width: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-}
-
-/* Inline suggestion card (non-overlay) */
-.suggestion-card {
-  border: 1px solid rgba(255,210,230,0.6);
-  background: linear-gradient(180deg,#fff,#fffaf7);
-  padding: 18px;
-  border-radius: 12px;
-  margin: 18px 0;
-  box-shadow: var(--gloss-shadow, 0 12px 30px rgba(255,96,160,0.06));
-}
-.suggestion-card h3 { margin: 0 0 10px; color: var(--elle-pink); }
-.suggestion-form .row { display:flex; gap:12px; margin-bottom:8px; }
-.suggestion-form label { display:block; font-size:14px; color:var(--muted); }
-.suggestion-form input, .suggestion-form textarea { width:100%; padding:.5rem; border:1px solid rgba(230,210,220,0.8); border-radius:8px; box-sizing:border-box; }
-.suggest-controls { display:flex; gap:8px; align-items:center; margin-top:10px; }
-.suggest-status { margin-left:auto; font-size:13px; color:var(--muted); }
-@media (max-width:860px){ .suggestion-form .row { flex-direction:column; } }

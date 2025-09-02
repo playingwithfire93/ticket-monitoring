@@ -750,6 +750,31 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => { status.textContent = ''; }, 2500);
     }
   });
+
+  // Reveal elements with .fade-in using IntersectionObserver
+  try {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
+  } catch (err) {
+    // fallback: reveal all immediately
+    document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+  }
+
+  // Small usability: focus first input in inline suggestion when visible
+  const inlineSuggest = document.getElementById('inline-suggest');
+  if (inlineSuggest) {
+    inlineSuggest.addEventListener('transitionend', () => {
+      const first = inlineSuggest.querySelector('input, textarea');
+      if (first) first.setAttribute('autocomplete','on');
+    });
+  }
 });
 
 // Ejecutar en DevTools Console
