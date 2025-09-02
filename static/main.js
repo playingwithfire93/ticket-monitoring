@@ -185,7 +185,7 @@
     changesMap = computeChangesMap(loadSessionSnapshot() || [], musicals || []);
   })();
 
-  // ---- table rows ----
+  /* Replace duplicate buildSummaryRow + buildDetailsRow with the "changes" column version */
   function buildSummaryRow(item, idx) {
     const tr = document.createElement('tr');
     tr.className = 'summary';
@@ -209,17 +209,33 @@
     span.textContent = `${count} URL(s)`;
     urlsTd.appendChild(span);
 
-    const actionsTd = document.createElement('td');
-    const openAll = document.createElement('button');
-    openAll.className = 'btn small';
-    openAll.textContent = 'Abrir 1ª';
-    openAll.onclick = (e) => { e.stopPropagation(); if (item.urls && item.urls[0]) window.open(item.urls[0], '_blank'); };
-    actionsTd.appendChild(openAll);
+    // changes column (shows added/removed totals since session baseline)
+    const changesTd = document.createElement('td');
+    const k = keyForItem(item);
+    const ch = changesMap[k];
+    if (ch && ch.total > 0) {
+      const badge = document.createElement('button');
+      badge.className = 'btn small change-badge';
+      badge.type = 'button';
+      badge.title = `Ver cambios: +${ch.added} / -${ch.removed}`;
+      badge.textContent = `${ch.total} cambios`;
+      badge.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        markItemAsSeen(item);
+        showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
+      });
+      changesTd.appendChild(badge);
+    } else {
+      const none = document.createElement('span');
+      none.className = 'no-changes';
+      none.textContent = '—';
+      changesTd.appendChild(none);
+    }
 
     tr.appendChild(expTd);
     tr.appendChild(nameTd);
     tr.appendChild(urlsTd);
-    tr.appendChild(actionsTd);
+    tr.appendChild(changesTd);
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -238,7 +254,7 @@
     tr.dataset.idx = idx;
 
     const td = document.createElement('td');
-    td.colSpan = 4;
+    td.colSpan = 3; // ensure matches table header columns
 
     const inner = document.createElement('div');
     inner.className = 'details-inner';
