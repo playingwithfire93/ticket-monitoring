@@ -1,58 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Lista de Monitoreo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <title>Lista de Monitoreo (Tabla)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* small local tweaks for the admin table */
+    .admin-table-wrap { margin-top: 6px; }
+    .expand-btn { width:36px;height:36px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer; }
+    .details-row td { padding:10px 16px; }
+    .details-inner { display:flex; gap:8px; flex-wrap:wrap; padding:12px 6px; }
+    .url-chip { font-size:13px; text-decoration:none; padding:8px 12px; border-radius:14px; border:1px solid rgba(255,200,230,0.6); }
+    .count-badge { font-weight:700; padding:6px 10px; background:linear-gradient(90deg,#fff6fb,#fff0f4); border-radius:999px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>&#128260; Lista de Monitoreo Activa</h1>
-        <div class="stats">
-            <strong>&#128202; Total de URLs monitoreadas: {{ current_urls|length }}</strong><br>
-            <strong>&#127917; Musicales en urls.json: {{ urls_data|length }}</strong>
+  <div class="container">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo" />
+          <h1>Lista de Monitoreo</h1>
+          <p class="subtitle">Vista de administrador — tabla con filas colapsables</p>
         </div>
-        <div class="section">
-            <h2>&#128221; URLs Activas en Memoria (URLS array)</h2>
-            {% if not current_urls %}
-                <p>No hay URLs configuradas en el array URLS.</p>
-            {% else %}
-                {% for url_item in current_urls %}
-                <div class="url-item">
-                    <strong>{{ loop.index }}: {{ url_item.label or 'Sin nombre' }}</strong><br>
-                    <a href="{{ url_item.url or '#' }}" target="_blank" class="url-link">{{ url_item.url or 'Sin URL' }}</a>
-                </div>
-                {% endfor %}
-            {% endif %}
+        <div class="controls">
+          <input id="search-admin" placeholder="Buscar musical..." />
+          <div class="last-checked">Última actualización: <span id="last-checked-admin">--</span></div>
         </div>
-        <div class="section">
-            <h2>&#128193; URLs en archivo urls.json</h2>
-            {% if not urls_data %}
-                <p>No hay datos en urls.json.</p>
-            {% else %}
-                {% for musical in urls_data %}
-                <div class="musical-group">
-                    <h3 style="color: #ff69b4;">{{ musical.musical or 'Sin nombre' }} ({{ musical.urls|length }} URLs)</h3>
-                    {% for url in musical.urls %}
-                    <div class="url-item">
-                        <a href="{{ url }}" target="_blank" class="url-link">{{ url }}</a>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-        <div class="navigation">
-            <div class="nav-buttons">
-                <a href="/" class="nav-btn" style="background: #28a745;">&#127968; Página Principal</a>
-                <a href="/admin/approval-panel" class="nav-btn" style="background: #ff69b4;">&#128221; Panel de Aprobación</a>
-                <a href="/admin/suggestions" class="nav-btn" style="background: #6f42c1;">&#128202; Ver Historial</a>
-                <a href="/admin/monitoring-list" class="nav-btn" style="background: #20c997;">&#128260; Ver Monitoreo</a>
-            </div>
-            <p style="color: #666; font-size: 0.9em; margin-top: 15px;">
-                &#9889; Esta página muestra las URLs que están siendo monitoreadas actualmente
-            </p>
-        </div>
+      </div>
     </div>
+
+    <section class="admin-table-wrap">
+      <table class="musicals-table" aria-label="Monitoreo admin">
+        <thead>
+          <tr>
+            <th aria-hidden="true"></th>
+            <th>Musical</th>
+            <th>URLs</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="admin-table-body">
+          {% if not musicals %}
+            <tr><td colspan="4" class="no-data">No hay musicales en urls.json</td></tr>
+          {% else %}
+            {% for item in musicals %}
+              <tr class="summary" data-idx="{{ loop.index0 }}">
+                <td>
+                  <button class="expand-btn" aria-expanded="false">+</button>
+                </td>
+                <td>{{ item.musical or item.name or 'Sin nombre' }}</td>
+                <td>
+                  <span class="count-badge">{{ (item.urls|length) or 0 }} URL(s)</span>
+                </td>
+                <td>
+                  <a class="btn ghost" href="/api/monitored-status?musical={{ (item.musical or '')|urlencode }}">Comprobar ahora</a>
+                  <a class="btn" href="/admin/reload-urls" onclick="event.preventDefault(); reloadUrls();">Recargar</a>
+                </td>
+              </tr>
+
+              <tr class="details-row hidden" data-idx="{{ loop.index0 }}">
+                <td colspan="4">
+                  <div class="details-inner" aria-hidden="true">
+                    {% if item.urls %}
+                      {% for u in item.urls %}
+                        <a class="url-chip" href="{{ u }}" target="_blank" rel="noopener noreferrer">{{ u if u|length < 80 else u[:77] ~ '…' }}</a>
+                      {% endfor %}
+                    {% else %}
+                      <div>No URLs configuradas</div>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </section>
+
+    <div style="margin-top:22px; display:flex; gap:12px; justify-content:center;">
+      <a href="/" class="nav-btn" style="background:#28a745;">Página Principal</a>
+      <a href="/admin/suggestions" class="nav-btn" style="background:#6f42c1;">Ver Historial</a>
+    </div>
+  </div>
+
+  <script>
+    // minimal client code to toggle rows and simple search
+    (function(){
+      const tbody = document.getElementById('admin-table-body');
+      const search = document.getElementById('search-admin');
+      const lastChecked = document.getElementById('last-checked-admin');
+
+      function setLastChecked() {
+        if (lastChecked) lastChecked.textContent = new Date().toLocaleString();
+      }
+      setLastChecked();
+
+      function toggle(idx) {
+        const summaryBtn = tbody.querySelector('tr.summary[data-idx="'+idx+'"] .expand-btn');
+        const details = tbody.querySelector('tr.details-row[data-idx="'+idx+'"]');
+        if (!details || !summaryBtn) return;
+        const isHidden = details.classList.contains('hidden');
+        // collapse others
+        tbody.querySelectorAll('tr.details-row').forEach(r => r.classList.add('hidden'));
+        tbody.querySelectorAll('.expand-btn').forEach(b => { b.textContent = '+'; b.setAttribute('aria-expanded','false'); });
+        if (isHidden) {
+          details.classList.remove('hidden');
+          summaryBtn.textContent = '–';
+          summaryBtn.setAttribute('aria-expanded','true');
+        } else {
+          details.classList.add('hidden');
+          summaryBtn.textContent = '+';
+          summaryBtn.setAttribute('aria-expanded','false');
+        }
+      }
+
+      tbody.querySelectorAll('tr.summary').forEach(r => {
+        const idx = r.getAttribute('data-idx');
+        const btn = r.querySelector('.expand-btn');
+        if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(idx); });
+        r.addEventListener('click', () => toggle(idx));
+      });
+
+      if (search) {
+        search.addEventListener('input', () => {
+          const q = (search.value || '').toLowerCase().trim();
+          tbody.querySelectorAll('tr.summary').forEach(s => {
+            const idx = s.getAttribute('data-idx');
+            const title = s.children[1].textContent.toLowerCase();
+            const match = !q || title.includes(q);
+            s.style.display = match ? '' : 'none';
+            const details = tbody.querySelector('tr.details-row[data-idx="'+idx+'"]');
+            if (details) details.style.display = match ? '' : 'none';
+          });
+        });
+      }
+
+      window.reloadUrls = function() {
+        fetch('/admin/reload-urls', { method: 'POST' }).then(r => r.json()).then(j => {
+          setLastChecked();
+          alert('Loaded: ' + (j.loaded || 0));
+          location.reload();
+        }).catch(e => alert('Error reloading'));
+      };
+    })();
+  </script>
 </body>
 </html>
