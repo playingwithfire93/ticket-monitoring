@@ -497,12 +497,37 @@
     if (arState) arState.textContent = autoRefresh ? 'ON' : 'OFF';
     if (autoRefresh) { intervalId = setInterval(fetchData, 8000); fetchData(); } else { clearInterval(intervalId); }
   });
-  if (modalClose) modalClose.addEventListener('click', () => modal.setAttribute('aria-hidden','true'));
-  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.setAttribute('aria-hidden','true'); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.setAttribute('aria-hidden','true'); });
   if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); stopSlideAuto(); });
   if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); stopSlideAuto(); });
 
+  // --- Safe modal controls: guard against missing elements and provide fallbacks ---
+  try {
+    // original modal id used by some parts of the UI
+    if (modal && modalClose) {
+      modalClose.addEventListener('click', () => modal.setAttribute('aria-hidden','true'));
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.setAttribute('aria-hidden','true'); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.setAttribute('aria-hidden','true'); });
+    } else {
+      // fallback bindings for the suggestion modal elements actually present in the templates
+      const suggestModal = document.getElementById('suggest-modal');
+      const suggestClose = document.getElementById('suggest-close');
+      const suggestCancel = document.getElementById('suggest-cancel');
+      const openSuggest = document.getElementById('open-suggest');
+
+      if (suggestClose) suggestClose.addEventListener('click', () => { suggestModal && (suggestModal.style.display = 'none'); });
+      if (suggestCancel) suggestCancel.addEventListener('click', () => { suggestModal && (suggestModal.style.display = 'none'); });
+      if (openSuggest && suggestModal) openSuggest.addEventListener('click', () => { suggestModal.style.display = 'block'; suggestModal.setAttribute('aria-hidden','false'); });
+
+      // also allow clicking backdrop to close
+      if (suggestModal) {
+        suggestModal.addEventListener('click', (e) => { if (e.target === suggestModal) suggestModal.style.display = 'none'; });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') suggestModal.style.display = 'none'; });
+      }
+    }
+  } catch (err) {
+    console.error('Modal safe-init failed', err);
+  }
+  
   { 
     // ----- Audio + new-change detection state -----
     let prevChangeKeys = new Set();
