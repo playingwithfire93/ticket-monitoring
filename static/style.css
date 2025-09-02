@@ -1,592 +1,137 @@
-/* M/* Tabla clásica moderna, tema rosa */
-:root{
-  --bg: #fff6fb;
-  --panel: #fff;
-  --accent: #ff3f92;
-  --accent-2: #ff86b8;
-  --muted: #7b5a6f;
+/* ================================
+   Modern Cute Dashboard Theme
+   ================================ */
+
+/* Import modern Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+:root {
+  --primary: #ff6ec4;
+  --secondary: #7873f5;
+  --accent: #4ade80;
+  --bg: #f9f7fb;
   --text: #222;
-  --line: rgba(230,210,220,0.8);
-  --radius: 12px;
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --card-bg: rgba(255, 255, 255, 0.25);
+  --card-border: rgba(255, 255, 255, 0.18);
 }
 
-/* Cute + pink theme tweaks (append) */
-:root{
-  --cute-pink-1: #fff0f6;
-  --cute-pink-2: #ffd5ea;
-  --accent: #ff2f8f;
-  --accent-2: #ff86bf;
-  --accent-3: #ffb6d9;
-  --muted: #7b5a6f;
-  --glass: rgba(255,255,255,0.8);
-  --shadow-cute: 0 12px 40px rgba(203,54,122,0.07);
-  --glow: 0 6px 24px rgba(255,92,150,0.12);
+/* Reset some defaults */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-
-/* Elle Woods — extra girly / glam overrides (append) */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;600&display=swap');
-
-:root{
-  --elle-pink: #ff2f8f;
-  --elle-pink-2: #ff86bf;
-  --rose-gold: linear-gradient(90deg,#ffd6ea,#ffe7f2);
-  --elle-gold: #ffd166;
-  --soft-white: #fff8fb;
-  --gloss-shadow: 0 12px 30px rgba(255,96,160,0.10);
-}
-
-/* Modern fonts: Inter for body, Space Grotesk for headings */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;600&display=swap');
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text);
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+  min-height: 100vh;
 }
 
-.brand h1,
-.hero-cta h2,
-.musicals-table thead th {
-  font-family: 'Space Grotesk', "Playfair Display", serif !important;
-  font-weight: 600;
-}
-
-/* Fonts & heading style */
-.brand h1, .hero-inner h2, .musicals-table thead th {
-  font-family: "Playfair Display", serif;
-  color: var(--elle-pink);
-  letter-spacing: 0.6px;
-}
-body, input, button, .url-chip {
-  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
-
-/* Glossier page background */
-body{
-  background: radial-gradient(circle at 10% 10%, rgba(255,230,245,0.65), transparent 6%),
-              linear-gradient(180deg, var(--cute-pink-1), #fff 55%);
-}
-
-/* soft page gradient */
-body{
-  background: linear-gradient(180deg, var(--cute-pink-1) 0%, #fff 55%);
-}
-
-/* Container / header kept as before */
-.container{width:100%;max-width:1150px;margin:26px auto;padding:0 20px 60px}
-
-/* Layout & framed background for more pizzaz */
-.container { max-width: 1060px; margin: 28px auto; position:relative; z-index:2; }
-
-/* Topbar */
-.topbar { padding: 18px 0; background: transparent; }
-.topbar-inner{ display:flex; justify-content:space-between; align-items:center; gap:16px; }
-.brand{ display:flex; gap:14px; align-items:center; }
-.brand .logo{ width:88px; height:auto; border-radius:10px; }
-.brand h1{ margin:0; font-family:"Playfair Display", serif; color:var(--elle-pink); font-size:28px; }
-.subtitle{ margin:0; font-size:13px; color:#aa6a88; }
-
-/* Controls */
-.controls{ display:flex; align-items:center; gap:12px; }
-.controls #search{ padding:8px 10px; border-radius:8px; border:1px solid rgba(255,200,230,0.6); background:#fff; }
-.last-checked{ font-size:13px; color:#7b5a6f; }
-
-/* Hero */
-.hero{ display:flex; gap:28px; align-items:center; margin-bottom:20px; }
-.slideshow-container{ flex:1 1 62%; height:420px; border-radius:18px; overflow:hidden; position:relative; }
-.slide{ display:none; height:100%; }
-.slide.active{ display:block; }
-.slide-img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-/* Slideshow nav */
-.slide-nav{ position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:none; background:linear-gradient(180deg,#fff,#fff7fb); box-shadow:0 10px 24px rgba(255,120,170,0.06); cursor:pointer; }
-.slide-nav.prev{ left:14px; }
-.slide-nav.next{ right:14px; }
-
-/* Hero text/CTAs */
-.hero-cta{ flex:0 0 34%; }
-.hero-cta h2{ font-family:"Playfair Display", serif; color:var(--elle-pink); margin:0 0 8px; font-size:24px; }
-.hero-sub{ color:#6d4a5b; margin:0 0 14px; }
-.hero-buttons .btn{ margin-right:8px; }
-
-/* Promo cards */
-.promo-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; margin:18px 0 30px; }
-.promo-card{ background:linear-gradient(180deg,#fff,#fffaf7); border:1px solid rgba(255,210,235,0.6); padding:18px; border-radius:12px; box-shadow:0 12px 36px rgba(255,96,160,0.04); text-align:left; }
-.promo-badge{ display:inline-block; background:var(--elle-pink); color:#fff; padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; margin-bottom:8px; }
-
-/* Table */
-.musicals-table{ width:100%; border-collapse:separate; border-spacing:0 6px; background:transparent; }
-.musicals-table thead th{ text-align:left; padding:14px 18px; font-size:13px; color:#7b5a6f; background:linear-gradient(90deg,#fff0f6,#fff8fb); border-radius:12px; }
-.musicals-table tbody td{ background:linear-gradient(90deg,#fff,#fff8fb); padding:12px 18px; border-bottom:1px solid rgba(255,220,235,0.6); }
-.musicals-table tbody tr.summary td:first-child{ width:64px; }
-.no-data{ color:#6d4a5b; padding:18px 12px; }
-
-/* Modal */
-.modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.35); z-index:1200; }
-.modal-inner { background: #fff; border-radius:12px; padding:16px; width:min(680px,94%); box-shadow:0 10px 40px rgba(0,0,0,0.18); position:relative; }
-.modal-close { position:absolute; right:10px; top:8px; border:0; background:transparent; font-size:20px; cursor:pointer; }
-#suggest-form label { display:block; margin-bottom:8px; font-size:14px; }
-#suggest-form input, #suggest-form textarea { width:100%; padding:.5rem; border:1px solid #eee; border-radius:6px; font-size:14px; }
-#open-suggest { cursor:pointer; }
-
-/* Decorative background frame (more pizzaz) */
-body{
-  background:
-    radial-gradient(circle at 10% 10%, rgba(255,230,245,0.6), transparent 6%),
-    linear-gradient(180deg,#fff0f6 0%, #fff 60%);
-  background-attachment:fixed;
-}
-.container::before{
-  content:"";
-  position:absolute;
-  inset:-18px;
-  border-radius:26px;
-  background: linear-gradient(90deg, rgba(255,220,235,0.45), rgba(255,240,250,0.25));
-  filter: blur(12px);
-  z-index:-1;
-}
-
-/* Responsive tweaks */
-@media (max-width:1000px){
-  .hero{ flex-direction:column; }
-  .promo-grid{ grid-template-columns:1fr; }
-  .slideshow-container{ height:300px; }
-}
-
-/* responsive height */
-@media (max-width:900px){
-  .slideshow-container{height:320px}
-}
-
-/* responsive tweak */
-@media (max-width:860px){
-  .url-chip{ width:100%; box-sizing:border-box; }
-}
-
-/* Quitar hueco entre filas: ocultar tr.details-row cuando está .hidden */
-.musicals-table tbody tr.details-row.hidden {
-  display: none;
-}
-
-/* Asegurar que la celda de detalles no deje bordes ni padding cuando esté visible/invisible */
-.musicals-table tbody tr.details-row td {
-  padding: 0;
-  border: none;
-}
-
-/* (Opcional) mantener animación al abrir: la .details-inner seguirá animando cuando la fila se muestre */
-.details-row:not(.hidden) .details-inner {
-  /* ya definidas: margin/padding/max-height/opacity/transform */
-}
-
-/* Tiny floating sparkle on brand logo */
-.brand img.logo{ box-shadow: 0 6px 18px rgba(255,100,160,0.06); transform-origin:center; }
-
-/* Optional confetti-like shimmer when a row opens (subtle) */
-@keyframes shimmer {
-  from { filter: hue-rotate(0deg) saturate(1); }
-  to   { filter: hue-rotate(20deg) saturate(1.1); }
-}
-.details-row:not(.hidden) .details-inner{ animation: shimmer .8s ease 1; }
-
-/* Mobile: keep it compact but cute */
-@media (max-width:860px){
-  .slideshow-container{ height:300px; }
-  .expand-btn{ width:40px; height:40px; }
-  .url-chip{ width:100%; }
-}
-
-/* Notification popup (bottom-right) */
-.notification-popup {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  max-width: 360px;
-  width: calc(100% - 36px);
-  background: linear-gradient(90deg, #fff6fb, #fff0f6);
-  border: 1px solid rgba(255,200,230,0.8);
-  color: #2b2130;
-  padding: 12px 14px;
-  border-radius: 12px;
-  box-shadow: 0 18px 40px rgba(255,80,150,0.12);
-  z-index: 99999;
-  transform: translateY(12px) scale(.98);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  font-weight:600;
-}
-.notification-popup.show {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-  pointer-events: auto;
-}
-.notification-popup .np-close {
-  margin-left: auto;
-  background: transparent;
-  border: 0;
-  font-size: 16px;
-  cursor: pointer;
-  color: var(--accent);
-  padding:4px 6px;
-  border-radius:8px;
-}
-.notification-popup .np-title{
-  display:block;
-  font-weight:700;
-  color:var(--accent);
-}
-.notification-popup .np-body{
-  font-weight:600;
-  color:var(--text);
-  font-size:14px;
-  line-height:1.2;
-}
-
-/* subtle pulse when appearing */
-@keyframes pop {
-  0%{ transform: translateY(6px) scale(.98); opacity:0 }
-  60%{ transform: translateY(-2px) scale(1.02); opacity:1 }
-  100%{ transform: translateY(0) scale(1); opacity:1 }
-}
-.notification-popup.show { animation: pop .32s ease both; }
-
-/* Decorative background + framed container (append) */
-
-/* subtle diagonal stripes over the whole page */
-body{
-  background-image:
-    repeating-linear-gradient(135deg, rgba(255,240,248,0.03) 0 2px, transparent 2px 46px),
-    radial-gradient(circle at 20% 10%, rgba(255,230,245,0.06), transparent 6%),
-    linear-gradient(180deg, var(--cute-pink-1, #fff0f6) 0%, #fff 55%);
-  background-attachment: fixed;
-}
-
-/* faint polka overlay for girly texture */
-body::after{
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 36px 36px;
-  opacity: 0.65;
-  mix-blend-mode: overlay;
-  z-index: 0;
-}
-
-/* vertical soft side bars to frame content */
-body::before{
-  content: "";
-  position: fixed;
-  top:0; bottom:0;
-  left:0; right:0;
-  pointer-events:none;
-  background:
-    linear-gradient(90deg, rgba(255,200,230,0.06) 0 80px, transparent 80px calc(100% - 80px), rgba(255,200,230,0.06) calc(100% - 80px) 100%);
-  z-index:0;
-}
-
-/* framed central container with glow and decorative hearts in corners */
-.container{
-  position: relative; /* ensure pseudo elements align */
-  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.9));
-  border-radius: 20px;
-  padding: 28px 24px 44px;
-  box-shadow: 0 18px 48px rgba(255,80,150,0.06);
-  border: 1px solid rgba(255,200,230,0.5);
-  z-index: 2;
-}
-
-/* soft outer glow / gradient border */
-.container::before{
-  content: "";
-  position: absolute;
-  inset: -10px;
-  border-radius: 22px;
-  background: linear-gradient(90deg, rgba(255,220,235,0.55), rgba(255,240,250,0.35));
-  filter: blur(12px);
-  opacity: 0.95;
-  z-index: -1;
-}
-
-/* tiny corner flourishes (hearts) */
-.container::after{
-  content: "💗";
-  position: absolute;
-  right: 14px;
-  top: 10px;
-  font-size: 22px;
-  opacity: 0.14;
-  transform: rotate(-12deg);
-  z-index: 3;
-}
-
-/* table improvements: soft striping and inner border line */
-.musicals-table{
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255,255,255,0.6);
-  border: 1px solid rgba(255,220,235,0.6);
-}
-.musicals-table tbody tr.summary{
-  background: linear-gradient(90deg, rgba(255,255,255,0.98), rgba(255,250,250,0.98));
-  border-bottom: 1px solid rgba(255,220,235,0.6);
-}
-/* alternating subtle bands (target only summary rows) */
-.musicals-table tbody tr.summary:nth-of-type(2n){
-  background: linear-gradient(90deg, rgba(255,249,251,1), rgba(255,247,250,1));
-}
-
-/* reduce empty space by tightening row paddings slightly */
-.musicals-table td{ padding: 10px 16px; }
-
-/* make header feel like a pill bar */
-.musicals-table thead th{
-  background: linear-gradient(90deg, rgba(255,240,250,0.95), rgba(255,255,255,0.95));
-  border-bottom: 1px solid rgba(255,220,235,0.6);
-}
-
-/* subtle floating shimmer behind slideshow */
-.slideshow-container{
-  position: relative;
-}
-.slideshow-container::before{
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 22px;
-  background: radial-gradient(ellipse at 10% 10%, rgba(255,235,245,0.6), transparent 8%),
-              radial-gradient(ellipse at 90% 80%, rgba(255,245,240,0.4), transparent 12%);
-  filter: blur(8px);
-  opacity: 0.9;
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* responsive: tone down overlays on small screens */
-@media (max-width:900px){
-  body::after{ opacity:0.35; }
-  .container::before{ filter: blur(8px); opacity:0.8; }
-  .slideshow-container::before{ display:none; }
-}
-
-/* ---------------- Modern visual polish: pink/purple gradient, glass cards, typography, animations ---------------- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap');
-
-:root{
-  --bg-1: #fff6fb;
-  --accent-1: #ff9ac2;   /* soft pink */
-  --accent-2: #d57cff;   /* mauve */
-  --accent-3: #7c3aed;   /* deep purple */
-  --glass-bg: rgba(255,255,255,0.62);
-  --glass-border: rgba(255,255,255,0.22);
-  --muted: #8a5971;
-  --text: #2b2130;
-  --card-radius: 14px;
-}
-
-/* Body gradient (soft pink → purple animated) */
-html,body{height:100%;scroll-behavior:smooth}
-body{
-  background: linear-gradient(270deg,var(--accent-1),var(--accent-2),var(--accent-3));
-  background-size: 600% 600%;
-  animation: gradientShift 20s linear infinite;
-  color:var(--text);
-  font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-}
+/* Gradient animation for background */
 @keyframes gradientShift {
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* Global container polish */
-.container{
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,250,253,0.92));
+/* Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.navbar a {
+  text-decoration: none;
+  color: var(--text);
+  margin-left: 1.5rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+  color: var(--secondary);
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--card-border);
   border-radius: 20px;
-  padding: 28px 24px 44px;
-  box-shadow: 0 18px 48px rgba(124,58,237,0.06);
-  border: 1px solid rgba(255,240,250,0.6);
-  z-index:2;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Glass cards */
-.card, .promo-card, .suggestion-card, .list-section, .musicals-table {
-  background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,250,253,0.78));
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  border-radius: var(--card-radius);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
 }
-
-/* Headings */
-.brand h1, .hero-cta h2 { font-family: "Playfair Display", serif; color:var(--accent-3); }
 
 /* Buttons */
-.btn.primary {
-  background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
-  color:#fff; border:0; padding:.7rem 1rem; border-radius:999px;
-  box-shadow: 0 8px 26px rgba(124,58,237,0.08);
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.btn.primary:hover{ transform: translateY(-3px) scale(1.02); box-shadow: 0 20px 50px rgba(124,58,237,0.14); }
-
-/* Inline suggestion card */
-.suggestion-card{ padding: 16px; margin: 18px 0; }
-.suggestion-card h3{ margin:0 0 8px; color:var(--accent-2); }
-.suggestion-form label{ display:block; font-size:14px; color:var(--muted); margin-bottom:8px; }
-.suggestion-form input, .suggestion-form textarea{
-  width:100%; padding:.6rem; border-radius:8px; border:1px solid rgba(200,180,188,0.6); background:#fff;
-}
-
-/* Fade-in for sections */
-.fade-in{ opacity:0; transform: translateY(12px); transition: opacity .6s ease, transform .6s ease; will-change:opacity,transform; }
-.fade-in.visible{ opacity:1; transform: translateY(0); }
-
-/* Subtle card lift on hover */
-.promo-card:hover, .card:hover { transform: translateY(-6px); transition: transform .22s ease; }
-
-/* ------------------ Modern polish (override / safe append) ------------------ */
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap');
-
-/* Color tokens (pink/purple vibe) */
-:root{
-  --bg-soft: #fff6fb;
-  --accent-pink: #ff8fc1;
-  --accent-mauve: #d57cff;
-  --accent-deep: #7c3aed;
-  --glass-bg: rgba(255,255,255,0.66);
-  --glass-border: rgba(255,255,255,0.18);
-  --muted: #7b5a6f;
-  --text: #2b2130;
-  --card-radius: 16px;
-}
-
-/* Gentle animated gradient background (pastel pink → mauve → purple) */
-html,body { height:100%; scroll-behavior:smooth; }
-body{
-  background: radial-gradient(circle at 12% 12%, rgba(255,240,250,0.6), transparent 8%),
-              linear-gradient(270deg, var(--accent-pink), var(--accent-mauve), var(--accent-deep));
-  background-size: 600% 600%;
-  animation: bgShift 22s ease infinite;
-  color: var(--text);
-  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
-@keyframes bgShift {
-  0%{ background-position: 0% 50% }
-  50%{ background-position: 100% 50% }
-  100%{ background-position: 0% 50% }
-}
-
-/* Container: subtle glass panel to separate from background, keeps slideshow visible */
-.container{
-  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,250,253,0.9));
-  border-radius: 20px;
-  padding: 28px 24px 44px;
-  box-shadow: 0 18px 40px rgba(124,58,237,0.06);
-  border: 1px solid rgba(255,240,250,0.6);
-  position: relative;
-  z-index: 2;
-}
-
-/* Glass cards (applies to promo, suggestion, hero-cta, table panels) */
-.promo-card, .card, .suggestion-card, .hero-cta, .list-section, .musicals-table {
-  background: rgba(255,255,255,0.64);
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  border-radius: var(--card-radius);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.06);
-}
-
-/* Keep slideshow images front and intact */
-.slideshow-container, .slide, .slide-img {
-  background: transparent;
-  border-radius: 14px;
-}
-.slide-img { object-fit: cover; width:100%; height:100%; display:block; }
-
-/* Headings: modern serif accent for titles, sans for body */
-.brand h1, .hero-cta h2 { font-family: "Playfair Display", serif; color: var(--accent-deep); margin:0; }
-body, input, button, .url-chip { font-family: "Poppins", sans-serif; }
-
-/* Buttons: gradient + glow on hover */
-.btn.primary {
-  background: linear-gradient(135deg, var(--accent-pink), var(--accent-mauve));
-  color:#fff;
+button, .btn {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   border: none;
-  padding: .6rem .95rem;
-  border-radius: 999px;
-  box-shadow: 0 8px 26px rgba(124,58,237,0.08);
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.btn.primary:hover, .btn.primary:focus {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 20px 50px rgba(124,58,237,0.14);
-}
-
-/* Secondary buttons (outline) */
-.btn.ghost {
-  background: transparent;
-  border: 1px solid rgba(124,58,237,0.06);
-  color: var(--accent-deep);
+  color: white;
+  padding: 0.8rem 1.6rem;
+  border-radius: 40px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Suggestion card tweaks */
-.suggestion-card { padding: 18px; margin: 20px 0; }
-.suggestion-card h3 { margin: 0 0 10px; color: var(--accent-mauve); }
-
-/* Fade-in micro animations */
-.fade-in { opacity: 0; transform: translateY(12px); transition: opacity .6s ease, transform .6s ease; will-change: opacity, transform; }
-.fade-in.visible { opacity: 1; transform: translateY(0); }
-
-/* Card hover lift on hover */
-.card:hover, .promo-card:hover, .suggestion-card:hover { transform: translateY(-6px); transition: transform .22s ease; }
-
-/* Sticky topbar with subtle blur for a modern nav */
-.topbar {
-  position: sticky;
-  top: 12px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 6;
+button:hover, .btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(120,115,245,0.6);
 }
 
-/* Subtle decorative floating orbs (no heavy perf hit) */
-body::after{
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 10% 20%, rgba(255,200,230,0.06) 0 120px, transparent 121px),
-    radial-gradient(circle at 85% 80%, rgba(200,170,255,0.04) 0 160px, transparent 161px);
-  z-index: 0;
-  mix-blend-mode: overlay;
+/* Animations for section entry */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-/* Accessibility tweak: ensure slides remain clickable */
-.slideshow-container { z-index: 3; position: relative; }
-.slideshow-container * { pointer-events: auto; }
-
-/* Responsive adjustments */
-@media (max-width:900px){
-  .hero { flex-direction: column; gap:12px; }
-  .promo-grid { grid-template-columns: 1fr; }
-  .slideshow-container{ height: 300px; }
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-/* small utility */
-.hidden { display:none; }
-#inline-suggest { z-index:3; }
+/* Typography tweaks */
+h1, h2, h3 {
+  font-weight: 700;
+  color: var(--secondary);
+}
 
-/* End of appended modern polish */
+p {
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Optional: wavy section dividers */
+.section-divider {
+  position: relative;
+  height: 80px;
+  overflow: hidden;
+}
+
+.section-divider svg {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
