@@ -23,6 +23,19 @@
       document.querySelectorAll('button, a, div').forEach(el=>{
         try { if ((el.textContent||'').trim().toLowerCase() === 'close') el.remove(); } catch(e){}
       });
+      // --- NEW: remove suggest-modal overlay if present (we keep inline card #inline-suggest) ---
+      try {
+        document.querySelectorAll('#suggest-modal, .modal-backdrop').forEach(el => {
+          // only remove overlays that appear to be the suggestion modal/backdrop
+          if (el.id === 'suggest-modal' || el.querySelector && (el.querySelector('#suggest-form') || el.querySelector('#suggest-close'))) {
+            el.remove();
+          }
+        });
+        // defensive: remove any full-screen .modal that contains suggest elements
+        document.querySelectorAll('.modal').forEach(el=>{
+          if (el.querySelector && (el.querySelector('#suggest-form') || el.querySelector('#suggest-close') || el.querySelector('#suggest-modal'))) el.remove();
+        });
+      } catch(e){}
       document.body.style.pointerEvents = 'auto';
       document.body.style.overflow = 'auto';
     })();
@@ -739,4 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Ejecutar en la consola del navegador
+// Ejecutar en DevTools Console
+document.querySelectorAll('#suggest-modal, .modal, .modal-backdrop, .notification-popup, .toast, #tm-test-popup').forEach(el=>el.remove());
+document.body.style.pointerEvents = 'auto';
+document.body.style.overflow = 'auto';
