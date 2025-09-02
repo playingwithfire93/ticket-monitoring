@@ -613,3 +613,13 @@ body, .container, .slideshow-container, .hero {
 .expand-btn[aria-expanded="true"] .icon {
   transform: rotate(90deg);
 }
+
+/* Hide numeric badge inside expand button (if present) */
+.url-count {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}

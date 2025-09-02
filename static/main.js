@@ -91,7 +91,7 @@
     tr.className = 'summary';
     tr.dataset.idx = idx;
 
-    // modern expand button with inline url-count badge
+    // modern expand button (icon only, no numeric badge)
     const expTd = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'expand-btn';
@@ -103,13 +103,8 @@
     icon.className = 'icon';
     icon.textContent = '+'; // toggled in event listener
 
-    const urlCount = document.createElement('span');
-    urlCount.className = 'url-count';
-    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
-    urlCount.textContent = urlNum;
-
+    // NO url-count element created anymore
     btn.appendChild(icon);
-    btn.appendChild(urlCount);
     expTd.appendChild(btn);
 
     const nameTd = document.createElement('td');
@@ -118,13 +113,13 @@
     const urlsTd = document.createElement('td');
     const span = document.createElement('span');
     span.className = 'count-badge';
+    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
     span.textContent = `${urlNum} URL(s)`;
     urlsTd.appendChild(span);
 
-    // changes column
     const changesTd = document.createElement('td');
-    const k = keyForItem(item);
-    const ch = changesMap && changesMap[k];
+    const k = keyForItem ? keyForItem(item) : JSON.stringify(item);
+    const ch = (typeof changesMap !== 'undefined' && changesMap) ? changesMap[k] : null;
     if (ch && ch.total > 0) {
       const badge = document.createElement('button');
       badge.className = 'btn small change-badge';
@@ -133,8 +128,8 @@
       badge.textContent = `${ch.total} cambios`;
       badge.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        markItemAsSeen(item);
-        showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
+        if (typeof markItemAsSeen === 'function') markItemAsSeen(item);
+        if (typeof showNotificationPopup === 'function') showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
       });
       changesTd.appendChild(badge);
     } else {
@@ -149,21 +144,20 @@
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
-    // toggle behaviour (keeps rest of UI logic)
+    // toggle behaviour
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
       btn.setAttribute('aria-expanded', open ? 'false' : 'true');
       icon.textContent = open ? '+' : '–';
-      toggleDetails(idx);
+      if (typeof toggleDetails === 'function') toggleDetails(idx);
     });
 
-    // allow row click to toggle too
     tr.addEventListener('click', () => {
       const open = btn.getAttribute('aria-expanded') === 'true';
       btn.setAttribute('aria-expanded', open ? 'false' : 'true');
       icon.textContent = open ? '+' : '–';
-      toggleDetails(idx);
+      if (typeof toggleDetails === 'function') toggleDetails(idx);
     });
 
     return tr;
@@ -209,7 +203,7 @@
     tr.className = 'summary';
     tr.dataset.idx = idx;
 
-    // modern expand button with inline url-count badge
+    // modern expand button (icon only, no numeric badge)
     const expTd = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'expand-btn';
@@ -221,13 +215,8 @@
     icon.className = 'icon';
     icon.textContent = '+'; // toggled in event listener
 
-    const urlCount = document.createElement('span');
-    urlCount.className = 'url-count';
-    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
-    urlCount.textContent = urlNum;
-
+    // NO url-count element created anymore
     btn.appendChild(icon);
-    btn.appendChild(urlCount);
     expTd.appendChild(btn);
 
     const nameTd = document.createElement('td');
@@ -236,13 +225,13 @@
     const urlsTd = document.createElement('td');
     const span = document.createElement('span');
     span.className = 'count-badge';
+    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
     span.textContent = `${urlNum} URL(s)`;
     urlsTd.appendChild(span);
 
-    // changes column
     const changesTd = document.createElement('td');
-    const k = keyForItem(item);
-    const ch = changesMap && changesMap[k];
+    const k = keyForItem ? keyForItem(item) : JSON.stringify(item);
+    const ch = (typeof changesMap !== 'undefined' && changesMap) ? changesMap[k] : null;
     if (ch && ch.total > 0) {
       const badge = document.createElement('button');
       badge.className = 'btn small change-badge';
@@ -251,8 +240,8 @@
       badge.textContent = `${ch.total} cambios`;
       badge.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        markItemAsSeen(item);
-        showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
+        if (typeof markItemAsSeen === 'function') markItemAsSeen(item);
+        if (typeof showNotificationPopup === 'function') showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
       });
       changesTd.appendChild(badge);
     } else {
@@ -267,7 +256,7 @@
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
-    // toggle behaviour (keeps rest of UI logic)
+    // toggle behaviour
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
