@@ -36,6 +36,22 @@
   --gloss-shadow: 0 12px 30px rgba(255,96,160,0.10);
 }
 
+/* Modern fonts: Inter for body, Space Grotesk for headings */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;600&display=swap');
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.brand h1,
+.hero-cta h2,
+.musicals-table thead th {
+  font-family: 'Space Grotesk', "Playfair Display", serif !important;
+  font-weight: 600;
+}
+
 /* Fonts & heading style */
 .brand h1, .hero-inner h2, .musicals-table thead th {
   font-family: "Playfair Display", serif;
