@@ -113,12 +113,12 @@
   let changesMap = {};
 
   // --- replace buildSummaryRow to show changes badge instead of actions ---
+  // single buildSummaryRow (keep only one consolidated version)
   function buildSummaryRow(item, idx) {
     const tr = document.createElement('tr');
     tr.className = 'summary';
     tr.dataset.idx = idx;
 
-    // modern expand button (icon only, no numeric badge)
     const expTd = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'expand-btn';
@@ -128,9 +128,8 @@
 
     const icon = document.createElement('span');
     icon.className = 'icon';
-    icon.textContent = '+'; // toggled in event listener
+    icon.textContent = '+';
 
-    // NO url-count element created anymore
     btn.appendChild(icon);
     expTd.appendChild(btn);
 
@@ -171,7 +170,6 @@
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
-    // toggle behaviour
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = btn.getAttribute('aria-expanded') === 'true';
@@ -345,9 +343,67 @@
     return tr;
   }
 
+  // improved renderTable with friendly empty-state + CTAs
   function renderTable(list) {
     tableBody.innerHTML = '';
-    if (!list || list.length === 0) { if (noData) noData.hidden = false; return; }
+
+    // empty/fallback state
+    if (!list || list.length === 0) {
+      if (noData) {
+        noData.hidden = false;
+        noData.textContent = 'No hay musicales aún — añade uno ✨';
+      }
+
+      const tr = document.createElement('tr');
+      tr.className = 'summary empty-state';
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.style.padding = '18px';
+      td.style.display = 'flex';
+      td.style.gap = '12px';
+      td.style.alignItems = 'center';
+      td.style.justifyContent = 'flex-start';
+
+      const msg = document.createElement('div');
+      msg.textContent = 'No hay musicales configurados todavía. Puedes enviar una sugerencia o reintentar la carga.';
+      msg.style.color = '#6d4a5b';
+      msg.style.fontSize = '14px';
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'btn';
+      addBtn.textContent = 'Enviar sugerencia';
+      addBtn.style.marginLeft = '6px';
+      addBtn.addEventListener('click', () => {
+        const inline = document.getElementById('inline-suggest-form');
+        if (inline) {
+          inline.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const name = inline.querySelector('[name="name"]');
+          if (name) name.focus();
+        } else {
+          const open = document.getElementById('open-suggest') || document.getElementById('suggest-button');
+          if (open) open.click();
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+      });
+
+      const retry = document.createElement('button');
+      retry.className = 'btn';
+      retry.textContent = 'Reintentar';
+      retry.addEventListener('click', () => {
+        retry.disabled = true;
+        setTimeout(() => { retry.disabled = false; }, 900);
+        fetchData();
+      });
+
+      td.appendChild(msg);
+      td.appendChild(addBtn);
+      td.appendChild(retry);
+      tr.appendChild(td);
+      tableBody.appendChild(tr);
+      return;
+    }
+
+    // normal render path
     if (noData) noData.hidden = true;
     list.forEach((item, i) => {
       tableBody.appendChild(buildSummaryRow(item, i));
@@ -773,23 +829,26 @@ window.cleanupSuggestionOverlays = function cleanupSuggestionOverlays(){
   document.body.style.overflow = 'auto';
 };
 
-const fetch = require('node-fetch');
-const FormData = require('form-data');
+// Guard server-only telegram helper (prevents require(...) in browser)
+if (typeof window === 'undefined') {
+  const fetch = require('node-fetch');
+  const FormData = require('form-data');
 
-async function sendTelegramWithJson(botToken, chatId, caption, changes) {
-  const jsonString = JSON.stringify(changes, null, 2);
-  const form = new FormData();
-  form.append('chat_id', chatId);
-  form.append('caption', caption);
-  form.append('document', Buffer.from(jsonString, 'utf8'), {
-    filename: `bom-changes-${new Date().toISOString().replace(/[:.]/g,'-')}.json`,
-    contentType: 'application/json'
-  });
+  async function sendTelegramWithJson(botToken, chatId, caption, changes) {
+    const jsonString = JSON.stringify(changes, null, 2);
+    const form = new FormData();
+    form.append('chat_id', chatId);
+    form.append('caption', caption);
+    form.append('document', Buffer.from(jsonString, 'utf8'), {
+      filename: `bom-changes-${new Date().toISOString().replace(/[:.]/g,'-')}.json`,
+      contentType: 'application/json'
+    });
 
-  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-    method: 'POST',
-    body: form
-  });
-  if (!res.ok) throw new Error(`Telegram error ${res.status}`);
-  return res.json();
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+      method: 'POST',
+      body: form
+    });
+    if (!res.ok) throw new Error(`Telegram error ${res.status}`);
+    return res.json();
+  }
 }
