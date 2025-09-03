@@ -931,3 +931,17 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
 /* Small visual polish for inline placement */
 .suggestion-inline { margin-top: 18px; }
 
+```python
+def send_telegram_with_json(bot_token, chat_id, caption, changes):
+    import json, requests, io
+    payload_json = json.dumps(changes, indent=2, ensure_ascii=False)
+    bio = io.BytesIO(payload_json.encode('utf-8'))
+    bio.name = 'bom-changes-{}.json'.format(__import__('datetime').datetime.utcnow().isoformat().replace(':','-'))
+    url = f'https://api.telegram.org/bot{bot_token}/sendDocument'
+    files = {'document': (bio.name, bio, 'application/json')}
+    data = {'chat_id': chat_id, 'caption': caption}
+    resp = requests.post(url, data=data, files=files, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
+```
+

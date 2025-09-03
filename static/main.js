@@ -772,3 +772,24 @@ window.cleanupSuggestionOverlays = function cleanupSuggestionOverlays(){
   document.body.style.pointerEvents = 'auto';
   document.body.style.overflow = 'auto';
 };
+
+const fetch = require('node-fetch');
+const FormData = require('form-data');
+
+async function sendTelegramWithJson(botToken, chatId, caption, changes) {
+  const jsonString = JSON.stringify(changes, null, 2);
+  const form = new FormData();
+  form.append('chat_id', chatId);
+  form.append('caption', caption);
+  form.append('document', Buffer.from(jsonString, 'utf8'), {
+    filename: `bom-changes-${new Date().toISOString().replace(/[:.]/g,'-')}.json`,
+    contentType: 'application/json'
+  });
+
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+    method: 'POST',
+    body: form
+  });
+  if (!res.ok) throw new Error(`Telegram error ${res.status}`);
+  return res.json();
+}
