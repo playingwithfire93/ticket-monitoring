@@ -113,12 +113,13 @@
   let changesMap = {};
 
   // --- replace buildSummaryRow to show changes badge instead of actions ---
-  // single buildSummaryRow (keep only one consolidated version)
+  // single consolidated buildSummaryRow (remove any duplicate definitions)
   function buildSummaryRow(item, idx) {
     const tr = document.createElement('tr');
     tr.className = 'summary';
     tr.dataset.idx = idx;
 
+    // expand cell with accessible button + icon span
     const expTd = document.createElement('td');
     const btn = document.createElement('button');
     btn.className = 'expand-btn';
@@ -133,9 +134,11 @@
     btn.appendChild(icon);
     expTd.appendChild(btn);
 
+    // name cell
     const nameTd = document.createElement('td');
     nameTd.textContent = item.musical || item.name || 'Sin nombre';
 
+    // urls count cell
     const urlsTd = document.createElement('td');
     const span = document.createElement('span');
     span.className = 'count-badge';
@@ -143,6 +146,7 @@
     span.textContent = `${urlNum} URL(s)`;
     urlsTd.appendChild(span);
 
+    // changes cell (uses global changesMap)
     const changesTd = document.createElement('td');
     const k = keyForItem ? keyForItem(item) : JSON.stringify(item);
     const ch = (typeof changesMap !== 'undefined' && changesMap) ? changesMap[k] : null;
@@ -170,20 +174,16 @@
     tr.appendChild(urlsTd);
     tr.appendChild(changesTd);
 
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
+    // toggle handlers (button and row click)
+    function toggleIconAndDetails() {
       const open = btn.getAttribute('aria-expanded') === 'true';
       btn.setAttribute('aria-expanded', open ? 'false' : 'true');
       icon.textContent = open ? '+' : '–';
       if (typeof toggleDetails === 'function') toggleDetails(idx);
-    });
+    }
 
-    tr.addEventListener('click', () => {
-      const open = btn.getAttribute('aria-expanded') === 'true';
-      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-      icon.textContent = open ? '+' : '–';
-      if (typeof toggleDetails === 'function') toggleDetails(idx);
-    });
+    btn.addEventListener('click', (e) => { e.stopPropagation(); toggleIconAndDetails(); });
+    tr.addEventListener('click', () => { toggleIconAndDetails(); });
 
     return tr;
   }
