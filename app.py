@@ -354,3 +354,8 @@ def suggest_smtp():
     except Exception as e:
         app.logger.exception('Failed to send suggestion via SMTP')
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Simple health check for uptime monitors."""
+    return jsonify({"ok": True, "time": datetime.now(UTC).isoformat()}), 200
