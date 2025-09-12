@@ -305,28 +305,186 @@
     const inner = document.createElement('div');
     inner.className = 'details-inner';
 
-    if (item.urls && item.urls.length) {
-      item.urls.forEach(u => {
-        try {
-          const chip = createUrlChip(item.musical || item.name || 'Musical', u);
-          // keep full URL accessible on hover
-          chip.title = u;
-          inner.appendChild(chip);
-        } catch (e) {
-          const fallback = document.createElement('a');
-          fallback.className = 'url-chip';
-          fallback.href = u;
-          fallback.target = '_blank';
-          fallback.rel = 'noopener noreferrer';
-          fallback.textContent = u;
-          inner.appendChild(fallback);
-        }
+    // load baseline for this item (session snapshot)
+    const sessionSnap = loadSessionSnapshot() || [];
+    const k = keyForItem(item);
+    const baseItem = sessionSnap.find(it => keyForItem(it) === k) || { urls: [] };
+    const baseUrls = Array.isArray(baseItem.urls) ? baseItem.urls.slice() : [];
+    const curUrls = Array.isArray(item.urls) ? item.urls.slice() : [];
+
+    // union of URLs so we can show removed ones too
+    const allUrlsMap = new Map();
+    baseUrls.forEach(u => allUrlsMap.set(u, { url: u, inBase: true, inCur: false }));
+    curUrls.forEach(u => {
+      const entry = allUrlsMap.get(u);
+      if (entry) entry.inCur = true; else allUrlsMap.set(u, { url: u, inBase: false, inCur: true });
+    });
+
+    // header / summary for details
+    const hdr = document.createElement('div');
+    hdr.style.display = 'flex';
+    hdr.style.alignItems = 'center';
+    hdr.style.justifyContent = 'space-between';
+    hdr.style.gap = '12px';
+    hdr.style.marginBottom = '8px';
+
+    const title = document.createElement('div');
+    title.style.fontWeight = '700';
+    title.textContent = item.musical || item.name || 'Sin nombre';
+
+    const summary = document.createElement('div');
+    const added = [...allUrlsMap.values()].filter(e => e.inCur && !e.inBase).length;
+    const removed = [...allUrlsMap.values()].filter(e => e.inBase && !e.inCur).length;
+    summary.innerHTML = `<span style="color:#c43ea6;font-weight:700">${added}</span> añadidos &nbsp; <span style="color:#777">${removed}</span> eliminados`;
+
+    hdr.appendChild(title);
+    hdr.appendChild(summary);
+    inner.appendChild(hdr);
+
+    // details table for urls
+    const table = document.createElement('table');
+    table.className = 'details-table';
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.style.marginTop = '6px';
+
+    // row builder
+    function buildUrlRow(entry, index) {
+      const r = document.createElement('tr');
+      r.style.borderBottom = '1px solid rgba(0,0,0,0.04)';
+      r.style.verticalAlign = 'middle';
+
+      const labelTd = document.createElement('td');
+      labelTd.style.padding = '10px 8px';
+      labelTd.style.width = '36%';
+
+      // friendly label or simple host
+      const labelText = labelForUrl(item.musical || item.name, entry.url);
+      const a = document.createElement('a');
+      a.href = entry.url.startsWith('http') ? entry.url : 'https://' + entry.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'url-chip';
+      a.textContent = labelText;
+      a.title = entry.url;
+      labelTd.appendChild(a);
+
+      const urlTd = document.createElement('td');
+      urlTd.style.padding = '10px 8px';
+      urlTd.style.color = '#6b4f5f';
+      urlTd.style.fontSize = '0.9rem';
+      urlTd.textContent = entry.url;
+
+      const stateTd = document.createElement('td');
+      stateTd.style.padding = '10px 8px';
+      stateTd.style.textAlign = 'right';
+      stateTd.style.width = '18%';
+
+      // status badge
+      const badge = document.createElement('span');
+      badge.style.padding = '.36rem .6rem';
+      badge.style.borderRadius = '999px';
+      badge.style.fontWeight = '700';
+      badge.style.fontSize = '.85rem';
+      if (entry.inCur && !entry.inBase) {
+        badge.textContent = 'añadido';
+        badge.style.background = 'linear-gradient(90deg,#ff9ac2,#d57cff)';
+        badge.style.color = '#fff';
+        r.style.background = 'linear-gradient(90deg, rgba(255,245,250,0.6), transparent)';
+      } else if (!entry.inCur && entry.inBase) {
+        badge.textContent = 'eliminado';
+        badge.style.background = 'rgba(220,220,220,0.9)';
+        badge.style.color = '#6b6b6b';
+        urlTd.style.textDecoration = 'line-through';
+        urlTd.style.opacity = '0.7';
+      } else {
+        badge.textContent = 'sin cambios';
+        badge.style.background = 'rgba(240,240,245,0.9)';
+        badge.style.color = '#6b6b6b';
+      }
+      stateTd.appendChild(badge);
+
+      const actionsTd = document.createElement('td');
+      actionsTd.style.padding = '10px 8px';
+      actionsTd.style.width = '8%';
+      actionsTd.style.textAlign = 'right';
+
+      const jsonBtn = document.createElement('button');
+      jsonBtn.className = 'btn ghost small';
+      jsonBtn.textContent = 'JSON';
+      jsonBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const payload = {
+          url: entry.url,
+          inBaseline: !!entry.inBase,
+          inCurrent: !!entry.inCur
+        };
+        // show small ephemeral preformatted box
+        const box = document.createElement('div');
+        box.style.position = 'fixed';
+        box.style.right = '18px';
+        box.style.bottom = '18px';
+        box.style.maxWidth = '360px';
+        box.style.padding = '10px';
+        box.style.background = '#fff';
+        box.style.border = '1px solid rgba(0,0,0,0.06)';
+        box.style.borderRadius = '8px';
+        box.style.boxShadow = '0 12px 30px rgba(0,0,0,0.08)';
+        box.innerHTML = `<pre style="white-space:pre-wrap;font-size:.8rem;margin:0">${JSON.stringify(payload, null, 2)}</pre>`;
+        document.body.appendChild(box);
+        setTimeout(()=>box.remove(), 3000);
       });
-    } else {
-      const p = document.createElement('div');
-      p.textContent = 'No URLs';
-      inner.appendChild(p);
+      actionsTd.appendChild(jsonBtn);
+
+      r.appendChild(labelTd);
+      r.appendChild(urlTd);
+      r.appendChild(stateTd);
+      r.appendChild(actionsTd);
+      return r;
     }
+
+    // append rows in a deterministic order: current urls first, then removed ones
+    const curSet = new Set(curUrls);
+    // current urls (mark added or unchanged)
+    curUrls.forEach((u, i) => {
+      const entry = allUrlsMap.get(u) || { url: u, inCur: true, inBase: false };
+      table.appendChild(buildUrlRow(entry, i));
+    });
+    // removed urls (present in base but not in current)
+    [...allUrlsMap.values()].filter(e => e.inBase && !e.inCur).forEach((entry, i) => {
+      table.appendChild(buildUrlRow(entry, i + 1000));
+    });
+
+    // optional bulk actions row
+    const footer = document.createElement('div');
+    footer.style.display = 'flex';
+    footer.style.justifyContent = 'space-between';
+    footer.style.alignItems = 'center';
+    footer.style.marginTop = '10px';
+
+    const markSeenBtn = document.createElement('button');
+    markSeenBtn.className = 'btn primary small';
+    markSeenBtn.textContent = 'Marcar musical como visto';
+    markSeenBtn.addEventListener('click', () => { markItemAsSeen(item); renderTable(filter(musicals)); });
+
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'btn ghost small';
+    exportBtn.textContent = 'Exportar JSON';
+    exportBtn.addEventListener('click', () => {
+      const payload = {
+        meta: changesMap && changesMap[k] ? changesMap[k] : null,
+        baseline: baseUrls,
+        current: curUrls
+      };
+      // fallback: open a new window with JSON
+      const win = window.open('', '_blank');
+      win.document.body.innerHTML = `<pre style="white-space:pre-wrap">${JSON.stringify(payload, null, 2)}</pre>`;
+    });
+
+    inner.appendChild(table);
+    footer.appendChild(markSeenBtn);
+    footer.appendChild(exportBtn);
+    inner.appendChild(footer);
 
     td.appendChild(inner);
     tr.appendChild(td);

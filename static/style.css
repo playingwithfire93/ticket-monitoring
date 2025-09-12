@@ -1076,55 +1076,38 @@ input#search:focus { outline: none; transform: translateY(-1px); box-shadow: 0 1
   gap:8px;
   margin:6px 8px 6px 0;
   padding:8px 10px;
-  border-radius:12px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,245,250,0.9));
-  border: 1px solid rgba(255,220,235,0.6);
-  color: var(--muted);
+  border-radius:10px;
+  background: rgba(255,245,250,0.9);
+  border:1px solid rgba(255,220,235,0.65);
+  color:var(--muted,#6b4f5f);
   text-decoration:none;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.url-chip:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(200,120,160,0.05); }
-
-/* Changes badge */
-.change-badge {
-  background: linear-gradient(90deg,#ff6ec4,#a07bff);
-  color:#fff;
-  border-radius:999px;
-  padding:.36rem .6rem;
-  box-shadow: 0 8px 22px rgba(160,80,140,0.07);
+  font-weight:600;
 }
 
-/* Empty state card */
-.empty-state td { background: linear-gradient(90deg, rgba(255,245,250,0.9), rgba(255,255,255,0.9)); }
+/* Details / modal / chips styles (append near end of file) */
+.details-inner { padding: 12px; border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,254,0.94)); border:1px solid rgba(230,210,220,0.7); }
+.details-table { width:100%; border-collapse: collapse; margin-top:6px; }
+.details-table td { padding:8px 10px; vertical-align:middle; font-size:0.95rem; color: var(--muted, #6b4f5f); }
+tr.details-row.hidden { display:none; }
 
-/* Inline suggestion card (modern) */
-.suggestion-card, #suggest-modal .modal-inner {
-  padding: 14px;
-  border-radius: 12px;
+/* badges / counts */
+.change-badge { background: linear-gradient(90deg,#ff6ec4,#a07bff); color:#fff; padding:.36rem .6rem; border-radius:999px; font-weight:700; }
+.count-badge { background: rgba(255,255,255,0.6); padding:.28rem .5rem; border-radius:8px; border:1px solid rgba(220,200,220,0.6); font-weight:600; color:var(--muted,#7b5a6f); }
+.no-changes { color:rgba(120,100,120,0.65); font-weight:600; }
+
+/* expand button */
+.expand-btn { width:36px; height:36px; border-radius:50%; display:inline-grid; place-items:center; border:0; background:transparent; cursor:pointer; font-weight:800; color:var(--accent,#c43ea6); }
+
+/* Modal base */
+.modal { position:fixed; left:0; top:0; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; z-index:20000; background: rgba(11,8,12,0.36); }
+.modal-inner { background: linear-gradient(180deg,#fff,#fffefc); padding:16px; border-radius:12px; box-shadow: 0 30px 80px rgba(0,0,0,0.16); border:1px solid rgba(0,0,0,0.05); max-height:84vh; overflow:auto; }
+
+/* small utility for JSON preview boxes */
+pre { background:#fafafa; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.04); font-size:.85rem; }
+
+/* responsive tweaks */
+@media (max-width:800px) {
+  .modal-inner { width:92%; padding:12px; }
+  .url-chip { padding:6px 8px; font-size:.92rem; }
 }
-.suggestion-form input, .suggestion-form textarea, #inline-suggest-form input, #inline-suggest-form textarea {
-  width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(230,210,220,0.9); background: rgba(255,255,255,0.98);
-}
-
-/* Small utilities */
-.kv-muted { color: var(--muted); font-size:.92rem; }
-.center { display:flex; align-items:center; justify-content:center; }
-
-/* Micro animations */
-@keyframes floaty {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
-}
-.logo { animation: floaty 6s ease-in-out infinite; transform-origin:center; }
-
-/* Responsive */
-@media (max-width:900px) {
-  .promo-grid { flex-direction:column; }
-  .hero { flex-direction:column; }
-  .slide-img { height:180px; object-position:center; }
-  .topbar .controls { flex-wrap:wrap; gap:8px; }
-}
-
-/* End revamp styles */
 
