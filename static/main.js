@@ -893,3 +893,59 @@ if (typeof window === 'undefined') {
     return res.json();
   }
 }
+
+/**
+ * Return a friendly label for a URL, e.g. "Wicked entradas", "Wicked elenco",
+ * falling back to musical name or hostname when no rule matches.
+ */
+function labelForUrl(musical, urlStr) {
+  try {
+    const u = new URL(urlStr.startsWith('http') ? urlStr : 'https://' + urlStr);
+    const path = (u.pathname || '').toLowerCase();
+    const host = u.hostname.replace(/^www\./, '').toLowerCase();
+
+    // heuristics for suffix
+    if (path.includes('elenco') || path.includes('cast') || path.includes('cast-member')) {
+      return `${musical} elenco`;
+    }
+    if (path.includes('entradas') || path.includes('tickets') || host.includes('ticket') || host.includes('entradas')) {
+      return `${musical} entradas`;
+    }
+    if (path.includes('info') || path.includes('about') || path.includes('details') || path.includes('noticias')) {
+      return `${musical} info`;
+    }
+
+    // If hostname is a recognizable short name, use it, else default to "entradas"
+    const shortHost = host.split('.')[0];
+    if (shortHost && /^([a-z0-9\-]{2,})$/.test(shortHost)) {
+      return `${musical} · ${shortHost}`;
+    }
+    return `${musical} entradas`;
+  } catch (e) {
+    return musical;
+  }
+}
+
+// Replace the code that creates the URL anchor text / chip with this pattern:
+//
+// previous code (example):
+//   const a = document.createElement('a');
+//   a.href = url;
+//   a.textContent = url; // <-- replace this
+//
+// new pattern:
+function createUrlChip(musical, url) {
+  const a = document.createElement('a');
+  a.className = 'url-chip';
+  a.href = url.startsWith('http') ? url : 'https://' + url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = labelForUrl(musical || 'Link', url);
+  return a;
+}
+
+// Example usage where you iterate item.urls:
+// urls.forEach(u => {
+//   const chip = createUrlChip(item.musical || item.name || 'Musical', u);
+//   urlsTd.appendChild(chip);
+// });
