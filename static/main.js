@@ -146,28 +146,22 @@
     span.textContent = `${urlNum} URL(s)`;
     urlsTd.appendChild(span);
 
-    // changes cell (uses global changesMap)
+    // changes cell (always show a count; tooltip shows +added / -removed)
     const changesTd = document.createElement('td');
     const k = keyForItem ? keyForItem(item) : JSON.stringify(item);
-    const ch = (typeof changesMap !== 'undefined' && changesMap) ? changesMap[k] : null;
-    if (ch && ch.total > 0) {
-      const badge = document.createElement('button');
-      badge.className = 'btn small change-badge';
-      badge.type = 'button';
-      badge.title = `Ver cambios: +${ch.added} / -${ch.removed}`;
-      badge.textContent = `${ch.total} cambios`;
-      badge.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        if (typeof markItemAsSeen === 'function') markItemAsSeen(item);
-        if (typeof showNotificationPopup === 'function') showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
-      });
-      changesTd.appendChild(badge);
-    } else {
-      const none = document.createElement('span');
-      none.className = 'no-changes';
-      none.textContent = '—';
-      changesTd.appendChild(none);
-    }
+    const ch = (typeof changesMap !== 'undefined' && changesMap && changesMap[k]) ? changesMap[k] : { added: 0, removed: 0, total: 0 };
+
+    const badge = document.createElement('button');
+    badge.className = ch.total > 0 ? 'btn small change-badge' : 'btn small change-none';
+    badge.type = 'button';
+    badge.title = `Cambios: +${ch.added} / -${ch.removed}`;
+    badge.textContent = `${ch.total} cambios`;
+    badge.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (typeof markItemAsSeen === 'function') markItemAsSeen(item);
+      if (typeof showNotificationPopup === 'function') showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
+    });
+    changesTd.appendChild(badge);
 
     tr.appendChild(expTd);
     tr.appendChild(nameTd);
