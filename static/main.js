@@ -307,30 +307,27 @@
     tr.dataset.idx = idx;
 
     const td = document.createElement('td');
-    td.colSpan = 3; // ensure matches table header columns
+    td.colSpan = 4; // span all table columns
 
     const inner = document.createElement('div');
     inner.className = 'details-inner';
 
     if (item.urls && item.urls.length) {
       item.urls.forEach(u => {
-        const a = document.createElement('a');
-        a.className = 'url-chip';
-        a.href = u;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.title = u;
-
-        const hostSpan = document.createElement('span');
-        hostSpan.className = 'url-host';
         try {
-          hostSpan.textContent = new URL(u).hostname + (u.length > 60 ? '…' : '');
+          const chip = createUrlChip(item.musical || item.name || 'Musical', u);
+          // keep full URL accessible on hover
+          chip.title = u;
+          inner.appendChild(chip);
         } catch (e) {
-          hostSpan.textContent = u;
+          const fallback = document.createElement('a');
+          fallback.className = 'url-chip';
+          fallback.href = u;
+          fallback.target = '_blank';
+          fallback.rel = 'noopener noreferrer';
+          fallback.textContent = u;
+          inner.appendChild(fallback);
         }
-
-        a.appendChild(hostSpan);
-        inner.appendChild(a);
       });
     } else {
       const p = document.createElement('div');
