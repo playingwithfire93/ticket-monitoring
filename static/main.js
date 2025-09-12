@@ -583,16 +583,32 @@
 
   })();
 
-  // slideshow controls (simple, no dots)
+  // slideshow controls (now optional random order)
+  const RANDOMIZE_SLIDES = true;
+
   function showSlide(index) {
     if (!slideElems.length) return;
     currentIndex = (index + slideElems.length) % slideElems.length;
     slideElems.forEach((s, i) => s.classList.toggle('active', i === currentIndex));
   }
-  function nextSlide(){ showSlide(currentIndex + 1); }
-  function prevSlide(){ showSlide(currentIndex - 1); }
-  function startSlideAuto(){ stopSlideAuto(); slideAutoId = setInterval(nextSlide, 5000); }
-  function stopSlideAuto(){ if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
+
+  function showRandomSlide() {
+    if (!slideElems.length) return;
+    if (slideElems.length === 1) { showSlide(0); return; }
+    let next;
+    // pick a random index different from currentIndex
+    do { next = Math.floor(Math.random() * slideElems.length); } while (next === currentIndex);
+    showSlide(next);
+  }
+
+  function nextSlide() { showSlide(currentIndex + 1); }
+  function prevSlide() { showSlide(currentIndex - 1); }
+
+  function startSlideAuto() {
+    stopSlideAuto();
+    slideAutoId = setInterval(RANDOMIZE_SLIDES ? showRandomSlide : nextSlide, 5000);
+  }
+  function stopSlideAuto() { if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
 
   // events
   if (search) search.addEventListener('input', () => renderTable(filter(musicals)));
@@ -657,7 +673,7 @@
       if (initialLoadDone && added.length > 0) {
         // play bell and show popup
         try { notifierAudio.play().catch(()=>{}); } catch(e){/*ignore*/ }
-        try { showNotificationPopup(`${added.length} cambios detectados ✨`, 3500); } catch(e){/*ignore*/ }
+        try { showNotificationPopup(`${added.length} cambios detectados ✨`, 3500); } catch(e) {}
         // NEW: lightweight celebration visual (non-blocking)
         try { celebrate(Math.min(28, Math.max(10, added.length * 6))); } catch(e) {}
       }
@@ -706,10 +722,10 @@
     })();
   }
 
-  // init
+  // init (use random first slide when enabled)
   renderTable(musicals);
   updateLastChecked();
-  showSlide(0);
+  if (RANDOMIZE_SLIDES) showRandomSlide(); else showSlide(0);
   startSlideAuto();
 
   // ensure auto-refresh is ALWAYS ON
@@ -792,6 +808,8 @@
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
+  try { document.body.classList.add('modernized'); } catch(e){}
+  
   // Reveal .fade-in elements with IntersectionObserver (graceful fallback)
   try {
     const io = new IntersectionObserver((entries, obs) => {
