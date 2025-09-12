@@ -158,8 +158,7 @@
     badge.textContent = `${ch.total} cambios`;
     badge.addEventListener('click', (ev) => {
       ev.stopPropagation();
-      if (typeof markItemAsSeen === 'function') markItemAsSeen(item);
-      if (typeof showNotificationPopup === 'function') showNotificationPopup(`Marcado como visto: ${item.musical || item.name}`, 1800);
+      try { showChangesForItem(item, k); } catch(e) { console.warn('open changes failed', e); }
     });
     changesTd.appendChild(badge);
 
@@ -970,3 +969,78 @@ function createUrlChip(musical, url) {
 //   const chip = createUrlChip(item.musical || item.name || 'Musical', u);
 //   urlsTd.appendChild(chip);
 // });
+
+/* helper: show changes for an item (modal if available, fallback overlay) */
+function showChangesForItem(item, key) {
+  const sess = loadSessionSnapshot() || [];
+  const base = (sess.find(it => keyForItem(it) === key) || { urls: [] }).urls || [];
+  const cur = (musicals.find(it => keyForItem(it) === key) || { urls: [] }).urls || [];
+
+  const prevSet = new Set(base);
+  const curSet = new Set(cur);
+  const addedList = cur.filter(u => !prevSet.has(u));
+  const removedList = base.filter(u => !curSet.has(u));
+  const meta = changesMap && changesMap[key] ? changesMap[key] : { added: addedList.length, removed: removedList.length, total: addedList.length + removedList.length };
+
+  // build content
+  const makeList = (arr) => arr.length ? `<ul style="margin:6px 0 10px 18px">${arr.map(u => `<li><a href="${(u.startsWith('http')?u:'https://'+u)}" target="_blank" rel="noopener noreferrer">${u}</a></li>`).join('')}</ul>` : '<div style="opacity:.8;font-size:.95rem">— ninguno —</div>';
+
+  const html = `
+    <div style="font-weight:700;margin-bottom:8px">${(item.musical || item.name || 'Item')}</div>
+    <div style="font-size:.95rem;margin-bottom:8px">Cambios: <strong style="color:#c43ea6">${meta.total}</strong> ( +${meta.added} / -${meta.removed} )</div>
+    <div style="margin-bottom:8px"><strong>Añadidos</strong>${makeList(addedList)}</div>
+    <div style="margin-bottom:8px"><strong>Eliminados</strong>${makeList(removedList)}</div>
+    <details style="margin-top:8px;border-top:1px dashed rgba(0,0,0,.04);padding-top:8px"><summary style="cursor:pointer">Ver JSON</summary><pre style="white-space:pre-wrap;font-size:.85rem;margin-top:8px;background:#fff;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.04)">${JSON.stringify({ meta, added: addedList, removed: removedList, baseline: base, current: cur }, null, 2)}</pre></details>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button id="changes-mark-seen" class="btn small change-badge" style="padding:.4rem .6rem">Marcar como visto</button>
+      <button id="changes-close" class="btn ghost" style="padding:.35rem .55rem">Cerrar</button>
+    </div>
+  `;
+
+  // prefer existing modal
+  if (modal && modalTitle && modalList) {
+    try {
+      modalTitle.textContent = `${item.musical || item.name || 'Item'} — Cambios`;
+      modalList.innerHTML = html;
+      modal.setAttribute('aria-hidden','false');
+      modal.style.display = 'block';
+      // wire close / mark seen
+      const closeBtn = document.getElementById('changes-close');
+      const markBtn = document.getElementById('changes-mark-seen');
+      if (closeBtn) closeBtn.addEventListener('click', () => { modal.setAttribute('aria-hidden','true'); modal.style.display='none'; });
+      if (markBtn) markBtn.addEventListener('click', () => { markItemAsSeen(item); modal.setAttribute('aria-hidden','true'); modal.style.display='none'; renderTable(filter(musicals)); });
+    } catch (e) {
+      console.warn('showChangesForItem modal failed', e);
+    }
+    return;
+  }
+
+  // fallback: ephemeral overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.left = '0';
+  overlay.style.top = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 999999;
+  overlay.style.background = 'rgba(12,8,12,0.36)';
+
+  const box = document.createElement('div');
+  box.style.maxWidth = '820px';
+  box.style.width = '92%';
+  box.style.background = 'linear-gradient(90deg,#fff,#fffefc)';
+  box.style.border = '1px solid rgba(0,0,0,0.06)';
+  box.style.borderRadius = '12px';
+  box.style.padding = '16px';
+  box.style.boxShadow = '0 20px 50px rgba(0,0,0,0.12)';
+  box.innerHTML = html;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // wire buttons
+  overlay.querySelector('#changes-close')?.addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#changes-mark-seen')?.addEventListener('click', () => { markItemAsSeen(item); overlay.remove(); renderTable(filter(musicals)); });
+}
