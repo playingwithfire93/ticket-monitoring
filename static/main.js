@@ -895,31 +895,61 @@ if (typeof window === 'undefined') {
  * Return a friendly label for a URL, e.g. "Wicked entradas", "Wicked elenco",
  * falling back to musical name or hostname when no rule matches.
  */
+function titleCase(s) {
+  return String(s || '').replace(/[-_]/g, ' ').split(/\s+/).map(w => {
+    return w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : '';
+  }).filter(Boolean).join(' ');
+}
+
+/**
+ * Friendly label for a URL:
+ * - If the hostname matches the musical (e.g. wicked.com + musical "Wicked") -> "Wicked"
+ * - If the path implies cast/cast/ el/enco -> "Wicked elenco"
+ * - Otherwise falls back to heuristics like "Wicked entradas" or "Wicked · provider"
+ */
 function labelForUrl(musical, urlStr) {
   try {
     const u = new URL(urlStr.startsWith('http') ? urlStr : 'https://' + urlStr);
-    const path = (u.pathname || '').toLowerCase();
+    const path = (u.pathname || '/').toLowerCase();
     const host = u.hostname.replace(/^www\./, '').toLowerCase();
-
-    // heuristics for suffix
-    if (path.includes('elenco') || path.includes('cast') || path.includes('cast-member')) {
-      return `${musical} elenco`;
-    }
-    if (path.includes('entradas') || path.includes('tickets') || host.includes('ticket') || host.includes('entradas')) {
-      return `${musical} entradas`;
-    }
-    if (path.includes('info') || path.includes('about') || path.includes('details') || path.includes('noticias')) {
-      return `${musical} info`;
-    }
-
-    // If hostname is a recognizable short name, use it, else default to "entradas"
     const shortHost = host.split('.')[0];
-    if (shortHost && /^([a-z0-9\-]{2,})$/.test(shortHost)) {
-      return `${musical} · ${shortHost}`;
+
+    const musicalClean = (musical || '').trim();
+    const musicalKey = musicalClean.toLowerCase();
+
+    // If musical is provided and host matches musical short name (e.g. wicked.com)
+    if (musicalKey && shortHost === musicalKey) {
+      // exact site root -> just "Wicked"
+      if (!path || path === '/' || path === '/index.html') return titleCase(musicalClean);
+      // cast/elenco pages
+      if (path.includes('elenco') || path.includes('cast') || path.includes('cast-member')) return `${titleCase(musicalClean)} elenco`;
+      // tickets/entradas pages
+      if (path.includes('tickets') || path.includes('entradas') || host.includes('ticket')) return `${titleCase(musicalClean)} entradas`;
+      // info/details fallback -> just musical
+      return titleCase(musicalClean);
     }
-    return `${musical} entradas`;
+
+    // If musical not provided, but hostname is meaningful, use host as label
+    if (!musicalKey && shortHost) {
+      if (!path || path === '/' || path === '/index.html') return titleCase(shortHost);
+      if (path.includes('elenco') || path.includes('cast')) return `${titleCase(shortHost)} elenco`;
+      if (path.includes('tickets') || path.includes('entradas') || host.includes('ticket')) return `${titleCase(shortHost)} entradas`;
+      return titleCase(shortHost);
+    }
+
+    // Generic heuristics when musical provided but host differs
+    if (path.includes('elenco') || path.includes('cast')) return `${titleCase(musicalClean)} elenco`;
+    if (path.includes('entradas') || path.includes('tickets') || host.includes('ticket') || host.includes('entradas')) return `${titleCase(musicalClean)} entradas`;
+
+    // Friendly short host suffix (e.g. "Wicked · ticketmaster")
+    if (shortHost && /^([a-z0-9\-]{2,})$/.test(shortHost)) {
+      return `${titleCase(musicalClean)} · ${shortHost}`;
+    }
+
+    // Final fallback
+    return titleCase(musicalClean || shortHost || 'Link');
   } catch (e) {
-    return musical;
+    return titleCase(musical || '');
   }
 }
 
