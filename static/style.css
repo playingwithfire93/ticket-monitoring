@@ -931,17 +931,113 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
 /* Small visual polish for inline placement */
 .suggestion-inline { margin-top: 18px; }
 
-```python
-def send_telegram_with_json(bot_token, chat_id, caption, changes):
-    import json, requests, io
-    payload_json = json.dumps(changes, indent=2, ensure_ascii=False)
-    bio = io.BytesIO(payload_json.encode('utf-8'))
-    bio.name = 'bom-changes-{}.json'.format(__import__('datetime').datetime.utcnow().isoformat().replace(':','-'))
-    url = f'https://api.telegram.org/bot{bot_token}/sendDocument'
-    files = {'document': (bio.name, bio, 'application/json')}
-    data = {'chat_id': chat_id, 'caption': caption}
-    resp = requests.post(url, data=data, files=files, timeout=30)
-    resp.raise_for_status()
-    return resp.json()
-```
+/* ===========================
+   UI Enhancements: neon/pulse/confetti & gradient headings
+   Applied to existing layout (auto-refresh, last-checked, brand)
+   =========================== */
+
+.brand h1 {
+  /* gradient-filled heading for logo/title */
+  background: linear-gradient(90deg, #ff6ec4, #7873f5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.auto-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Neon glow state for the auto-refresh toggle */
+.btn.soft.neon,
+#toggle-refresh.neon {
+  box-shadow:
+    0 4px 18px rgba(120,115,245,0.18),
+    0 0 12px rgba(120,115,245,0.14),
+    0 0 30px rgba(255,110,196,0.06);
+  transform: translateZ(0);
+  transition: box-shadow .24s ease, transform .18s ease;
+}
+@keyframes neonPulse {
+  0% { box-shadow: 0 6px 20px rgba(120,115,245,0.18); transform: translateY(0); }
+  50% { box-shadow: 0 10px 34px rgba(120,115,245,0.26); transform: translateY(-2px); }
+  100% { box-shadow: 0 6px 20px rgba(120,115,245,0.18); transform: translateY(0); }
+}
+#toggle-refresh.neon { animation: neonPulse 2.8s ease-in-out infinite; }
+
+/* Pulsing dot next to last-checked (pure CSS, triggered via class on the element) */
+#last-checked {
+  position: relative;
+  padding-left: 14px; /* room for dot */
+  font-weight: 600;
+  color: var(--muted);
+}
+#last-checked::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scale(.9);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #ff6ec4, #7873f5);
+  box-shadow: 0 6px 14px rgba(120,115,245,0.12);
+  opacity: 0;
+  transition: opacity .18s ease, transform .22s ease;
+}
+#last-checked.pulse-on::before {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+  animation: pulseDot 1.2s ease-out 1;
+}
+@keyframes pulseDot {
+  0% { transform: translateY(-50%) scale(.8); opacity: 0.0; }
+  30% { transform: translateY(-50%) scale(1.12); opacity: 1; }
+  100% { transform: translateY(-50%) scale(1); opacity: 1; }
+}
+
+/* Sparkle / confetti lightweight pieces */
+.confetti-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 14000;
+}
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 14px;
+  opacity: 0.95;
+  transform-origin: center;
+  will-change: transform, opacity, left, top;
+  border-radius: 2px;
+  animation: confettiFall 1400ms cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 1; }
+  30% { transform: translateY(160px) rotate(90deg) translateX(18px); }
+  60% { transform: translateY(360px) rotate(180deg) translateX(-14px); opacity: 0.95; }
+  100% { transform: translateY(680px) rotate(270deg) translateX(0); opacity: 0; }
+}
+
+/* subtle sparkle used on details open (keeps existing shimmer intact) */
+.details-inner.sparkle {
+  box-shadow: 0 6px 30px rgba(255,140,200,0.08), 0 0 40px rgba(120,115,245,0.04);
+  transition: box-shadow .5s ease;
+}
+
+/* keep responsiveness & non-intrusive style */
+@media (max-width: 900px) {
+  .confetti-piece { width: 8px; height: 10px; }
+  #last-checked { padding-left: 12px; }
+}
 

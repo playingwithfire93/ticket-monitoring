@@ -438,7 +438,28 @@
   }
 
   // helpers
-  function updateLastChecked() { if (lastCheckedEl) lastCheckedEl.textContent = new Date().toLocaleString(); }
+  function updateLastChecked() { 
+    if (lastCheckedEl) {
+      try {
+        lastCheckedEl.textContent = new Date().toLocaleString();
+        // trigger CSS pulse (remove after animation)
+        lastCheckedEl.classList.remove('pulse-on');
+        // force reflow then add to restart animation
+        void lastCheckedEl.offsetWidth;
+        lastCheckedEl.classList.add('pulse-on');
+        setTimeout(() => lastCheckedEl.classList.remove('pulse-on'), 1400);
+      } catch (e) { /* ignore */ }
+    }
+    // Also ensure the auto-refresh toggle has neon if autoRefresh is enabled
+    try {
+      if (typeof autoRefresh !== 'undefined' && autoRefresh && arToggle) {
+        arToggle.classList.add('neon');
+        // keep the AR state text updated (already handled elsewhere)
+      } else if (arToggle) {
+        arToggle.classList.remove('neon');
+      }
+    } catch (e) {}
+  }
   async function fetchData() {
     try {
       const res = await fetch(api);
@@ -637,6 +658,8 @@
         // play bell and show popup
         try { notifierAudio.play().catch(()=>{}); } catch(e){/*ignore*/ }
         try { showNotificationPopup(`${added.length} cambios detectados ✨`, 3500); } catch(e){/*ignore*/ }
+        // NEW: lightweight celebration visual (non-blocking)
+        try { celebrate(Math.min(28, Math.max(10, added.length * 6))); } catch(e) {}
       }
       prevChangeKeys = newKeys;
       initialLoadDone = true;
