@@ -559,29 +559,59 @@
     });
   }
 
-  function toggleDetails(idx) {
-    const details = tableBody.querySelector(`tr.details-row[data-idx="${idx}"]`);
-    const btn = tableBody.querySelector(`tr.summary[data-idx="${idx}"] .expand-btn`);
-    if (!details) return;
-    const isHidden = details.classList.contains('hidden');
+  // Controlled details behaviour:
+  // - abrir una fila mantiene esa fila abierta
+  // - abrir otra fila cierra la anterior
+  // - pulsar la misma fila no la cierra (se queda abierta hasta abrir otra)
+  let openDetailsIdx = null;
 
-    // collapse any open rows first
-    Array.from(tableBody.querySelectorAll('tr.details-row')).forEach(r => r.classList.add('hidden'));
-    Array.from(tableBody.querySelectorAll('.expand-btn')).forEach(b => { b.textContent = '+'; b.setAttribute('aria-expanded','false'); });
-
-    if (isHidden) {
-      details.classList.remove('hidden');
-      if (btn) { btn.textContent = '–'; btn.setAttribute('aria-expanded','true'); }
-      // sparkle effect
-      const inner = details.querySelector('.details-inner');
-      if (inner) {
-        inner.classList.add('sparkle');
-        // remove sparkle after animation finishes
-        setTimeout(() => inner.classList.remove('sparkle'), 900);
+  function closeDetails(idx) {
+    try {
+      const prevDetails = document.querySelector(`tr.details-row[data-idx="${idx}"]`);
+      const prevSummary = document.querySelector(`tr.summary[data-idx="${idx}"]`);
+      if (prevDetails) prevDetails.classList.add('hidden');
+      if (prevSummary) {
+        const btn = prevSummary.querySelector('.expand-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        const icon = prevSummary.querySelector('.icon');
+        if (icon) icon.textContent = '+';
       }
-    } else {
-      details.classList.add('hidden');
-      if (btn) { btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
+    } catch (e) { /* ignore */ }
+  }
+
+  function openDetails(idx) {
+    try {
+      // if same index, do nothing (keep open)
+      if (openDetailsIdx === idx) return;
+
+      // close previously open
+      if (openDetailsIdx !== null) closeDetails(openDetailsIdx);
+
+      // open the requested one
+      const details = document.querySelector(`tr.details-row[data-idx="${idx}"]`);
+      const summary = document.querySelector(`tr.summary[data-idx="${idx}"]`);
+      if (details) details.classList.remove('hidden');
+      if (summary) {
+        const btn = summary.querySelector('.expand-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+        const icon = summary.querySelector('.icon');
+        if (icon) icon.textContent = '–';
+      }
+      openDetailsIdx = idx;
+    } catch (e) { console.warn('openDetails error', e); }
+  }
+
+  // backward-compatible toggleDetails: now acts as "open this row"
+  // (keeps behavior for other code that calls toggleDetails)
+  function toggleDetails(idx) {
+    openDetails(idx);
+  }
+
+  // Optional helper to close everything (if you want a button to collapse all)
+  function closeAllDetails() {
+    if (openDetailsIdx !== null) {
+      closeDetails(openDetailsIdx);
+      openDetailsIdx = null;
     }
   }
 
