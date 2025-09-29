@@ -355,7 +355,7 @@ def admin_check_now():
     return jsonify(res)
 
 # background scheduler to run periodic checks
-POLL_INTERVAL_SECONDS = 5  # change to desired interval (beware rate limits)
+POLL_INTERVAL_SECONDS = 30  # was 5, increase to 30 (or 60) to avoid overlapping job runs
 scheduler = BackgroundScheduler()
 scheduler.add_job(lambda: check_all_urls(send_notifications=True), "interval", seconds=POLL_INTERVAL_SECONDS, id="monitor_job")
 scheduler.start()
@@ -606,10 +606,10 @@ def suggest_smtp():
         except Exception:
             app.logger.exception("Slack notify failed")
 
-    # Try Discord
-    if DISCORD_WEBHOOK:
+    # Try Discord (fixed names)
+    if DISCORD_WEBHOOK_SUGGESTIONS:
         try:
-            resd = send_discord_notification(payload_text)
+            resd = send_discord_suggestion(payload_text)
             if resd.get("ok"):
                 sent_via.append("discord")
         except Exception:
@@ -659,4 +659,28 @@ def suggest_smtp():
         return jsonify({'ok': True, 'via': 'smtp'})
     except Exception as e:
         app.logger.exception('Failed to send suggestion via SMTP')
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/admin/test-discord', methods=['POST'])
+def admin_test_discord():
+    """
+    Send a test message to Discord.
+    JSON body: {"text":"...","target":"suggestions"|"alerts"}
+    If target is "alerts" it uses DISCORD_WEBHOOK_ALERTS, otherwise DISCORD_WEBHOOK_SUGGESTIONS.
+    """
+    body = request.get_json(silent=True) or {}
+    text = body.get('text', 'Test desde Ticket Monitor: Discord webhook working')
+    target = (body.get('target') or 'suggestions').lower()
+
+    webhook = DISCORD_WEBHOOK_ALERTS if target == 'alerts' else DISCORD_WEBHOOK_SUGGESTIONS
+    if not webhook:
+        return jsonify({'ok': False, 'error': f'Webhook for {target} not configured'}), 400
+
+    try:
+        r = requests.post(webhook, json={'content': text}, timeout=10)
+        # Discord typically returns 204 No Content on success
+        ok = 200 <= r.status_code < 300
+        return jsonify({'ok': ok, 'status_code': r.status_code, 'response_text': r.text or None})
+    except Exception as e:
+        app.logger.exception('admin_test_discord failed')
         return jsonify({'ok': False, 'error': str(e)}), 500
