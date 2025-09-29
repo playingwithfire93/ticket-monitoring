@@ -1241,3 +1241,31 @@ function showChangesForItem(item, key) {
   overlay.querySelector('#changes-close')?.addEventListener('click', () => overlay.remove());
   overlay.querySelector('#changes-mark-seen')?.addEventListener('click', () => { markItemAsSeen(item); overlay.remove(); renderTable(filter(musicals)); });
 }
+
+// Ensure portrait images don't get cropped: add .portrait to their .slide container
+function normalizeSlideImageOrientation() {
+  try {
+    const imgs = Array.from(document.querySelectorAll('.slide-img'));
+    imgs.forEach(img => {
+      const apply = () => {
+        const slide = img.closest('.slide');
+        if (!slide) return;
+        // if natural dimensions not available yet, skip
+        if (!img.naturalWidth || !img.naturalHeight) return;
+        if (img.naturalHeight > img.naturalWidth) slide.classList.add('portrait');
+        else slide.classList.remove('portrait');
+      };
+      if (img.complete) apply();
+      else img.addEventListener('load', apply, { once: true });
+    });
+  } catch (e) { console.warn('normalizeSlideImageOrientation failed', e); }
+}
+
+// run once on DOM ready and on resize (in case layout changes)
+document.addEventListener('DOMContentLoaded', () => {
+  normalizeSlideImageOrientation();
+  window.addEventListener('resize', () => { normalizeSlideImageOrientation(); });
+});
+
+// If your slideshow code dynamically swaps images, call normalizeSlideImageOrientation()
+// after swapping/changing slides to re-evaluate orientation.

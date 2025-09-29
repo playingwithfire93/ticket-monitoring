@@ -1066,3 +1066,39 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
 /* subtle focus for accessibility */
 .suggestion-form input:focus, .suggestion-form textarea:focus { box-shadow: 0 0 0 4px rgba(160,110,150,0.06); }
 
+/* Slideshow: handle portrait (vertical) images without cropping */
+.slideshow-container { display:flex; align-items:center; justify-content:center; }
+.slides { display:block; width:100%; }
+.slide {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  min-height:220px; /* keeps layout stable for small images */
+  box-sizing: border-box;
+}
+.slide-img {
+  width:100%;
+  height:auto;           /* let height adapt */
+  max-width:720px;       /* limit very wide images */
+  max-height:520px;      /* limit very tall images */
+  object-fit: contain;   /* preserve entire image, no cropping */
+  border-radius:12px;
+  transition: transform .45s ease;
+  background: linear-gradient(180deg, rgba(255,250,253,0.6), rgba(255,245,250,0.6)); /* subtle backdrop */
+  box-shadow: 0 12px 36px rgba(30,20,30,0.04);
+}
+
+/* Portrait-specific tweaks (applied via JS) */
+.slide.portrait .slide-img {
+  width: auto;           /* portrait: don't stretch to full width */
+  max-height: 620px;     /* allow taller render */
+  max-width: 420px;      /* constrain width to reasonable size */
+}
+
+/* small-screen adjustments */
+@media (max-width:900px) {
+  .slide-img { max-height:360px; max-width:92%; }
+  .slide.portrait .slide-img { max-height:520px; max-width:84%; }
+}
+
