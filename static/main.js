@@ -985,6 +985,15 @@
   }
 })();
 
+// Ensure modernized styles are enabled on load (idempotent)
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    if (!document.body.classList.contains('modernized')) {
+      document.body.classList.add('modernized');
+    }
+  } catch (e) { /* noop */ }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   try { document.body.classList.add('modernized'); } catch(e){}
   

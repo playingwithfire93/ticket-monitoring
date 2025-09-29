@@ -538,7 +538,7 @@ body{ background-image: none, linear-gradient(180deg,var(--cute-1) 0%, #fff 55%)
 
 /* Buttons: softer gradient + glow on hover */
 .btn.primary, button {
-  background: linear-gradient(135deg, var(--pink-1), var(--mauve));
+  background: linear-gradient(135deg, #ff9ac2, #d57cff);
   border: none;
   color: #fff;
   padding: .62rem .95rem;
@@ -1109,5 +1109,68 @@ pre { background:#fafafa; padding:10px; border-radius:8px; border:1px solid rgba
 @media (max-width:800px) {
   .modal-inner { width:92%; padding:12px; }
   .url-chip { padding:6px 8px; font-size:.92rem; }
+}
+
+/* Modern polish: fonts, header, hero, table improvements */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+:root{
+  --pink-soft: #fff3f8;
+  --accent-grad: linear-gradient(90deg,#ff7ab6,#9b7bff);
+  --muted: #6b5363;
+  --card-bg: rgba(255,255,255,0.76);
+  --glass-border: rgba(230,200,220,0.6);
+  --shadow: 0 10px 30px rgba(120,80,120,0.08);
+}
+
+/* base fonts */
+body { font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #2b1f2a; background: radial-gradient(circle at 10% 10%, rgba(255,230,245,0.45), transparent 10%), #fff; }
+
+/* header polish */
+.topbar-inner {
+  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,250,252,0.84));
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+.brand h1 {
+  font-family: "Playfair Display", serif;
+  font-weight:700;
+  background: var(--accent-grad);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 6px 18px rgba(255,110,160,0.06);
+  margin:0;
+}
+
+/* search pill */
+.search-wrap { background: rgba(255,255,255,0.97); border-radius:999px; padding:6px 8px; border:1px solid rgba(230,210,220,0.9); display:inline-flex; align-items:center; gap:8px; }
+.search-wrap input { border:0; background:transparent; outline:none; padding:6px 8px; min-width:200px; }
+
+/* hero image card */
+.slideshow-container { background: linear-gradient(180deg, rgba(255,250,255,0.85), rgba(255,245,250,0.85)); border-radius:14px; padding:28px; display:flex; justify-content:center; align-items:center; box-shadow: 0 18px 50px rgba(150,90,130,0.06); }
+.slide-img { border-radius:12px; box-shadow: 0 12px 36px rgba(30,20,30,0.06); max-width:720px; width:80%; height:auto; object-fit:cover; }
+
+/* table/card */
+.container .musicals-table { background: transparent; border-radius:12px; overflow:hidden; margin-top:10px; }
+.musicals-table tbody tr.summary { background: rgba(255,255,255,0.85); border-bottom:1px solid rgba(230,210,220,0.6); transition: transform .18s ease, box-shadow .18s ease; }
+.musicals-table tbody tr.summary:hover { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(150,80,130,0.04); }
+.musicals-table td { padding:12px 16px; }
+
+/* change badge & counts */
+.change-badge { background: linear-gradient(90deg,#ff6ec4,#a07bff); color:#fff; padding:.32rem .56rem; border-radius:999px; font-weight:700; box-shadow: 0 8px 22px rgba(160,80,140,0.07); }
+.count-badge { background: rgba(255,255,255,0.9); border:1px solid rgba(230,210,220,0.8); padding:.28rem .5rem; border-radius:10px; font-weight:600; color:var(--muted); }
+
+/* details / chips */
+.details-inner { background: var(--card-bg); border:1px solid var(--glass-border); padding:12px; border-radius:10px; }
+.url-chip { display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border-radius:10px; background: #fff; border:1px solid rgba(240,220,230,0.6); color:var(--muted); text-decoration:none; font-weight:600; }
+
+/* focus & accessibility */
+button:focus, a:focus, input:focus { outline: 3px solid rgba(160,110,150,0.12); outline-offset:3px; }
+
+/* responsive tuning */
+@media (max-width:900px) {
+  .slide-img { width:92%; height:160px; object-position:center; }
+  .search-wrap input { min-width:120px; }
 }
 
