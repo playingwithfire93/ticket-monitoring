@@ -231,6 +231,56 @@ def _save_state():
 def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()
 
+# Try to reuse BoMtickets helpers (non-mandatory)
+try:
+    import BoMtickets as bm
+except Exception:
+    bm = None
+
+# JSON-style Telegram alert (image optional) — match BoMtickets format
+def send_telegram_json_alert(url, changes_text, timestamp=None, image_path=None):
+    """
+    Send a Telegram notification that mirrors the JSON-format used in BoMtickets.
+    Sends image (if provided) via sendPhoto, then a pretty-printed JSON message
+    inside a Markdown code block.
+    """
+    if not TG_TOKEN or not TG_CHAT:
+        app.logger.warning('Telegram not configured for JSON alert')
+        return {'ok': False, 'reason': 'not-configured'}
+
+    # 1) try to send image first (ignore failures)
+    if image_path:
+        try:
+            photo_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendPhoto'
+            if os.path.exists(image_path):
+                with open(image_path, 'rb') as imgf:
+                    files = {'photo': imgf}
+                    data = {'chat_id': TG_CHAT}
+                    requests.post(photo_url, data=data, files=files, timeout=15)
+        except Exception:
+            app.logger.debug('send_telegram_json_alert: sending photo failed', exc_info=True)
+
+    # 2) prepare JSON payload and send as pretty-printed code block
+    payload = {
+        "type": "ticket_alert",
+        "url": url,
+        "timestamp": timestamp or datetime.now(UTC).isoformat(),
+        "changes_truncated": (changes_text or "")[:3900],
+        "changes_full_length": len(changes_text or "")
+    }
+    msg = "```json\n" + json.dumps(payload, ensure_ascii=False, indent=2) + "\n```"
+
+    send_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage'
+    try:
+        r = requests.post(send_url, json={'chat_id': TG_CHAT, 'text': msg, 'parse_mode': 'Markdown'}, timeout=8)
+        try:
+            return r.json()
+        except Exception:
+            return {'ok': r.ok, 'status_code': r.status_code, 'text': r.text}
+    except Exception as e:
+        app.logger.exception('send_telegram_json_alert failed')
+        return {'ok': False, 'reason': str(e)}
+
 def check_all_urls(send_notifications=True):
     """Fetch all monitored URLs, detect content changes and notify."""
     app.logger.debug("Running check_all_urls")
@@ -269,10 +319,24 @@ def check_all_urls(send_notifications=True):
                     socketio.emit("monitor_change", change, namespace="/")
                 except Exception:
                     app.logger.exception("socketio emit failed")
-                # send Telegram notification if configured
+
+                # send Telegram notification in BoMtickets JSON style
                 if send_notifications:
-                    text = f"Nuevo cambio detectado: {musical}\n{url}"
-                    send_telegram_message(text)
+                    # build a short "changes" string — include previous & new hash (keeps payload informative)
+                    changes_text = f"previous_hash: {prev}\nnew_hash: {h}"
+                    # try to get image asset from BoMtickets module (if available)
+                    image_path = None
+                    try:
+                        if bm and hasattr(bm, 'get_alert_assets'):
+                            sp, ip = bm.get_alert_assets(url)
+                            image_path = ip if ip and os.path.exists(ip) else None
+                    except Exception:
+                        image_path = None
+                    # send JSON-formatted alert (image optional)
+                    try:
+                        send_telegram_json_alert(url, changes_text, timestamp=change["when"], image_path=image_path)
+                    except Exception:
+                        app.logger.exception("Failed to send JSON telegram alert")
     if changes:
         _save_state()
     return {"checked": True, "changes": len(changes), "details": changes}
