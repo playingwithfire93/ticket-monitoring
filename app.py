@@ -661,24 +661,34 @@ def suggest_smtp():
         app.logger.exception('Failed to send suggestion via SMTP')
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-@app.route('/admin/test-discord', methods=['POST'])
+@app.route('/admin/test-discord', methods=['GET', 'POST'])
 def admin_test_discord():
     """
-    Send a test message to Discord.
-    JSON body: {"text":"...","target":"suggestions"|"alerts"}
-    If target is "alerts" it uses DISCORD_WEBHOOK_ALERTS, otherwise DISCORD_WEBHOOK_SUGGESTIONS.
+    GET: return basic status (which webhook is configured) so browser visits don't get 404.
+    POST: send a test message. JSON body: {"text":"...","target":"suggestions"|"alerts"}
     """
+    # prefer JSON body, fallback to query params for GET
     body = request.get_json(silent=True) or {}
-    text = body.get('text', 'Test desde Ticket Monitor: Discord webhook working')
-    target = (body.get('target') or 'suggestions').lower()
+    text = body.get('text') or request.args.get('text') or 'Test desde Ticket Monitor: Discord webhook working'
+    target = (body.get('target') or request.args.get('target') or 'suggestions').lower()
 
     webhook = DISCORD_WEBHOOK_ALERTS if target == 'alerts' else DISCORD_WEBHOOK_SUGGESTIONS
+
+    if request.method == 'GET':
+        return jsonify({
+            'ok': True,
+            'method': 'GET',
+            'target': target,
+            'webhook_configured': bool(webhook),
+            'hint': "POST JSON {'text':'...','target':'suggestions'|'alerts'} to run a test"
+        })
+
+    # POST: actually send
     if not webhook:
         return jsonify({'ok': False, 'error': f'Webhook for {target} not configured'}), 400
 
     try:
         r = requests.post(webhook, json={'content': text}, timeout=10)
-        # Discord typically returns 204 No Content on success
         ok = 200 <= r.status_code < 300
         return jsonify({'ok': ok, 'status_code': r.status_code, 'response_text': r.text or None})
     except Exception as e:
