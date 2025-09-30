@@ -11,6 +11,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import smtplib
 from email.message import EmailMessage
 import ssl
+import html as _html
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -280,6 +281,68 @@ def send_telegram_json_alert(url, changes_text, timestamp=None, image_path=None)
             return {'ok': r.ok, 'status_code': r.status_code, 'text': r.text}
     except Exception as e:
         app.logger.exception('send_telegram_json_alert failed')
+        return {'ok': False, 'reason': str(e)}
+
+def send_telegram_pretty_alert(url, changes, timestamp=None, image_path=None):
+    """
+    Send a Telegram alert that matches the attached screenshot:
+      - Send photo (if available)
+      - Send a nicely formatted HTML message:
+          🎭 <b>Ticket Alert!</b>
+          🌐 URL: <a href="...">...</a>
+          ⏱ Cambio detectado: ...
+          📄 Cambios:
+          <pre>...diff...</pre>
+    Truncates the changes to fit Telegram limits and marks truncation.
+    """
+    if not TG_TOKEN or not TG_CHAT:
+        app.logger.warning('Telegram not configured: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing')
+        return {'ok': False, 'reason': 'not-configured'}
+
+    ts = timestamp or datetime.now(UTC).isoformat()
+    # Telegram message max ~4096 chars; reserve some room for other text
+    MAX_PAYLOAD = 3800
+    changes = changes or ""
+    truncated = changes if len(changes) <= MAX_PAYLOAD else changes[:MAX_PAYLOAD] + "\n\n...[truncated]"
+
+    # Escape for HTML, but keep pre block to preserve diff formatting
+    escaped_url = _html.escape(url or "")
+    escaped_changes = _html.escape(truncated)
+
+    # Build message in HTML
+    html_msg = (
+        "🎭 <b>Ticket Alert!</b>\n"
+        f"🌐 URL: <a href=\"{escaped_url}\">{escaped_url}</a>\n"
+        f"⏱ Cambio detectado: {_html.escape(ts)}\n"
+        "📄 Cambios:\n"
+        f"<pre>{escaped_changes}</pre>"
+    )
+
+    # 1) Send image first (ignore failures)
+    if image_path:
+        try:
+            if os.path.exists(image_path):
+                photo_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendPhoto'
+                with open(image_path, 'rb') as ph:
+                    files = {'photo': ph}
+                    data = {'chat_id': TG_CHAT}
+                    # Don't rely on caption (could be truncated); send message separately
+                    requests.post(photo_url, data=data, files=files, timeout=12)
+        except Exception:
+            app.logger.debug('send_telegram_pretty_alert: sending photo failed', exc_info=True)
+
+    # 2) Send formatted message (HTML)
+    send_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage'
+    try:
+        r = requests.post(send_url, json={'chat_id': TG_CHAT, 'text': html_msg, 'parse_mode': 'HTML'}, timeout=10)
+        try:
+            data = r.json()
+        except Exception:
+            data = {'status_code': r.status_code, 'text': r.text}
+        app.logger.info('Telegram pretty send: status=%s', r.status_code)
+        return {'ok': r.ok, 'resp': data}
+    except Exception as e:
+        app.logger.exception('send_telegram_pretty_alert failed')
         return {'ok': False, 'reason': str(e)}
 
 def check_all_urls(send_notifications=True):
