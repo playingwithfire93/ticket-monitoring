@@ -12,6 +12,9 @@ import smtplib
 from email.message import EmailMessage
 import ssl
 import html as _html
+import difflib
+import random
+import re
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -212,12 +215,21 @@ def admin_test_telegram():
             'response_text': resp.text if resp is not None else None
         }), 500
 
-# Monitor state (persist last seen content hashes)
+# Monitor state (persist last seen content hashes + body)
 MONITOR_STATE_FILE = BASE / "monitor_state.json"
 try:
     if MONITOR_STATE_FILE.exists():
         with MONITOR_STATE_FILE.open("r", encoding="utf-8") as f:
-            _prev_hashes = json.load(f)
+            raw = json.load(f)
+        # support legacy format where values were plain hash strings
+        _prev_hashes = {}
+        if isinstance(raw, dict):
+            for url, val in raw.items():
+                if isinstance(val, str):
+                    _prev_hashes[url] = {"hash": val, "body": ""}
+                elif isinstance(val, dict) and "hash" in val:
+                    # keep existing structure
+                    _prev_hashes[url] = {"hash": val.get("hash"), "body": val.get("body", "")}
     else:
         _prev_hashes = {}
 except Exception:
@@ -225,6 +237,7 @@ except Exception:
 
 def _save_state():
     try:
+        # persist mapping url -> {hash, body}
         with MONITOR_STATE_FILE.open("w", encoding="utf-8") as f:
             json.dump(_prev_hashes, f, ensure_ascii=False, indent=2)
     except Exception:
@@ -361,33 +374,44 @@ def check_all_urls(send_notifications=True):
                 body = ""
                 h = None
 
-            prev = _prev_hashes.get(url)
+            prev_entry = _prev_hashes.get(url)
+            prev_hash = prev_entry.get("hash") if prev_entry else None
+
             if h is None:
-                # fetch error — skip change detection but log
                 continue
-            if prev is None:
-                # first time seeing this URL — store and continue
-                _prev_hashes[url] = h
+
+            if prev_entry is None:
+                # first time: store hash + body
+                _prev_hashes[url] = {"hash": h, "body": body}
                 continue
-            if prev != h:
-                # Detected change
-                _prev_hashes[url] = h
+
+            if prev_hash != h:
+                # compute diff between previous body and current body
+                prev_body = prev_entry.get("body", "") or ""
+                diff_lines = list(difflib.unified_diff(
+                    prev_body.splitlines(), body.splitlines(),
+                    fromfile='before', tofile='after', lineterm=''
+                ))
+                changes_text = "\n".join(diff_lines).strip()
+                if not changes_text:
+                    # fallback if diff generator produced nothing
+                    changes_text = "Contenido cambiado (no se pudo generar diff)."
+
+                # update stored state
+                _prev_hashes[url] = {"hash": h, "body": body}
+
                 change = {
                     "musical": musical,
                     "url": url,
                     "when": datetime.now(UTC).isoformat()
                 }
                 changes.append(change)
-                # emit socketio event so UI updates immediately
                 try:
                     socketio.emit("monitor_change", change, namespace="/")
                 except Exception:
                     app.logger.exception("socketio emit failed")
 
-                # send Telegram notification in BoMtickets JSON style
                 if send_notifications:
-                    # build a short "changes" string — include previous & new hash (keeps payload informative)
-                    changes_text = f"previous_hash: {prev}\nnew_hash: {h}"
                     # try to get image asset from BoMtickets module (if available)
                     image_path = None
                     try:
@@ -396,17 +420,28 @@ def check_all_urls(send_notifications=True):
                             image_path = ip if ip and os.path.exists(ip) else None
                     except Exception:
                         image_path = None
-                    # send JSON-formatted alert (image optional)
-                    try:
-                        # send to Telegram
-                        send_telegram_json_alert(url, changes_text, timestamp=change["when"], image_path=image_path)
-                        # send the same JSON to Discord (if configured)
+
+                    # fallback: choose a random matching image from static/
+                    if not image_path:
                         try:
-                            send_discord_json_alert(url, changes_text, timestamp=change["when"])
+                            image_path = get_random_musical_image(musical)
+                            if image_path and not os.path.exists(image_path):
+                                image_path = None
                         except Exception:
-                            app.logger.exception("Discord notify failed")
+                            image_path = None
+
+                    # send Telegram pretty alert with the diff text
+                    try:
+                        send_telegram_pretty_alert(url, changes_text, timestamp=change["when"], image_path=image_path)
                     except Exception:
-                        app.logger.exception("Failed to send JSON telegram alert")
+                        app.logger.exception("Failed to send Telegram pretty alert")
+
+                    # send same payload to Discord alerts webhook if configured
+                    try:
+                        send_discord_json_alert(url, changes_text, timestamp=change["when"])
+                    except Exception:
+                        app.logger.exception("Discord notify failed")
+
     if changes:
         _save_state()
     return {"checked": True, "changes": len(changes), "details": changes}
@@ -757,3 +792,51 @@ def admin_test_discord():
     except Exception as e:
         app.logger.exception('admin_test_discord failed')
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+# helper: pick a random static image that matches the musical name (fallback)
+def get_random_musical_image(musical_name: str):
+    """
+    Search static/ for images whose filename contains tokens from musical_name.
+    Returns full path string or None.
+    """
+    try:
+        if not musical_name:
+            return None
+        # normalize tokens
+        name = musical_name.lower()
+        name = re.sub(r"[_\-]+", " ", name)
+        tokens = [t for t in re.split(r"\s+", re.sub(r"[^a-z0-9\s]", " ", name)) if t]
+        static_dir = BASE / "static"
+        if not static_dir.exists():
+            return None
+
+        # collect candidate image files
+        exts = (".jpg", ".jpeg", ".png", ".webp", ".gif")
+        candidates = []
+        for p in static_dir.iterdir():
+            if not p.is_file():
+                continue
+            if p.suffix.lower() not in exts:
+                continue
+            fname = p.name.lower()
+            # prefer filenames containing all tokens, then any token
+            if tokens and all(tok in fname for tok in tokens):
+                candidates.append(p)
+        if not candidates and tokens:
+            for p in static_dir.iterdir():
+                if p.is_file() and p.suffix.lower() in exts:
+                    fname = p.name.lower()
+                    if any(tok in fname for tok in tokens):
+                        candidates.append(p)
+        # final fallback: any image
+        if not candidates:
+            for p in static_dir.iterdir():
+                if p.is_file() and p.suffix.lower() in exts:
+                    candidates.append(p)
+        if not candidates:
+            return None
+        choice = random.choice(candidates)
+        return str(choice)
+    except Exception:
+        app.logger.exception("get_random_musical_image failed")
+        return None
