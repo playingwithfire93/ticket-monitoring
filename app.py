@@ -497,15 +497,6 @@ def suggest_smtp():
 
     sent_via = []
 
-    # Try Slack
-    try:
-        if SLACK_WEBHOOK:
-            res = send_slack_notification(payload_text)
-            if res.get("ok"):
-                sent_via.append("slack")
-    except Exception:
-        app.logger.exception("Slack notify failed")
-
     # Try Discord suggestions webhook
     try:
         if DISCORD_WEBHOOK_SUGGESTIONS:
@@ -597,29 +588,6 @@ def send_email_via_smtp(subject: str, body: str, to_addrs: list):
         app.logger.exception("send_email_via_smtp failed")
         return {"ok": False, "error": str(e)}
 
-import os, requests
-from flask import request, jsonify
-
-SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK_URL")
-
-def send_slack_notification(payload_text: str) -> dict:
-    """
-    Post a simple text message to a Slack incoming webhook.
-    Expects SLACK_WEBHOOK_URL in env.
-    """
-    if not SLACK_WEBHOOK:
-        return {"ok": False, "reason": "slack-not-configured"}
-    try:
-        r = requests.post(SLACK_WEBHOOK, json={"text": payload_text}, timeout=6)
-        try:
-            data = r.json()
-        except Exception:
-            data = {"status_code": r.status_code, "text": r.text}
-        return {"ok": r.ok, "resp": data}
-    except Exception as e:
-        app.logger.exception("send_slack_notification failed")
-        return {"ok": False, "error": str(e)}
-
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS") or os.getenv("DISCORD_WEBHOOK_URL")
 DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 
@@ -701,15 +669,6 @@ def suggest_smtp():
     )
 
     sent_via = []
-
-    # Try Slack
-    try:
-        if SLACK_WEBHOOK:
-            res = send_slack_notification(payload_text)
-            if res.get("ok"):
-                sent_via.append("slack")
-    except Exception:
-        app.logger.exception("Slack notify failed")
 
     # Try Discord suggestions webhook
     try:
