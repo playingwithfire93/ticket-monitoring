@@ -458,15 +458,9 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(lambda: check_all_urls(send_notifications=True), "interval", seconds=POLL_INTERVAL_SECONDS, id="monitor_job")
 scheduler.start()
 
-if __name__ == "__main__":
-    # Development friendly: auto-reload and run socketio
-    try:
-        socketio.run(app, host="0.0.0.0", port=5000, debug=True)
-    finally:
-        try:
-            scheduler.shutdown(wait=False)
-        except Exception:
-            pass
+# >>> Removed early app runner so routes defined later are registered.
+# (the original if __name__ == "__main__": socketio.run(...) block was here;
+#  it has been deleted so subsequent route definitions are registered.)
 
 import json
 from flask import jsonify
@@ -852,3 +846,14 @@ def calendar_view():
         musicals = []
     grouped = {}  # opcional: group_urls_by_musical(musicals) si existe esa función
     return render_template("calendar.html", musicals=musicals, grouped_urls=grouped)
+
+# >>> Re-add the app runner at EOF so it runs after all routes are defined
+if __name__ == "__main__":
+    # Development friendly: auto-reload and run socketio
+    try:
+        socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    finally:
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass
