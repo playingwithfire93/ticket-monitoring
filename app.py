@@ -458,21 +458,8 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(lambda: check_all_urls(send_notifications=True), "interval", seconds=POLL_INTERVAL_SECONDS, id="monitor_job")
 scheduler.start()
 
-# >>> Removed early app runner so routes defined later are registered.
-# (the original if __name__ == "__main__": socketio.run(...) block was here;
-#  it has been deleted so subsequent route definitions are registered.)
-
-import json
-from flask import jsonify
-
-# Safe wrapper to ensure "Buscando a Audrey" is included in the API output
-@app.route("/api/monitored-urls", methods=["GET"])
-def api_monitored_urls():
-    try:
-        items = load_urls() or []
-    except Exception:
-        items = []
-    return jsonify(items)
+# >>> Removed duplicate imports and duplicate /api/monitored-urls route that caused Flask AssertionError.
+# The api_monitored_urls route is already defined above; keeping only the first definition.
 
 import os, requests
 from flask import request, jsonify
