@@ -637,93 +637,9 @@ def send_discord_json_alert(url, changes_text, timestamp=None):
         app.logger.exception("send_discord_json_alert failed")
         return {"ok": False, "reason": str(e)}
 
-# Replace existing /suggest handler or swap its internals to prefer Slack
-@app.route('/suggest', methods=['POST'])
-def suggest_smtp():
-    """
-    Unified /suggest handler:
-      - Try Slack webhook (if configured)
-      - Then Discord suggestions webhook (if configured)
-      - If none succeeded, fall back to SMTP using env vars
-    """
-    data = request.get_json(silent=True) or {}
-    name = (data.get('name') or '').strip()
-    sender = (data.get('email') or '').strip() or os.getenv('SUGGEST_SMTP_USER') or f'no-reply@{os.getenv("HOSTNAME","local")}'
-    message_body = (data.get('message') or '').strip()
-    musical = (data.get('musical') or '').strip()
-    url = (data.get('url') or '').strip()
-
-    if not message_body:
-        return jsonify({'ok': False, 'error': 'message required'}), 400
-
-    remote = request.remote_addr
-    timestamp = datetime.now(UTC).isoformat()
-    payload_text = (
-        f"*Nueva sugerencia* · {timestamp}\n"
-        f"Nombre: {name or '—'}\n"
-        f"Email: {sender or '—'}\n"
-        f"Musical: {musical or '—'}\n"
-        f"Link: {url or '—'}\n\n"
-        f"Mensaje:\n{message_body}\n\n"
-        f"_IP: {remote}_"
-    )
-
-    sent_via = []
-
-    # Try Discord suggestions webhook
-    try:
-        if DISCORD_WEBHOOK_SUGGESTIONS:
-            resd = send_discord_suggestion(payload_text)
-            if resd.get("ok"):
-                sent_via.append("discord")
-    except Exception:
-        app.logger.exception("Discord notify failed")
-
-    # If either handled it, persist + emit and return success
-    if sent_via:
-        save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
-        try:
-            socketio.emit("new_suggestion", {"name": name, "musical": musical, "url": url, "message": message_body}, namespace="/admin")
-        except Exception:
-            pass
-        return jsonify({"ok": True, "via": sent_via})
-
-    # Fallback to SMTP if no webhook handled it
-    to_email = os.getenv('SUGGEST_TO_EMAIL')
-    smtp_host = os.getenv('SUGGEST_SMTP_HOST', 'smtp.gmail.com')
-    smtp_port = int(os.getenv('SUGGEST_SMTP_PORT', '587'))
-    smtp_user = os.getenv('SUGGEST_SMTP_USER')
-    smtp_pass = os.getenv('SUGGEST_SMTP_PASS')
-
-    if not to_email or not smtp_host or not smtp_user or not smtp_pass:
-        return jsonify({'ok': False, 'error': 'SMTP not configured and no webhooks configured'}), 500
-
-    msg = EmailMessage()
-    msg['Subject'] = 'Sugerencia desde Ticket Monitor'
-    msg['From'] = f'{name or "Usuario"} <{smtp_user}>'
-    msg['To'] = to_email
-    msg.set_content(f'Nombre: {name}\nEmail: {sender}\nMusical: {musical}\nLink: {url}\n\nMensaje:\n{message_body}\n\nOrigen: {remote}\nTimestamp: {timestamp}')
-
-    try:
-        if smtp_port == 465:
-            smtp = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
-        else:
-            smtp = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-        smtp.login(smtp_user, smtp_pass)
-        smtp.send_message(msg)
-        smtp.quit()
-        save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
-        try:
-            socketio.emit("new_suggestion", {"name": name, "musical": musical, "url": url, "message": message_body}, namespace="/admin")
-        except Exception:
-            pass
-        return jsonify({'ok': True, 'via': 'smtp'})
-    except Exception as e:
-        app.logger.exception('Failed to send suggestion via SMTP')
-        return jsonify({'ok': False, 'error': str(e)}), 500
+# >>> Eliminada definición duplicada de suggest_smtp (se conserva la implementación unificada más abajo).
+# Antes aquí había un @app.route('/suggest') / def suggest_smtp(...) que duplicaba la ruta.
+# Si necesitas restaurarla, revisa la implementación final más abajo en este mismo archivo.
 
 @app.route('/admin/test-discord', methods=['GET', 'POST'])
 def admin_test_discord():
