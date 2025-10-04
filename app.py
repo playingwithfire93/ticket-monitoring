@@ -850,5 +850,5 @@ def calendar_view():
         musicals = load_urls() if 'load_urls' in globals() else []
     except Exception:
         musicals = []
-    grouped = {}  # optional: group_urls_by_musical(musicals) if available
+    grouped = {}  # opcional: group_urls_by_musical(musicals) si existe esa función
     return render_template("calendar.html", musicals=musicals, grouped_urls=grouped)
