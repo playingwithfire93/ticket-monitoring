@@ -53,7 +53,35 @@ document.addEventListener('DOMContentLoaded', function() {
     return bg;
   }
 
-  const PREFERRED_ORDER = ['wicked','the book of mormon']; // lowercase keys, preferred sequence
+  // preferred sequence (lowercase) — los que quieres siempre juntos y en ese orden
+  const PREFERRED_ORDER = ['wicked', 'the book of mormon'];
+
+  // helper que devuelve una clave numérica para ordenar: preferidos primero (en el orden
+  // definido en PREFERRED_ORDER), luego el resto ordenado alfabéticamente.
+  function orderKeyForEvent(ev) {
+    const name = (ev.extendedProps && (ev.extendedProps.musical || ev.extendedProps.title)) || (ev.musical || ev.title) || '';
+    const key = name.toString().toLowerCase().trim();
+    const prefIndex = PREFERRED_ORDER.indexOf(key);
+    if (prefIndex !== -1) {
+      // los preferidos obtienen prioridad 0..N-1
+      return { zone: 0, idx: prefIndex, tie: key };
+    }
+    // resto: zone 1 y orden alfabético (estable)
+    return { zone: 1, idx: 0, tie: key };
+  }
+
+  // comparator para eventOrder que usa orderKeyForEvent y mantiene orden estable
+  function preferredEventComparator(a, b) {
+    const A = orderKeyForEvent(a);
+    const B = orderKeyForEvent(b);
+    if (A.zone !== B.zone) return A.zone - B.zone;
+    if (A.zone === 0 && B.zone === 0) {
+      // ambos preferidos: usar el índice preferido
+      return A.idx - B.idx;
+    }
+    // mismos zone (1): ordenar por nombre (tie)
+    return A.tie.localeCompare(B.tie);
+  }
 
   const calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
@@ -67,20 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dayMaxEvents: true,
 
     // custom ordering: put Wicked first, The Book of Mormon right after, then alphabetical
-    eventOrder: function(a, b) {
-      const ka = (a.extendedProps.musical || a.title || '').toString().toLowerCase();
-      const kb = (b.extendedProps.musical || b.title || '').toString().toLowerCase();
-      const ia = PREFERRED_ORDER.indexOf(ka);
-      const ib = PREFERRED_ORDER.indexOf(kb);
-      if (ia !== -1 || ib !== -1) {
-        if (ia === -1) return 1;
-        if (ib === -1) return -1;
-        return ia - ib;
-      }
-      // fallback: keep by musical then title
-      if (ka !== kb) return ka.localeCompare(kb);
-      return (a.title || '').localeCompare(b.title || '');
-    },
+    eventOrder: preferredEventComparator,
 
     // render events compactly (smaller font) and use our colored props
     eventContent: function(arg) {
