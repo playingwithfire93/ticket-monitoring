@@ -840,3 +840,15 @@ def get_random_musical_image(musical_name: str):
     except Exception:
         app.logger.exception("get_random_musical_image failed")
         return None
+
+from flask import render_template
+
+@app.route("/calendar")
+def calendar_view():
+    # Simple view for the embedded calendar widget
+    try:
+        musicals = load_urls() if 'load_urls' in globals() else []
+    except Exception:
+        musicals = []
+    grouped = {}  # optional: group_urls_by_musical(musicals) if available
+    return render_template("calendar.html", musicals=musicals, grouped_urls=grouped)
