@@ -53,12 +53,48 @@ document.addEventListener('DOMContentLoaded', function() {
     return bg;
   }
 
+  const PREFERRED_ORDER = ['wicked','the book of mormon']; // lowercase keys, preferred sequence
+
   const calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
     initialDate: isoToday,
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
     height: 700,
     validRange: { start: MIN_DATE, end: MAX_DATE },
+
+    // keep the month cells compact and limit stacked rows (shows "+N" when overflow)
+    dayMaxEventRows: 3,
+    dayMaxEvents: true,
+
+    // custom ordering: put Wicked first, The Book of Mormon right after, then alphabetical
+    eventOrder: function(a, b) {
+      const ka = (a.extendedProps.musical || a.title || '').toString().toLowerCase();
+      const kb = (b.extendedProps.musical || b.title || '').toString().toLowerCase();
+      const ia = PREFERRED_ORDER.indexOf(ka);
+      const ib = PREFERRED_ORDER.indexOf(kb);
+      if (ia !== -1 || ib !== -1) {
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      }
+      // fallback: keep by musical then title
+      if (ka !== kb) return ka.localeCompare(kb);
+      return (a.title || '').localeCompare(b.title || '');
+    },
+
+    // render events compactly (smaller font) and use our colored props
+    eventContent: function(arg) {
+      const title = arg.event.title;
+      const txt = document.createElement('div');
+      txt.style.fontSize = '12px';
+      txt.style.lineHeight = '1';
+      txt.style.whiteSpace = 'nowrap';
+      txt.style.overflow = 'hidden';
+      txt.style.textOverflow = 'ellipsis';
+      txt.textContent = title;
+      return { domNodes: [txt] };
+    },
+
     events: function(fetchInfo, successCallback, failureCallback) {
       (async () => {
         try {
