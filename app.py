@@ -15,10 +15,12 @@ import html as _html
 import difflib
 import random
 import re
+import uuid
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
 SUGGESTIONS_FILE = BASE / "suggestions.json"
+EVENTS_FILE = BASE / "events.json"
 UTC = timezone.utc
 
 app = Flask(__name__)
@@ -637,91 +639,92 @@ def send_discord_json_alert(url, changes_text, timestamp=None):
         app.logger.exception("send_discord_json_alert failed")
         return {"ok": False, "reason": str(e)}
 
-# >>> Eliminada definición duplicada de suggest_smtp (se conserva la implementación unificada más abajo).
-# Antes aquí había un @app.route('/suggest') / def suggest_smtp(...) que duplicaba la ruta.
-# Si necesitas restaurarla, revisa la implementación final más abajo en este mismo archivo.
-
-@app.route('/admin/test-discord', methods=['GET', 'POST'])
-def admin_test_discord():
-    """
-    GET: return basic status (which webhook is configured) so browser visits don't get 404.
-    POST: send a test message. JSON body: {"text":"...","target":"suggestions"|"alerts"}
-    """
-    # prefer JSON body, fallback to query params for GET
-    body = request.get_json(silent=True) or {}
-    text = body.get('text') or request.args.get('text') or 'Test desde Ticket Monitor: Discord webhook working'
-    target = (body.get('target') or request.args.get('target') or 'suggestions').lower()
-
-    webhook = DISCORD_WEBHOOK_ALERTS if target == 'alerts' else DISCORD_WEBHOOK_SUGGESTIONS
-
-    if request.method == 'GET':
-        return jsonify({
-            'ok': True,
-            'method': 'GET',
-            'target': target,
-            'webhook_configured': bool(webhook),
-            'hint': "POST JSON {'text':'...','target':'suggestions'|'alerts'} to run a test"
-        })
-
-    # POST: actually send
-    if not webhook:
-        return jsonify({'ok': False, 'error': f'Webhook for {target} not configured'}), 400
-
+def load_events():
     try:
-        r = requests.post(webhook, json={'content': text}, timeout=10)
-        ok = 200 <= r.status_code < 300
-        return jsonify({'ok': ok, 'status_code': r.status_code, 'response_text': r.text or None})
-    except Exception as e:
-        app.logger.exception('admin_test_discord failed')
-        return jsonify({'ok': False, 'error': str(e)}), 500
-
-# helper: pick a random static image that matches the musical name (fallback)
-def get_random_musical_image(musical_name: str):
-    """
-    Search static/ for images whose filename contains tokens from musical_name.
-    Returns full path string or None.
-    """
-    try:
-        if not musical_name:
-            return None
-        # normalize tokens
-        name = musical_name.lower()
-        name = re.sub(r"[_\-]+", " ", name)
-        tokens = [t for t in re.split(r"\s+", re.sub(r"[^a-z0-9\s]", " ", name)) if t]
-        static_dir = BASE / "static"
-        if not static_dir.exists():
-            return None
-
-        # collect candidate image files
-        exts = (".jpg", ".jpeg", ".png", ".webp", ".gif")
-        candidates = []
-        for p in static_dir.iterdir():
-            if not p.is_file():
-                continue
-            if p.suffix.lower() not in exts:
-                continue
-            fname = p.name.lower()
-            # prefer filenames containing all tokens, then any token
-            if tokens and all(tok in fname for tok in tokens):
-                candidates.append(p)
-        if not candidates and tokens:
-            for p in static_dir.iterdir():
-                if p.is_file() and p.suffix.lower() in exts:
-                    fname = p.name.lower()
-                    if any(tok in fname for tok in tokens):
-                        candidates.append(p)
-        # final fallback: any image
-        if not candidates:
-            for p in static_dir.iterdir():
-                if p.is_file() and p.suffix.lower() in exts:
-                    candidates.append(p)
-        if not candidates:
-            return None
-        choice = random.choice(candidates)
-        return str(choice)
+        if EVENTS_FILE.exists():
+            with EVENTS_FILE.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
     except Exception:
-        app.logger.exception("get_random_musical_image failed")
-        return None
+        app.logger.exception("load_events failed")
+    return []
+
+def save_events(events):
+    try:
+        with EVENTS_FILE.open("w", encoding="utf-8") as f:
+            json.dump(events, f, ensure_ascii=False, indent=2)
+    except Exception:
+        app.logger.exception("save_events failed")
+
+def create_default_2025_2026_events():
+    # If events file missing or empty, create a basic calendar of monthly shows for 2025-2026
+    try:
+        existing = load_events()
+        if existing:
+            return
+        musicals_list = [itm.get("musical") or itm.get("name") or None for itm in load_urls()]
+        # fallback sample musicals if none defined
+        if not any(musicals_list):
+            musicals_list = ["Wicked", "The Book of Mormon", "Los Miserables", "Houdini"]
+        events = []
+        for musical in filter(None, musicals_list):
+            for year in (2025, 2026):
+                for month in range(1, 13):
+                    day = 15
+                    start_date = datetime(year, month, day).date().isoformat()
+                    ev = {
+                        "id": str(uuid.uuid4()),
+                        "title": f"{musical} — Función",
+                        "musical": musical,
+                        "start": start_date,
+                        "end": start_date,
+                        "allDay": True
+                    }
+                    events.append(ev)
+        save_events(events)
+        app.logger.info("Created default 2025-2026 events (%d)", len(events))
+    except Exception:
+        app.logger.exception("create_default_2025_2026_events failed")
+
+# ensure default events exist at startup
+create_default_2025_2026_events()
+
+@app.route("/api/events", methods=["GET","POST","PUT","DELETE"])
+def api_events():
+    events = load_events()
+    if request.method == "GET":
+        return jsonify(events)
+    data = request.get_json(silent=True) or {}
+    if request.method == "POST":
+        ev = {
+            "id": str(uuid.uuid4()),
+            "title": data.get("title") or "Evento",
+            "musical": data.get("musical") or "",
+            "start": data.get("start"),
+            "end": data.get("end") or data.get("start"),
+            "allDay": bool(data.get("allDay", True))
+        }
+        events.append(ev)
+        save_events(events)
+        return jsonify(ev), 201
+    if request.method == "PUT":
+        ev_id = data.get("id")
+        for e in events:
+            if e.get("id") == ev_id:
+                for k in ("title","start","end","allDay","musical"):
+                    if k in data:
+                        e[k] = data[k]
+                save_events(events)
+                return jsonify(e)
+        return jsonify({"error": "not found"}), 404
+    if request.method == "DELETE":
+        ev_id = request.args.get("id") or data.get("id")
+        new = [e for e in events if e.get("id") != ev_id]
+        if len(new) == len(events):
+            return jsonify({"error": "not found"}), 404
+        save_events(new)
+        return jsonify({"ok": True})
 
 from flask import render_template
 
