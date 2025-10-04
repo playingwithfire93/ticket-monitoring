@@ -6,17 +6,27 @@
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet"/>
   <style>
     body{font-family:system-ui,Arial;margin:12px;color:#222}
-    #calendar{max-width:1000px;margin:0 auto;background:#fff;padding:10px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    #calendar-wrap{max-width:1000px;margin:0 auto}
+    #filters{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+    #musical-filter{min-width:260px;padding:6px;border-radius:6px;border:1px solid #ddd}
+    .filter-btn{padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fafafa;cursor:pointer}
   </style>
 </head>
 <body>
-  <h2>Calendario 2025–2026</h2>
-  <div id="calendar"></div>
+  <main id="calendar-wrap">
+    <h2>Calendario 2025–2026</h2>
 
-  <script>
-    // provide grouped urls (if any) to the calendar script
-    window.__GROUPED_URLS__ = {{ grouped_urls | tojson }};
-  </script>
+    <div id="filters" aria-label="Filtros del calendario">
+      <label for="musical-filter"><strong>Filtrar por musical:</strong></label>
+      <select id="musical-filter" multiple size="4" aria-label="Selección de musicales"></select>
+      <button id="filter-all" class="filter-btn" title="Mostrar todos">Todos</button>
+      <button id="filter-clear" class="filter-btn" title="Limpiar selección">Limpiar</button>
+      <span id="filter-count" style="margin-left:auto;color:#666"></span>
+    </div>
+
+    <div id="calendar"></div>
+  </main>
+
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
   <script src="/static/calendar.js"></script>
 </body>
