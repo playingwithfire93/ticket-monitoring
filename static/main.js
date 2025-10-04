@@ -1269,3 +1269,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // If your slideshow code dynamically swaps images, call normalizeSlideImageOrientation()
 // after swapping/changing slides to re-evaluate orientation.
+
+// Calendar widget behavior: toggle maximize, close with ESC, lazy-load iframe if needed
+(function(){
+  const widget = document.getElementById('calendar-widget');
+  if (!widget) return;
+  const maxBtn = document.getElementById('cw-max-btn');
+  const closeBtn = document.getElementById('cw-close-btn');
+  const iframe = document.getElementById('cw-iframe');
+
+  function maximize() {
+    widget.classList.add('maximized');
+    // ensure iframe reloads when maximizing (fixes sizing)
+    try { iframe.contentWindow && iframe.contentWindow.dispatchEvent(new Event('resize')); } catch(e){}
+    document.body.style.overflow = 'hidden';
+  }
+  function restore() {
+    widget.classList.remove('maximized');
+    document.body.style.overflow = '';
+  }
+  function toggle() {
+    if (widget.classList.contains('maximized')) restore();
+    else maximize();
+  }
+
+  maxBtn && maxBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    toggle();
+  });
+
+  closeBtn && closeBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    restore();
+  });
+
+  // Close on ESC
+  window.addEventListener('keydown', function(ev){
+    if (ev.key === 'Escape' && widget.classList.contains('maximized')) {
+      restore();
+    }
+  });
+
+  // Allow clicking the body of the widget to maximize
+  widget.addEventListener('click', function(ev){
+    // don't maximize if clicking the header controls
+    if (ev.target.closest('.cw-actions') || ev.target.id === 'cw-close-btn') return;
+    maximize();
+  });
+
+  // lazy load iframe src on first interaction to save bandwidth
+  let iframeLoaded = true; // currently src already set; if want lazy, set src="" in HTML and toggle here
+  // Example to lazy-load: if iframe.dataset.src exists and not loaded
+  if (iframe && iframe.dataset && iframe.dataset.src && !iframeLoaded) {
+    widget.addEventListener('mouseenter', function loadOnce(){
+      iframe.src = iframe.dataset.src;
+      iframeLoaded = true;
+      widget.removeEventListener('mouseenter', loadOnce);
+    });
+  }
+})();

@@ -1102,3 +1102,83 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
   .slide.portrait .slide-img { max-height:520px; max-width:84%; }
 }
 
+/* Calendar widget (mini preview that can maximize) */
+.calendar-widget {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 360px;
+  height: 220px;
+  background: rgba(255,255,255,0.98);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 14000;
+  display: flex;
+  flex-direction: column;
+  transition: transform .22s ease, width .22s ease, height .22s ease;
+  --cw-header-height: 36px;
+}
+.calendar-widget .cw-header {
+  height: var(--cw-header-height);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 6px 10px;
+  background: linear-gradient(90deg, rgba(120,115,245,0.06), rgba(255,110,196,0.03));
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  font-weight:600;
+}
+.calendar-widget .cw-body { flex:1; position:relative; }
+.calendar-widget .cw-body iframe {
+  width:100%;
+  height:100%;
+  border:0;
+  display:block;
+  background:#fff;
+}
+.calendar-widget .cw-actions { display:flex; gap:6px; align-items:center; }
+.cw-btn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size:14px;
+  padding:6px;
+  border-radius:6px;
+}
+.cw-btn:hover { background: rgba(0,0,0,0.04); }
+
+.calendar-widget .cw-close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: none;
+  background: rgba(0,0,0,0.06);
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Maximized state (full viewport modal) */
+.calendar-widget.maximized {
+  width: 100vw !important;
+  height: 100vh !important;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: 0;
+  border-radius: 0;
+  transform: none;
+  align-items: stretch;
+}
+.calendar-widget.maximized .cw-close { display: block; }
+.calendar-widget.maximized .cw-header { padding: 10px 14px; }
+
+/* Slight entrance micro-anim */
+.calendar-widget.hidden { opacity: 0; transform: translateY(8px) scale(.99); pointer-events:none; }
+@media (max-width:900px){
+  .calendar-widget { width: 92vw; height: 200px; right: 4%; bottom: 12px; }
+}
+

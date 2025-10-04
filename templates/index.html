@@ -167,6 +167,20 @@
     </div>
   </div>
 
+  <!-- Añadir widget de calendario (pequeño preview + maximizable) -->
+<div id="calendar-widget" class="calendar-widget">
+  <div class="cw-header">
+    <strong>Calendario</strong>
+    <div class="cw-actions">
+      <button id="cw-max-btn" class="cw-btn" title="Maximizar">⤢</button>
+    </div>
+  </div>
+  <div class="cw-body">
+    <iframe id="cw-iframe" src="/calendar" title="Calendario" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+  </div>
+  <button id="cw-close-btn" class="cw-close" title="Cerrar">✕</button>
+</div>
+
   <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
   <script>
     const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');
