@@ -1328,3 +1328,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 })();
+
+// Generic slideshow autoplay + controls. Targets containers with class "slideshow".
+// Slides may be <img> or elements with class "slide" inside the container.
+document.addEventListener('DOMContentLoaded', function () {
+  const slideshows = Array.from(document.querySelectorAll('.slideshow'));
+  slideshows.forEach(initSlideshow);
+
+  function initSlideshow(container) {
+    const slideEls = Array.from(container.querySelectorAll('.slide'));
+    // fallback: direct imgs as slides
+    const imgs = Array.from(container.querySelectorAll('img'));
+    const slides = slideEls.length ? slideEls : (imgs.length ? imgs : []);
+    if (!slides.length) return;
+
+    let idx = 0;
+    const interval = parseInt(container.dataset.interval || 5000, 10);
+    let timer = null;
+    slides.forEach((s,i) => {
+      s.style.transition = 'opacity 480ms ease';
+      s.style.position = 'absolute';
+      s.style.left = 0; s.style.top = 0; s.style.width = '100%';
+      s.style.opacity = i === idx ? '1' : '0';
+      s.style.zIndex = i === idx ? '2' : '1';
+    });
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+    // controls
+    const next = container.querySelector('.slideshow-next');
+    const prev = container.querySelector('.slideshow-prev');
+
+    function show(n) {
+      slides[idx].style.opacity = '0'; slides[idx].style.zIndex = 1;
+      idx = (n + slides.length) % slides.length;
+      slides[idx].style.opacity = '1'; slides[idx].style.zIndex = 2;
+    }
+
+    function nextSlide(){ show(idx + 1); }
+    function prevSlide(){ show(idx - 1); }
+
+    function start() { stop(); timer = setInterval(nextSlide, interval); container.classList.add('slideshow-playing'); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; container.classList.remove('slideshow-playing'); } }
+
+    if (next) next.addEventListener('click', e => { e.preventDefault(); nextSlide(); start(); });
+    if (prev) prev.addEventListener('click', e => { e.preventDefault(); prevSlide(); start(); });
+
+    container.addEventListener('mouseenter', stop);
+    container.addEventListener('mouseleave', start);
+
+    // keyboard navigation when hovered
+    container.addEventListener('keydown', (ev) => {
+      if (ev.key === 'ArrowRight') { nextSlide(); start(); }
+      if (ev.key === 'ArrowLeft') { prevSlide(); start(); }
+    });
+    // make container focusable for keyboard support
+    if (!container.hasAttribute('tabindex')) container.setAttribute('tabindex','0');
+
+    // start autoplay
+    start();
+  }
+});

@@ -1,14 +1,23 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Calendario</title>
-  <style>body{font-family:system-ui,Arial;margin:18px}#calendar{min-height:320px;border:1px dashed #e6dfee;padding:12px;border-radius:8px}</style>
+  <meta charset="utf-8" />
+  <title>Calendario de musicales</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet"/>
+  <style>
+    body{font-family:system-ui,Arial;margin:12px;color:#222}
+    #calendar{max-width:1000px;margin:0 auto;background:#fff;padding:10px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  </style>
 </head>
 <body>
-  <h3>Calendario (vista embebida)</h3>
-  <div id="calendar">
-    Si ves esto, la plantilla /calendar se sirve correctamente.
-  </div>
+  <h2>Calendario 2025–2026</h2>
+  <div id="calendar"></div>
+
+  <script>
+    // provide grouped urls (if any) to the calendar script
+    window.__GROUPED_URLS__ = {{ grouped_urls | tojson }};
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script src="/static/calendar.js"></script>
 </body>
 </html>
