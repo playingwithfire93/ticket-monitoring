@@ -68,15 +68,37 @@ document.addEventListener('DOMContentLoaded', function() {
             buildMusicalDropdown(allEventsCache);
           }
           const filtered = applyFilter(allEventsCache);
-          // assign colors to events based on musical/title
-          const withColors = filtered.map(ev => {
-            const key = (ev.musical || ev.title || '').toString();
-            const bg = pickColorFor(key);
-            // determine readable text color: use dark for light backgrounds, white otherwise
-            const textColor = isLightColor(bg) ? '#111827' : '#ffffff';
-            return Object.assign({}, ev, { backgroundColor: bg, borderColor: bg, textColor });
+
+          // Expand multi-day events into per-day events, skipping Mondays (leave Mondays empty)
+          const expanded = [];
+          filtered.forEach(ev => {
+            // parse start/end as local dates
+            const s = new Date(ev.start);
+            // if end missing, treat as single day
+            const e = ev.end ? new Date(ev.end) : new Date(ev.start);
+            // normalize to midnight local
+            s.setHours(0,0,0,0);
+            e.setHours(0,0,0,0);
+            for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+              // JS: 0=Sun, 1=Mon ... skip Mondays
+              if (d.getDay() === 1) continue;
+              const dayStr = d.toISOString().split('T')[0];
+              const key = (ev.musical || ev.title || '').toString();
+              const bg = pickColorFor(key);
+              const textColor = isLightColor(bg) ? '#111827' : '#ffffff';
+              expanded.push(Object.assign({}, ev, {
+                id: `${ev.id || Math.random().toString(36).slice(2)}:${dayStr}`,
+                start: dayStr,
+                end: dayStr,
+                allDay: true,
+                backgroundColor: bg,
+                borderColor: bg,
+                textColor
+              }));
+            }
           });
-          successCallback(withColors);
+
+          successCallback(expanded);
         } catch (e) {
           console.error('fetch /api/events failed', e);
           failureCallback(e);
