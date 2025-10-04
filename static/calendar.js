@@ -84,6 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   const calendar = new FullCalendar.Calendar(el, {
+    locale: 'es',         // Spanish locale
+    firstDay: 1,          // week starts on Monday (Spain)
     initialView: 'dayGridMonth',
     initialDate: isoToday,
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
