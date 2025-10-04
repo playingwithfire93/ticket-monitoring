@@ -3,12 +3,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const el = document.getElementById('calendar');
   if (!el || typeof FullCalendar === 'undefined') return;
 
+  // start on the current month, but clamp to the 2025-2026 range
+  const today = new Date();
+  const isoToday = today.toISOString().split('T')[0]; // YYYY-MM-DD
+  const MIN_DATE = '2025-01-01';
+  const MAX_DATE = '2026-12-31';
+  let initialDate = isoToday;
+  if (initialDate < MIN_DATE) initialDate = MIN_DATE;
+  if (initialDate > MAX_DATE) initialDate = MAX_DATE;
+
   const calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
-    initialDate: '2025-01-01',
+    initialDate: initialDate,
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
     height: 700,
-    validRange: { start: '2025-01-01', end: '2026-12-31' },
+    validRange: { start: MIN_DATE, end: MAX_DATE },
     events: async function(fetchInfo, successCallback, failureCallback) {
       try {
         const res = await fetch('/api/events');
