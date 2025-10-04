@@ -92,6 +92,14 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 700,
     validRange: { start: MIN_DATE, end: MAX_DATE },
 
+    // highlight Monday cells and keep them empty
+    dayCellDidMount: function(info) {
+      // info.date is a Date; 1 === Monday
+      if (info.date && info.date.getDay() === 1) {
+        info.el.classList.add('fc-monday-off');
+      }
+    },
+
     // keep the month cells compact and limit stacked rows (shows "+N" when overflow)
     dayMaxEventRows: 3,
     dayMaxEvents: true,
@@ -125,15 +133,12 @@ document.addEventListener('DOMContentLoaded', function() {
           // Expand multi-day events into per-day events, skipping Mondays (leave Mondays empty)
           const expanded = [];
           filtered.forEach(ev => {
-            // parse start/end as local dates
             const s = new Date(ev.start);
-            // if end missing, treat as single day
             const e = ev.end ? new Date(ev.end) : new Date(ev.start);
-            // normalize to midnight local
             s.setHours(0,0,0,0);
             e.setHours(0,0,0,0);
             for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-              // JS: 0=Sun, 1=Mon ... skip Mondays
+              // JS: 0=Sun, 1=Mon ... skip Mondays explícitamente
               if (d.getDay() === 1) continue;
               const dayStr = d.toISOString().split('T')[0];
               const key = (ev.musical || ev.title || '').toString();
@@ -151,7 +156,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          successCallback(expanded);
+          // safety: remove any events that accidentally fall on Monday
+          const final = expanded.filter(e => {
+            const dt = new Date(e.start);
+            return dt.getDay() !== 1;
+          });
+
+          successCallback(final);
         } catch (e) {
           console.error('fetch /api/events failed', e);
           failureCallback(e);
