@@ -1,46 +1,106 @@
 // Minimal FullCalendar setup: initial view in 2025 and restrict visible range 2025-01-01 → 2026-12-31
 document.addEventListener('DOMContentLoaded', function() {
   const el = document.getElementById('calendar');
-  if (!el || typeof FullCalendar === 'undefined') return;
+  const multiWrap = document.getElementById('musical-multi');
+  const inputEl = document.getElementById('musical-filter-input');
+  const dropdown = document.getElementById('musical-dropdown');
+  const btnAll = document.getElementById('filter-all');
+  const btnClear = document.getElementById('filter-clear');
+  const countEl = document.getElementById('filter-count');
+  if (!el) return;
 
-  // start on the current month, but clamp to the 2025-2026 range
-  const today = new Date();
-  const isoToday = today.toISOString().split('T')[0]; // YYYY-MM-DD
   const MIN_DATE = '2025-01-01';
   const MAX_DATE = '2026-12-31';
-  let initialDate = isoToday;
-  if (initialDate < MIN_DATE) initialDate = MIN_DATE;
-  if (initialDate > MAX_DATE) initialDate = MAX_DATE;
+  let today = new Date();
+  let isoToday = today.toISOString().split('T')[0];
+  if (isoToday < MIN_DATE) isoToday = MIN_DATE;
+  if (isoToday > MAX_DATE) isoToday = MAX_DATE;
+
+  let allEventsCache = null;
+  let musicalsList = []; // unique musical names
+  let selectedSet = new Set();
+  let colorsMap = {}; // musical -> color mapping
+
+  // palette: visually distinct but pleasant
+  const COLOR_PALETTE = [
+    '#FF6B6B', // red
+    '#FFB86B', // orange
+    '#FFD93D', // yellow
+    '#8BE9B4', // mint
+    '#69B7FF', // blue
+    '#8A79FF', // purple
+    '#FF8AD6', // pink
+    '#A0E1E0', // teal
+    '#D6A2E8', // lilac
+    '#F6C6EA'  // light pink
+  ];
+
+  function hashString(s) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return h;
+  }
+  function pickColorFor(name) {
+    if (!name) return '#999';
+    if (colorsMap[name]) return colorsMap[name];
+    const idx = Math.abs(hashString(name)) % COLOR_PALETTE.length;
+    // choose color and slightly compute text color (dark vs light)
+    const bg = COLOR_PALETTE[idx];
+    colorsMap[name] = bg;
+    return bg;
+  }
 
   const calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
-    initialDate: initialDate,
+    initialDate: isoToday,
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
     height: 700,
     validRange: { start: MIN_DATE, end: MAX_DATE },
-    events: async function(fetchInfo, successCallback, failureCallback) {
-      try {
-        const res = await fetch('/api/events');
-        const data = await res.json();
-        successCallback(data);
-      } catch (e) {
-        console.error('fetch /api/events failed', e);
-        failureCallback(e);
+    events: function(fetchInfo, successCallback, failureCallback) {
+      (async () => {
+        try {
+          if (!allEventsCache) {
+            const res = await fetch('/api/events');
+            allEventsCache = await res.json();
+            buildMusicalDropdown(allEventsCache);
+          }
+          const filtered = applyFilter(allEventsCache);
+          // assign colors to events based on musical/title
+          const withColors = filtered.map(ev => {
+            const key = (ev.musical || ev.title || '').toString();
+            const bg = pickColorFor(key);
+            // determine readable text color: use dark for light backgrounds, white otherwise
+            const textColor = isLightColor(bg) ? '#111827' : '#ffffff';
+            return Object.assign({}, ev, { backgroundColor: bg, borderColor: bg, textColor });
+          });
+          successCallback(withColors);
+        } catch (e) {
+          console.error('fetch /api/events failed', e);
+          failureCallback(e);
+        }
+      })();
+    },
+    eventDidMount: function(info) {
+      // ensure event text color is applied
+      if (info.event.extendedProps && info.event.extendedProps.textColor) {
+        info.el.style.color = info.event.extendedProps.textColor;
       }
     },
     eventClick: function(info) {
-      // quick edit: rename or delete
       const title = prompt('Editar título (o escribe DELETE para borrar):', info.event.title);
       if (title === null) return;
       if (title === 'DELETE') {
-        fetch('/api/events?id=' + info.event.id, { method: 'DELETE' }).then(()=> calendar.refetchEvents());
+        fetch('/api/events?id=' + info.event.id, { method: 'DELETE' }).then(()=> { allEventsCache = null; calendar.refetchEvents(); });
         return;
       }
       fetch('/api/events', {
         method: 'PUT',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ id: info.event.id, title, start: info.event.startStr, end: info.event.endStr, allDay: info.event.allDay })
-      }).then(()=> calendar.refetchEvents());
+      }).then(()=> { allEventsCache = null; calendar.refetchEvents(); });
     },
     selectable: true,
     select: function(selInfo) {
@@ -50,9 +110,121 @@ document.addEventListener('DOMContentLoaded', function() {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ title, start: selInfo.startStr, end: selInfo.endStr || selInfo.startStr, allDay: selInfo.allDay })
-      }).then(()=> calendar.refetchEvents());
+      }).then(()=> { allEventsCache = null; calendar.refetchEvents(); });
     }
   });
 
   calendar.render();
+
+  // Build dropdown items with colored swatches and checkboxes
+  function buildMusicalDropdown(events) {
+    musicalsList = Array.from(new Set(events.map(e => (e.musical || e.title || '').trim()).filter(Boolean))).sort((a,b)=> a.localeCompare(b));
+    dropdown.innerHTML = '';
+    // reset colors map so deterministic mapping re-applies in same order
+    colorsMap = {};
+    musicalsList.forEach(name => {
+      const color = pickColorFor(name);
+      const div = document.createElement('div');
+      div.className = 'mf-item';
+      div.tabIndex = 0;
+      div.dataset.name = name;
+      // swatch + checkbox + label
+      div.innerHTML = `
+        <span style="width:14px;height:14px;border-radius:3px;display:inline-block;margin-right:8px;background:${color};border:1px solid rgba(0,0,0,0.06);vertical-align:middle"></span>
+        <input type="checkbox" aria-label="${escapeHtml(name)}" value="${escapeHtml(name)}">
+        <span class="mf-name" style="margin-left:8px">${escapeHtml(name)}</span>
+      `;
+      dropdown.appendChild(div);
+      div.addEventListener('click', (e) => {
+        const cb = div.querySelector('input');
+        cb.checked = !cb.checked;
+        toggleSelection(name, cb.checked);
+      });
+      div.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); div.click(); }
+      });
+    });
+    updateFilterCount();
+  }
+
+  function toggleSelection(name, checked) {
+    if (checked) selectedSet.add(name);
+    else selectedSet.delete(name);
+    updateInputPlaceholder();
+    calendar.refetchEvents();
+  }
+
+  function getSelectedMusicalsArray() {
+    return Array.from(selectedSet);
+  }
+
+  function applyFilter(events) {
+    const selected = getSelectedMusicalsArray();
+    if (!selected || selected.length === 0) {
+      updateFilterCount(events.length);
+      return events;
+    }
+    const filtered = events.filter(e => {
+      const m = (e.musical || e.title || '').toString();
+      return selected.includes(m);
+    });
+    updateFilterCount(filtered.length);
+    return filtered;
+  }
+
+  function updateFilterCount(n) {
+    if (typeof n === 'undefined') n = allEventsCache ? allEventsCache.length : 0;
+    countEl.textContent = `${n} evento(s)`;
+  }
+
+  function updateInputPlaceholder() {
+    const arr = getSelectedMusicalsArray();
+    inputEl.value = arr.length ? `${arr.slice(0,3).join(', ')}${arr.length>3 ? '…':''}` : '';
+    inputEl.placeholder = arr.length ? '' : 'Escribe para buscar / Escoge (click)';
+  }
+
+  // input search behaviour
+  inputEl.addEventListener('input', function() {
+    const q = inputEl.value.trim().toLowerCase();
+    Array.from(dropdown.children).forEach(item => {
+      const name = item.dataset.name.toLowerCase();
+      item.style.display = name.includes(q) ? '' : 'none';
+    });
+    dropdown.style.display = 'block';
+  });
+
+  // toggle dropdown on focus/click
+  inputEl.addEventListener('focus', () => { dropdown.style.display = 'block'; });
+  document.addEventListener('click', (e) => {
+    if (!multiWrap.contains(e.target)) dropdown.style.display = 'none';
+  });
+
+  // select all / clear
+  btnAll.addEventListener('click', function(){
+    Array.from(dropdown.querySelectorAll('input')).forEach(cb => { cb.checked = true; selectedSet.add(cb.value); });
+    updateInputPlaceholder(); calendar.refetchEvents();
+  });
+  btnClear.addEventListener('click', function(){
+    Array.from(dropdown.querySelectorAll('input')).forEach(cb => { cb.checked = false; });
+    selectedSet.clear(); updateInputPlaceholder(); calendar.refetchEvents();
+  });
+
+  // helper: approximate luminance to choose readable text color
+  function isLightColor(hex) {
+    // hex -> r,g,b
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const r = parseInt(hex.substr(0,2),16);
+    const g = parseInt(hex.substr(2,2),16);
+    const b = parseInt(hex.substr(4,2),16);
+    // perceived luminance
+    const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+    return lum > 180;
+  }
+
+  // helper
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // expose refresh
+  window.calendarRefresh = function(){ allEventsCache = null; selectedSet.clear(); updateInputPlaceholder(); calendar.refetchEvents(); };
 });
