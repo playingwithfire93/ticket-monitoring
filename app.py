@@ -467,6 +467,12 @@ from flask import request, jsonify
 # Replace existing /suggest handler (SendGrid) with this Gmail/SMTP version
 @app.route('/suggest', methods=['POST'])
 def suggest_smtp():
+    """
+    Unified /suggest handler:
+      - Try Slack webhook (if configured)
+      - Then Discord suggestions webhook (if configured)
+      - If none succeeded, fall back to SMTP using env vars
+    """
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     sender = (data.get('email') or '').strip() or os.getenv('SUGGEST_SMTP_USER') or f'no-reply@{os.getenv("HOSTNAME","local")}'
@@ -477,34 +483,48 @@ def suggest_smtp():
     if not message_body:
         return jsonify({'ok': False, 'error': 'message required'}), 400
 
-    # Prepare a clear payload for Slack/Email
     remote = request.remote_addr
     timestamp = datetime.now(UTC).isoformat()
-    slack_text = (
+    payload_text = (
         f"*Nueva sugerencia* · {timestamp}\n"
-        f"*Nombre:* {name or '—'}\n"
-        f"*Email:* {sender or '—'}\n"
-        f"*Musical:* {musical or '—'}\n"
-        f"*Link:* {url or '—'}\n"
-        f"*Mensaje:*\n{message_body}\n"
+        f"Nombre: {name or '—'}\n"
+        f"Email: {sender or '—'}\n"
+        f"Musical: {musical or '—'}\n"
+        f"Link: {url or '—'}\n\n"
+        f"Mensaje:\n{message_body}\n\n"
         f"_IP: {remote}_"
     )
 
-    # Try Slack first if configured
-    if SLACK_WEBHOOK:
-        res = send_slack_notification(slack_text)
-        if res.get("ok"):
-            # also save locally
-            save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
-            try:
-                socketio.emit("new_suggestion", {"name": name, "musical": musical, "url": url, "message": message_body}, namespace="/admin")
-            except Exception:
-                pass
-            return jsonify({"ok": True, "via": "slack", "result": res})
-        else:
-            app.logger.warning("Slack notify failed, falling back to SMTP: %s", res.get("reason") or res.get("error"))
+    sent_via = []
 
-    # Fallback: existing SMTP path (unchanged)
+    # Try Slack
+    try:
+        if SLACK_WEBHOOK:
+            res = send_slack_notification(payload_text)
+            if res.get("ok"):
+                sent_via.append("slack")
+    except Exception:
+        app.logger.exception("Slack notify failed")
+
+    # Try Discord suggestions webhook
+    try:
+        if DISCORD_WEBHOOK_SUGGESTIONS:
+            resd = send_discord_suggestion(payload_text)
+            if resd.get("ok"):
+                sent_via.append("discord")
+    except Exception:
+        app.logger.exception("Discord notify failed")
+
+    # If either handled it, persist + emit and return success
+    if sent_via:
+        save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
+        try:
+            socketio.emit("new_suggestion", {"name": name, "musical": musical, "url": url, "message": message_body}, namespace="/admin")
+        except Exception:
+            pass
+        return jsonify({"ok": True, "via": sent_via})
+
+    # Fallback to SMTP if no webhook handled it
     to_email = os.getenv('SUGGEST_TO_EMAIL')
     smtp_host = os.getenv('SUGGEST_SMTP_HOST', 'smtp.gmail.com')
     smtp_port = int(os.getenv('SUGGEST_SMTP_PORT', '587'))
@@ -512,7 +532,7 @@ def suggest_smtp():
     smtp_pass = os.getenv('SUGGEST_SMTP_PASS')
 
     if not to_email or not smtp_host or not smtp_user or not smtp_pass:
-        return jsonify({'ok': False, 'error': 'SMTP not configured and Slack not configured'}), 500
+        return jsonify({'ok': False, 'error': 'SMTP not configured and no webhooks configured'}), 500
 
     msg = EmailMessage()
     msg['Subject'] = 'Sugerencia desde Ticket Monitor'
@@ -652,6 +672,12 @@ def send_discord_json_alert(url, changes_text, timestamp=None):
 # Replace existing /suggest handler or swap its internals to prefer Slack
 @app.route('/suggest', methods=['POST'])
 def suggest_smtp():
+    """
+    Unified /suggest handler:
+      - Try Slack webhook (if configured)
+      - Then Discord suggestions webhook (if configured)
+      - If none succeeded, fall back to SMTP using env vars
+    """
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     sender = (data.get('email') or '').strip() or os.getenv('SUGGEST_SMTP_USER') or f'no-reply@{os.getenv("HOSTNAME","local")}'
@@ -665,36 +691,36 @@ def suggest_smtp():
     remote = request.remote_addr
     timestamp = datetime.now(UTC).isoformat()
     payload_text = (
-        f"**Nueva sugerencia** · {timestamp}\n"
+        f"*Nueva sugerencia* · {timestamp}\n"
         f"Nombre: {name or '—'}\n"
         f"Email: {sender or '—'}\n"
         f"Musical: {musical or '—'}\n"
         f"Link: {url or '—'}\n\n"
         f"Mensaje:\n{message_body}\n\n"
-        f"IP: {remote}"
+        f"_IP: {remote}_"
     )
 
     sent_via = []
 
     # Try Slack
-    if SLACK_WEBHOOK:
-        try:
+    try:
+        if SLACK_WEBHOOK:
             res = send_slack_notification(payload_text)
             if res.get("ok"):
                 sent_via.append("slack")
-        except Exception:
-            app.logger.exception("Slack notify failed")
+    except Exception:
+        app.logger.exception("Slack notify failed")
 
-    # Try Discord (fixed names)
-    if DISCORD_WEBHOOK_SUGGESTIONS:
-        try:
+    # Try Discord suggestions webhook
+    try:
+        if DISCORD_WEBHOOK_SUGGESTIONS:
             resd = send_discord_suggestion(payload_text)
             if resd.get("ok"):
                 sent_via.append("discord")
-        except Exception:
-            app.logger.exception("Discord notify failed")
+    except Exception:
+        app.logger.exception("Discord notify failed")
 
-    # If either Slack or Discord accepted the message, persist + emit and return success
+    # If either handled it, persist + emit and return success
     if sent_via:
         save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
         try:
