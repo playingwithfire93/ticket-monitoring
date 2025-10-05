@@ -156,11 +156,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const s = parseLocalDate(ev.start);
             const e = parseLocalDate(ev.end || ev.start);
             if (!s || !e) return;
-            // iterate local dates inclusive
+
+            // Normalize event name and try to find a matching exclusions key.
+            // Matches exact normalized key OR any exclusions key contained within the event key
+            const eventKey = normalizeKey(ev.musical || ev.title || '');
+            let excludedSet = new Set();
+            if (exclusionsMap[eventKey]) {
+              excludedSet = exclusionsMap[eventKey];
+            } else {
+              // try partial match (e.g. "book of mormon" matches "the book of mormon — temporada")
+              for (const exKey of Object.keys(exclusionsMap)) {
+                if (!exKey) continue;
+                if (eventKey.includes(exKey)) {
+                  excludedSet = exclusionsMap[exKey];
+                  console.debug('exclusions matched', exKey, 'for event', eventKey);
+                  break;
+                }
+              }
+            }
+
             for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
               // skip Mondays only (1)
               if (d.getDay() === 1) continue;
               const dayStr = formatLocalDate(d);
+
+              // skip if this musical has the day excluded
+              if (excludedSet.has(dayStr)) {
+                console.debug('skipping excluded date', dayStr, 'for', eventKey);
+                continue;
+              }
+
               const key = (ev.musical || ev.title || '').toString();
               const bg = pickColorFor(key);
               const textColor = isLightColor(bg) ? '#111827' : '#ffffff';
