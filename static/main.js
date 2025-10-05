@@ -44,9 +44,9 @@
   } catch (err) { console.warn('cleanup overlay failed', err); }
 
   // slideshow DOM (no dots/polka anywhere)
-  const slideElems = Array.from(document.querySelectorAll('.slide'));
-  const prevBtn = document.querySelector('.slide-nav.prev') || document.querySelector('.prev');
-  const nextBtn = document.querySelector('.slide-nav.next') || document.querySelector('.next');
+  const slideElems = [];
+  const prevBtn = null;
+  const nextBtn = null;
   // NOTE: all dots/polka logic removed — no variables, functions or comments referencing "dot(s)" remain
 
   if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
@@ -956,7 +956,7 @@
   })();
 
   // slideshow controls (now optional random order)
-  const RANDOMIZE_SLIDES = true;
+  const RANDOMIZE_SLIDES = false;
 
   function showSlide(index) {
     if (!slideElems.length) return;
@@ -989,8 +989,7 @@
     if (arState) arState.textContent = autoRefresh ? 'ON' : 'OFF';
     if (autoRefresh) { intervalId = setInterval(fetchData, 8000); fetchData(); } else { clearInterval(intervalId); }
   });
-  if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); stopSlideAuto(); });
-  if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); stopSlideAuto(); });
+  // slideshow controls removed with hero slideshow
 
   // --- Safe modal controls: guard against missing elements and provide fallbacks ---
   try {
@@ -1115,8 +1114,7 @@
   // init (use random first slide when enabled)
   renderTable(musicals);
   updateLastChecked();
-  if (RANDOMIZE_SLIDES) showRandomSlide(); else showSlide(0);
-  startSlideAuto();
+  // no page-level slideshow
 
   // ensure auto-refresh is ALWAYS ON
   autoRefresh = true;
