@@ -92,11 +92,18 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 700,
     validRange: { start: MIN_DATE, end: MAX_DATE },
 
-    // highlight Monday cells and keep them empty
+    // highlight Monday cells and mark them "Libre" (ONLY Mondays are emptied; Sundays remain normal)
     dayCellDidMount: function(info) {
-      // info.date is a Date; 1 === Monday
+      // JS: 0=Sun, 1=Mon ... mark Mondays only
       if (info.date && info.date.getDay() === 1) {
         info.el.classList.add('fc-monday-off');
+        // add a small "Libre" label in the corner if not already present
+        if (!info.el.querySelector('.monday-label')) {
+          const lbl = document.createElement('div');
+          lbl.className = 'monday-label';
+          lbl.textContent = 'Libre';
+          info.el.appendChild(lbl);
+        }
       }
     },
 
@@ -130,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           const filtered = applyFilter(allEventsCache);
 
-          // Expand multi-day events into per-day events, skipping Mondays (leave Mondays empty)
+          // Expand multi-day events into per-day events, skipping ONLY Mondays (leave Mondays empty)
           const expanded = [];
           filtered.forEach(ev => {
             const s = new Date(ev.start);
@@ -138,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
             s.setHours(0,0,0,0);
             e.setHours(0,0,0,0);
             for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-              // JS: 0=Sun, 1=Mon ... skip Mondays explícitamente
+              // skip Mondays (1) only — Sundays (0) WILL be included
               if (d.getDay() === 1) continue;
               const dayStr = d.toISOString().split('T')[0];
               const key = (ev.musical || ev.title || '').toString();
@@ -156,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
 
-          // safety: remove any events that accidentally fall on Monday
+          // final safety: only remove Mondays (should already be skipped)
           const final = expanded.filter(e => {
             const dt = new Date(e.start);
             return dt.getDay() !== 1;
