@@ -662,6 +662,28 @@ def shows_page():
         shows.append(v)
     return render_template('shows.html', shows=shows)
 
+@app.route("/calendar")
+def calendar_page():
+    """
+    Página del calendario (cliente carga /api/events).
+    grouped_urls se pasa por compatibilidad si la plantilla la usa.
+    """
+    grouped = group_urls_by_musical(load_urls())
+    return render_template("calendar.html", grouped_urls=grouped)
+
+
+@app.route("/api/events", methods=["GET"])
+def api_events():
+    """
+    Devuelve la lista de eventos (events.json) en JSON.
+    """
+    try:
+        events = load_events()
+        return jsonify(events)
+    except Exception:
+        app.logger.exception("api_events failed")
+        return jsonify([]), 500
+
 # >>> Re-add the app runner at EOF so it runs after all routes are defined
 if __name__ == "__main__":
     # Development friendly: auto-reload and run socketio
