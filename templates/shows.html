@@ -5,59 +5,179 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Cartelera — Ticket Monitor</title>
   <link rel="stylesheet" href="/static/style.css">
-</head>
+  <script>
+    // Guard tiny dataset coming from server for simple client sort/filter
+    window.SHOWS_DATA = {{ (shows | default([])) | tojson }};
+  </script>
+  <style>
+    /* keep page snappy while hydrating */
+    .catalog-grid .card{visibility:hidden}
+    .catalog-grid.ready .card{visibility:visible}
+  </style>
+  </head>
 <body class="pink-theme">
-  <header class="hero">
-    <div class="hero-inner">
-      <h1>Cartelera de musicales</h1>
-      <p class="lead">Selecciona teatro, fecha o musical. Manteniendo el estilo rosa.</p>
-      <div class="search-row">
-        <input id="search" placeholder="Buscar musical, teatro..." />
+  <header class="catalog-hero">
+    <div class="catalog-hero-inner">
+      <nav class="breadcrumb" aria-label="Ruta">
+        <a href="/" class="crumb">Inicio</a>
+        <span class="sep">›</span>
+        <a href="/shows" class="crumb is-active" aria-current="page">Musicales</a>
+      </nav>
+      <h1>Musicales y shows</h1>
+      <p class="lead">Explora por ciudad, fecha o popularidad y encuentra entradas al mejor precio.</p>
+      <div class="catalog-searchbar">
+        <div class="cs-input">
+          <input id="q" placeholder="Buscar musical o teatro" />
+        </div>
         <select id="city">
           <option value="">Todas las ciudades</option>
           <option value="madrid">Madrid</option>
+          <option value="barcelona">Barcelona</option>
+        </select>
+        <select id="sort">
+          <option value="pop">Popularidad</option>
+          <option value="az">A–Z</option>
+          <option value="date">Fecha</option>
         </select>
       </div>
     </div>
   </header>
 
-  <main class="container">
-    <section class="filters">
-      <label>Filtrar por género</label>
-      <div class="chips" id="genre-chips"></div>
-    </section>
-
-    <section class="grid" id="shows-grid">
-      <!-- Ejemplo de card = se genera desde servidor o JS -->
-      {% for s in shows %}
-      <article class="card">
-        <img src="{{ s.image }}" alt="{{ s.title }}" class="card-img" />
-        <div class="card-body">
-          <h3 class="card-title">{{ s.title }}</h3>
-          <p class="meta">{{ s.location }} · {{ s.range }}</p>
-          <p class="card-desc">{{ s.short }}</p>
-          <div class="card-actions">
-            <a class="btn btn-primary" href="{{ s.url }}" target="_blank">Entradas</a>
-            <button class="btn btn-outline js-add-calendar" data-id="{{ s.id }}">Añadir calendario</button>
-          </div>
+  <main class="container catalog">
+    <aside class="catalog-sidebar" aria-label="Filtros">
+      <div class="side-card">
+        <strong class="side-title">Género</strong>
+        <div class="chips" id="genre-chips"></div>
+      </div>
+      <div class="side-card">
+        <strong class="side-title">Fechas</strong>
+        <label class="side-row"><input type="checkbox" name="when" value="today"> Hoy</label>
+        <label class="side-row"><input type="checkbox" name="when" value="weekend"> Este finde</label>
+        <label class="side-row"><input type="checkbox" name="when" value="month"> Este mes</label>
+      </div>
+      <div class="side-card">
+        <strong class="side-title">Precio</strong>
+        <div class="price-row">
+          <input type="range" id="price" min="0" max="200" step="10" value="200">
+          <div class="price-val"><span id="price-val">≤ 200€</span></div>
         </div>
-      </article>
-      {% endfor %}
+      </div>
+    </aside>
+
+    <section class="catalog-content">
+      <div class="catalog-toolbar" aria-label="Orden y resultados">
+        <div class="count"><span id="count">0</span> resultados</div>
+        <div class="spacer"></div>
+        <label class="sort-label">Ordenar por
+          <select id="sort2">
+            <option value="pop">Popularidad</option>
+            <option value="az">A–Z</option>
+            <option value="date">Fecha</option>
+          </select>
+        </label>
+      </div>
+
+      <section class="grid catalog-grid" id="shows-grid">
+        {% for s in shows %}
+        <article class="card show-card" data-title="{{ s.title|e }}" data-city="{{ s.city|default('')|e }}" data-date="{{ s.date|default('')|e }}" data-pop="{{ s.popularity|default(0) }}" data-price="{{ s.min_price|default(0) }}" data-genres="{{ ','.join(s.genres) if s.genres else '' }}">
+          <a href="{{ s.url }}" target="_blank" class="image-wrap" aria-label="Ver entradas de {{ s.title }}">
+            <img src="{{ s.image }}" alt="{{ s.title }}" class="card-img" />
+            <span class="badge">Entradas</span>
+          </a>
+          <div class="card-body">
+            <h3 class="card-title">{{ s.title }}</h3>
+            <p class="meta">{{ s.location }} · {{ s.range }}</p>
+            <p class="card-desc">{{ s.short }}</p>
+            <div class="pill-row">
+              {% if s.genres %}
+                {% for g in s.genres %}<span class="pill">{{ g }}</span>{% endfor %}
+              {% endif %}
+            </div>
+            <div class="card-actions">
+              <a class="btn btn-primary" href="{{ s.url }}" target="_blank">Ver entradas</a>
+              <button class="btn btn-outline js-add-calendar" data-id="{{ s.id }}">Añadir calendario</button>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </section>
     </section>
   </main>
 
   <script>
-    // simple client filter (search + chips)
     (function(){
-      const input = document.getElementById('search');
       const grid = document.getElementById('shows-grid');
-      input && input.addEventListener('input', () => {
-        const q = input.value.toLowerCase().trim();
-        Array.from(grid.querySelectorAll('.card')).forEach(card => {
-          const t = (card.querySelector('.card-title')?.textContent||'').toLowerCase();
-          card.style.display = t.includes(q) ? '' : 'none';
-        });
+      const q = document.getElementById('q');
+      const city = document.getElementById('city');
+      const sort = document.getElementById('sort');
+      const sort2 = document.getElementById('sort2');
+      const chipsWrap = document.getElementById('genre-chips');
+      const countEl = document.getElementById('count');
+      const price = document.getElementById('price');
+      const priceVal = document.getElementById('price-val');
+
+      // build genre chips from data
+      const genres = Array.from(new Set((window.SHOWS_DATA||[]).flatMap(s => s.genres||[])));
+      genres.sort((a,b)=>a.localeCompare(b,'es'));
+      const activeGenres = new Set();
+      chipsWrap.innerHTML = genres.map(g=>`<button class="chip" data-g="${g}">${g}</button>`).join('');
+      chipsWrap.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.chip'); if (!btn) return;
+        const g = btn.getAttribute('data-g');
+        if (activeGenres.has(g)) { activeGenres.delete(g); btn.classList.remove('active'); }
+        else { activeGenres.add(g); btn.classList.add('active'); }
+        apply();
       });
+
+      function text(el, sel){ return (el.querySelector(sel)?.textContent||'').toLowerCase(); }
+      function dataNum(el, key){ const v = parseFloat(el.getAttribute(key)||'0'); return isNaN(v)?0:v; }
+
+      function apply(){
+        const query = (q.value||'').toLowerCase().trim();
+        const cityVal = (city.value||'').toLowerCase();
+        const maxPrice = parseFloat(price.value||'200');
+        const cards = Array.from(grid.querySelectorAll('.show-card'));
+        let visible = [];
+
+        // filter
+        cards.forEach(card => {
+          const title = (card.getAttribute('data-title')||'').toLowerCase();
+          const cityAttr = (card.getAttribute('data-city')||'').toLowerCase();
+          const genresAttr = (card.getAttribute('data-genres')||'').toLowerCase();
+          const priceAttr = dataNum(card, 'data-price');
+
+          const matchQ = !query || title.includes(query);
+          const matchCity = !cityVal || cityAttr === cityVal;
+          const matchGenre = activeGenres.size === 0 || [...activeGenres].some(g=>genresAttr.includes(g.toLowerCase()));
+          const matchPrice = !maxPrice || priceAttr <= maxPrice || priceAttr === 0;
+
+          const show = matchQ && matchCity && matchGenre && matchPrice;
+          card.style.display = show ? '' : 'none';
+          if (show) visible.push(card);
+        });
+
+        // sort
+        const mode = (sort2.value || sort.value || 'pop');
+        visible.sort((a,b)=>{
+          if (mode === 'az') return a.getAttribute('data-title').localeCompare(b.getAttribute('data-title'),'es');
+          if (mode === 'date') return (a.getAttribute('data-date')||'').localeCompare(b.getAttribute('data-date')||'');
+          // pop: higher first
+          return dataNum(b,'data-pop') - dataNum(a,'data-pop');
+        });
+        visible.forEach(el=>grid.appendChild(el));
+
+        countEl.textContent = String(visible.length);
+        grid.classList.add('ready');
+      }
+
+      q.addEventListener('input', apply);
+      city.addEventListener('change', apply);
+      sort.addEventListener('change', ()=>{ sort2.value = sort.value; apply(); });
+      sort2.addEventListener('change', ()=>{ sort.value = sort2.value; apply(); });
+      price.addEventListener('input', ()=>{ priceVal.textContent = `≤ ${price.value}€`; apply(); });
+
+      // initial
+      apply();
     })();
   </script>
 </body>

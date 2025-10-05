@@ -1231,3 +1231,39 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{padding:6px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,0.04);cursor:pointer;color:var(--pink-700);font-weight:600}
 
+/* Catalog page (inspired by entradas.com list layout) */
+.catalog-hero{background:linear-gradient(90deg,rgba(255,107,179,0.08),rgba(160,123,255,0.08));padding:24px 0;border-bottom:1px solid rgba(0,0,0,0.03)}
+.catalog-hero-inner{max-width:var(--maxw);margin:0 auto;padding:0 18px}
+.breadcrumb{display:flex;align-items:center;gap:8px;margin:4px 0 10px 0;font-size:13px;color:var(--muted)}
+.breadcrumb .crumb{color:var(--pink-700);text-decoration:none}
+.breadcrumb .crumb.is-active{color:#111;pointer-events:none}
+.breadcrumb .sep{opacity:.5}
+.catalog-hero h1{margin:0 0 6px 0;color:var(--pink-700);font-size:28px}
+.catalog-hero .lead{margin:0 0 14px;color:var(--muted)}
+.catalog-searchbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.catalog-searchbar input, .catalog-searchbar select{padding:10px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.06)}
+.catalog-searchbar .cs-input{flex:1 1 280px}
+.catalog-searchbar #q{width:100%}
+
+.catalog{display:grid;grid-template-columns:260px 1fr;gap:18px}
+@media (max-width: 900px){ .catalog{grid-template-columns:1fr} }
+.catalog-sidebar{position:sticky;top:12px;align-self:start;display:flex;flex-direction:column;gap:12px}
+.side-card{background:var(--card-bg);border-radius:var(--radius);box-shadow:0 10px 30px rgba(16,24,40,0.06);padding:12px}
+.side-title{display:block;font-weight:700;color:var(--pink-700);margin-bottom:8px}
+.side-row{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px;color:#444}
+.price-row{display:flex;flex-direction:column;gap:6px}
+.price-row input[type="range"]{width:100%}
+.price-val{font-size:13px;color:var(--muted)}
+.chip.active{background:var(--pink-100);border-color:var(--pink-300)}
+
+.catalog-content{display:flex;flex-direction:column;gap:12px}
+.catalog-toolbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(0,0,0,0.04);border-radius:10px;padding:10px}
+.catalog-toolbar .spacer{flex:1}
+.catalog-toolbar .count{font-weight:700;color:#333}
+.catalog-toolbar select{padding:8px 10px;border-radius:999px;border:1px solid rgba(0,0,0,0.06)}
+
+.show-card .image-wrap{position:relative;display:block}
+.show-card .badge{position:absolute;left:10px;top:10px;background:var(--pink-500);color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
+.show-card .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.pill{padding:4px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,0.04);color:var(--pink-700);font-weight:600;font-size:12px}
+
