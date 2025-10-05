@@ -641,102 +641,26 @@ def send_discord_json_alert(url, changes_text, timestamp=None):
 
 def load_events():
     try:
-        if EVENTS_FILE.exists():
-            with EVENTS_FILE.open("r", encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    return data
+        with EVENTS_FILE.open('r', encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
-        app.logger.exception("load_events failed")
-    return []
+        return []
 
-def save_events(events):
-    try:
-        with EVENTS_FILE.open("w", encoding="utf-8") as f:
-            json.dump(events, f, ensure_ascii=False, indent=2)
-    except Exception:
-        app.logger.exception("save_events failed")
-
-def create_default_2025_2026_events():
-    # If events file missing or empty, create a basic calendar of monthly shows for 2025-2026
-    try:
-        existing = load_events()
-        if existing:
-            return
-        musicals_list = [itm.get("musical") or itm.get("name") or None for itm in load_urls()]
-        # fallback sample musicals if none defined
-        if not any(musicals_list):
-            musicals_list = ["Wicked", "The Book of Mormon", "Los Miserables", "Houdini"]
-        events = []
-        for musical in filter(None, musicals_list):
-            for year in (2025, 2026):
-                for month in range(1, 13):
-                    day = 15
-                    start_date = datetime(year, month, day).date().isoformat()
-                    ev = {
-                        "id": str(uuid.uuid4()),
-                        "title": f"{musical} — Función",
-                        "musical": musical,
-                        "start": start_date,
-                        "end": start_date,
-                        "allDay": True
-                    }
-                    events.append(ev)
-        save_events(events)
-        app.logger.info("Created default 2025-2026 events (%d)", len(events))
-    except Exception:
-        app.logger.exception("create_default_2025_2026_events failed")
-
-# ensure default events exist at startup
-create_default_2025_2026_events()
-
-@app.route("/api/events", methods=["GET","POST","PUT","DELETE"])
-def api_events():
+@app.route('/shows')
+def shows_page():
     events = load_events()
-    if request.method == "GET":
-        return jsonify(events)
-    data = request.get_json(silent=True) or {}
-    if request.method == "POST":
-        ev = {
-            "id": str(uuid.uuid4()),
-            "title": data.get("title") or "Evento",
-            "musical": data.get("musical") or "",
-            "start": data.get("start"),
-            "end": data.get("end") or data.get("start"),
-            "allDay": bool(data.get("allDay", True))
-        }
-        events.append(ev)
-        save_events(events)
-        return jsonify(ev), 201
-    if request.method == "PUT":
-        ev_id = data.get("id")
-        for e in events:
-            if e.get("id") == ev_id:
-                for k in ("title","start","end","allDay","musical"):
-                    if k in data:
-                        e[k] = data[k]
-                save_events(events)
-                return jsonify(e)
-        return jsonify({"error": "not found"}), 404
-    if request.method == "DELETE":
-        ev_id = request.args.get("id") or data.get("id")
-        new = [e for e in events if e.get("id") != ev_id]
-        if len(new) == len(events):
-            return jsonify({"error": "not found"}), 404
-        save_events(new)
-        return jsonify({"ok": True})
-
-from flask import render_template
-
-@app.route("/calendar")
-def calendar_view():
-    # Simple view for the embedded calendar widget
-    try:
-        musicals = load_urls() if 'load_urls' in globals() else []
-    except Exception:
-        musicals = []
-    grouped = {}  # opcional: group_urls_by_musical(musicals) si existe esa función
-    return render_template("calendar.html", musicals=musicals, grouped_urls=grouped)
+    # agrupa por musical y genera mini-datos para la vista
+    grouped = {}
+    for ev in events:
+        key = (ev.get('musical') or ev.get('title') or 'Sin título').strip()
+        g = grouped.setdefault(key, {'title': key, 'id': key, 'dates': [], 'image': '/static/placeholder.jpg', 'short': ''})
+        g['dates'].append(ev.get('start'))
+    shows = []
+    for k,v in grouped.items():
+        dates = sorted(d for d in v['dates'] if d)
+        v['range'] = dates[0] + ((' → ' + dates[dates.length-1]) if len(dates)>1 else '')
+        shows.append(v)
+    return render_template('shows.html', shows=shows)
 
 # >>> Re-add the app runner at EOF so it runs after all routes are defined
 if __name__ == "__main__":

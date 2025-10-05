@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cartelera — Ticket Monitor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="pink-theme">
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>Cartelera de musicales</h1>
+      <p class="lead">Selecciona teatro, fecha o musical. Manteniendo el estilo rosa.</p>
+      <div class="search-row">
+        <input id="search" placeholder="Buscar musical, teatro..." />
+        <select id="city">
+          <option value="">Todas las ciudades</option>
+          <option value="madrid">Madrid</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="filters">
+      <label>Filtrar por género</label>
+      <div class="chips" id="genre-chips"></div>
+    </section>
+
+    <section class="grid" id="shows-grid">
+      <!-- Ejemplo de card = se genera desde servidor o JS -->
+      {% for s in shows %}
+      <article class="card">
+        <img src="{{ s.image }}" alt="{{ s.title }}" class="card-img" />
+        <div class="card-body">
+          <h3 class="card-title">{{ s.title }}</h3>
+          <p class="meta">{{ s.location }} · {{ s.range }}</p>
+          <p class="card-desc">{{ s.short }}</p>
+          <div class="card-actions">
+            <a class="btn btn-primary" href="{{ s.url }}" target="_blank">Entradas</a>
+            <button class="btn btn-outline js-add-calendar" data-id="{{ s.id }}">Añadir calendario</button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+  </main>
+
+  <script>
+    // simple client filter (search + chips)
+    (function(){
+      const input = document.getElementById('search');
+      const grid = document.getElementById('shows-grid');
+      input && input.addEventListener('input', () => {
+        const q = input.value.toLowerCase().trim();
+        Array.from(grid.querySelectorAll('.card')).forEach(card => {
+          const t = (card.querySelector('.card-title')?.textContent||'').toLowerCase();
+          card.style.display = t.includes(q) ? '' : 'none';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

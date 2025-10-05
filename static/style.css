@@ -1182,3 +1182,52 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
   .calendar-widget { width: 92vw; height: 200px; right: 4%; bottom: 12px; }
 }
 
+/* Nueva paleta rosa */
+:root{
+  --pink-50:#fff0f6;
+  --pink-100:#ffe6f0;
+  --pink-300:#ff9fcf;
+  --pink-500:#ff6bb3;
+  --pink-700:#d94f8f;
+  --muted:#6b7280;
+  --card-bg: #ffffff;
+  --radius:14px;
+  --maxw:1100px;
+}
+*{box-sizing:border-box}
+body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#111;font-family:Inter,system-ui,Arial;margin:0;padding:0}
+.container{max-width:var(--maxw);margin:22px auto;padding:0 18px}
+
+/* Hero */
+.hero{background:linear-gradient(90deg,rgba(255,107,179,0.08),rgba(255,200,230,0.06));padding:28px 0;border-bottom:1px solid rgba(0,0,0,0.03)}
+.hero-inner{max-width:var(--maxw);margin:0 auto;padding:0 18px}
+.hero h1{color:var(--pink-700);margin:0 0 6px;font-size:28px}
+.hero .lead{color:var(--muted);margin:0 0 12px}
+
+/* search row */
+.search-row{display:flex;gap:10px;align-items:center}
+.search-row input, .search-row select{padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.06);min-width:220px}
+
+/* Filters */
+.filters{display:flex;align-items:center;gap:12px;margin:18px 0}
+
+/* Grid of cards */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:640px){ .grid{grid-template-columns:1fr} }
+
+.card{background:var(--card-bg);border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px rgba(16,24,40,0.06);display:flex;flex-direction:column}
+.card-img{width:100%;height:180px;object-fit:cover;display:block}
+.card-body{padding:12px 14px 18px;display:flex;flex-direction:column;gap:8px}
+.card-title{margin:0;font-size:16px;color:var(--pink-700)}
+.meta{font-size:13px;color:var(--muted);margin:0}
+.card-desc{flex:1;color:#444;font-size:14px;margin:6px 0}
+.card-actions{display:flex;gap:8px}
+.btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+.btn-primary{background:var(--pink-500);color:#fff}
+.btn-outline{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--pink-700)}
+
+/* small helpers */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,0.04);cursor:pointer;color:var(--pink-700);font-weight:600}
+
