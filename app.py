@@ -4,7 +4,7 @@ import time
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, url_for
 from flask_socketio import SocketIO
 import hashlib
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -18,6 +18,7 @@ import re
 import uuid
 
 BASE = Path(__file__).parent
+STATIC_DIR = BASE / "static"
 URLS_FILE = BASE / "urls.json"
 SUGGESTIONS_FILE = BASE / "suggestions.json"
 EVENTS_FILE = BASE / "events.json"
@@ -48,6 +49,65 @@ def group_urls_by_musical(urls_list):
     return grouped
 
 
+def _normalize_key(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (s or "").strip().lower())
+
+
+def _candidate_tokens(name: str) -> list:
+    """Return loose tokens for matching filenames for a musical name.
+    Includes a few common synonyms for known shows (e.g., Book of Mormon -> bom).
+    """
+    key = (name or "").strip().lower()
+    tokens = [t for t in re.split(r"\s+|[-_/]", key) if t]
+    syn = set(tokens)
+    joined = key.replace(" ", "")
+    if "book" in tokens and "mormon" in tokens:
+        syn.update(["bom", "bookofmormon", "mormon"])  # matches BOM*.jpg in /static
+    if "les" in tokens and ("mis" in tokens or "miserables" in tokens):
+        syn.update(["lesmis", "miserables", "lesmiserables"])
+    if "wicked" in tokens:
+        syn.add("wicked")
+    if "houdini" in tokens:
+        syn.add("houdini")
+    if "audrey" in tokens:
+        syn.add("audrey")
+    syn.add(joined)
+    return list({t for t in syn if len(t) >= 3})
+
+
+def find_musical_images(name: str, limit: int = 8) -> list:
+    """Scan static directory for images loosely matching the musical name.
+    Returns a list of static-relative paths (e.g., 'BOM1.jpg').
+    """
+    try:
+        tokens = _candidate_tokens(name)
+        if not tokens:
+            return []
+        exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+        found = []
+        if STATIC_DIR.exists():
+            for p in STATIC_DIR.iterdir():
+                if not p.is_file():
+                    continue
+                if p.suffix.lower() not in exts:
+                    continue
+                stem = p.stem.lower()
+                if any(t in stem for t in tokens):
+                    found.append(p.name)  # return static-relative filename
+                if len(found) >= limit:
+                    break
+        return found
+    except Exception:
+        return []
+
+
+def get_random_musical_image(name: str) -> str | None:
+    imgs = find_musical_images(name, limit=20)
+    if not imgs:
+        return None
+    return str(STATIC_DIR / random.choice(imgs))
+
+
 def save_suggestion(suggestion):
     try:
         if SUGGESTIONS_FILE.exists():
@@ -66,7 +126,19 @@ def save_suggestion(suggestion):
 def index():
     musicals = load_urls()
     grouped = group_urls_by_musical(musicals)
-    return render_template("index.html", musicals=musicals, grouped_urls=grouped)
+    # build cards with images for each musical (used in grid on homepage)
+    cards = []
+    for title, urls in grouped.items():
+        imgs = find_musical_images(title, limit=6)
+        img_urls = [url_for('static', filename=fn) for fn in imgs]
+        cards.append({
+            "title": title,
+            "images": img_urls,
+            "urlCount": len(urls)
+        })
+    # deterministic order by name
+    cards.sort(key=lambda c: c["title"].lower())
+    return render_template("index.html", musicals=musicals, grouped_urls=grouped, musicals_cards=cards)
 
 @app.route("/api/monitored-urls")
 def api_monitored_urls():
