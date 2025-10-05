@@ -677,32 +677,34 @@
   // Load extra cards from events.json and suggestions.json (optional)
   async function loadExtraData(){
     const outs = [];
-    try {
-      // events.json provides schedule info
-      const r = await fetch('/events.json', { cache: 'no-store' });
-      if (r.ok) {
-        const evs = await r.json();
-        (Array.isArray(evs)?evs:[]).forEach(ev => {
-          const name = ev.musical || ev.title || '';
-          if (!name) return;
-          const range = (ev.start && ev.end) ? `${ev.start} — ${ev.end}` : '';
-          outs.push({ name, musical: name, location: ev.location || '', range, urls: [], images: [] });
-        });
+
+    async function getJsonFromFirst(paths){
+      for (const p of paths){
+        try {
+          const r = await fetch(p, { cache: 'no-store' });
+          if (r.ok) return await r.json();
+        } catch(e){ /* try next */ }
       }
-    } catch(e) { /* ignore */ }
-    try {
-      // suggestions.json: siteName/siteUrl
-      const r = await fetch('/suggestions.json', { cache: 'no-store' });
-      if (r.ok) {
-        const sug = await r.json();
-        (Array.isArray(sug)?sug:[]).forEach(s => {
-          const name = s.siteName || '';
-          if (!name) return;
-          const url = s.siteUrl || '';
-          outs.push({ name, musical: name, location: '', range: '', urls: url ? [url] : [], images: [] });
-        });
-      }
-    } catch(e) { /* ignore */ }
+      return null;
+    }
+
+    // events.json provides schedule info (try multiple common locations)
+    const evs = await getJsonFromFirst(['/events.json','/static/data/events.json','/static/events.json']);
+    (Array.isArray(evs)?evs:[]).forEach(ev => {
+      const name = ev.musical || ev.title || '';
+      if (!name) return;
+      const range = (ev.start && ev.end) ? `${ev.start} — ${ev.end}` : '';
+      outs.push({ name, musical: name, location: ev.location || '', range, urls: [], images: [] });
+    });
+
+    // suggestions.json (try multiple locations)
+    const sug = await getJsonFromFirst(['/suggestions.json','/static/data/suggestions.json','/static/suggestions.json']);
+    (Array.isArray(sug)?sug:[]).forEach(s => {
+      const name = s.siteName || '';
+      if (!name) return;
+      const url = s.siteUrl || '';
+      outs.push({ name, musical: name, location: '', range: '', urls: url ? [url] : [], images: [] });
+    });
     // de-dupe by key
     const seen = new Set();
     extraCardItems = outs.filter(it => { const k = keyForItem(it); if (seen.has(k)) return false; seen.add(k); return true; });
