@@ -1343,3 +1343,12 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
 
 .visually-hidden{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
+/* Mini slideshow inside monitor card */
+.mc-slideshow{position:relative;aspect-ratio:16/9;background:#fef7fb;border-bottom:1px solid rgba(0,0,0,0.04);overflow:hidden}
+.mc-slides{position:relative;width:100%;height:100%}
+.mc-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease}
+.mc-slide.active{opacity:1}
+.mc-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:0;border-radius:999px;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.mc-nav.prev{left:8px}
+.mc-nav.next{right:8px}
+

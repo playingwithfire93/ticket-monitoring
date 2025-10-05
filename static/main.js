@@ -570,6 +570,37 @@
     card.className = 'monitor-card';
     card.dataset.idx = idx;
 
+    // slideshow (optional per-musical images)
+    const slideWrap = document.createElement('div');
+    slideWrap.className = 'mc-slideshow';
+    const images = getImagesForItem(item);
+    if (images.length) {
+      const inner = document.createElement('div');
+      inner.className = 'mc-slides';
+      images.forEach((src, i) => {
+        const img = document.createElement('img');
+        img.className = 'mc-slide';
+        img.src = src;
+        img.alt = (item.musical || item.name || 'Imagen');
+        if (i === 0) img.classList.add('active');
+        inner.appendChild(img);
+      });
+      slideWrap.appendChild(inner);
+
+      const prev = document.createElement('button');
+      prev.className = 'mc-nav prev';
+      prev.type = 'button';
+      prev.textContent = '‹';
+      const next = document.createElement('button');
+      next.className = 'mc-nav next';
+      next.type = 'button';
+      next.textContent = '›';
+      slideWrap.appendChild(prev);
+      slideWrap.appendChild(next);
+
+      initMiniSlideshow(slideWrap);
+    }
+
     const header = document.createElement('div');
     header.className = 'mc-header';
     const title = document.createElement('div');
@@ -618,6 +649,7 @@
     details.appendChild(urls);
     details.appendChild(actions);
 
+    if (images.length) card.appendChild(slideWrap);
     card.appendChild(header);
     card.appendChild(body);
     card.appendChild(details);
@@ -634,6 +666,49 @@
     cardsGrid.innerHTML = '';
     if (!list || !list.length) return;
     list.forEach((item,i)=> cardsGrid.appendChild(buildCard(item,i)));
+  }
+
+  // Map item to available static images
+  function getImagesForItem(item){
+    const m = ((item.musical || item.name || '').toLowerCase());
+    const paths = [];
+    const base = (p) => `/static/${p}`;
+    const pushIf = (arr) => arr.forEach(p=>paths.push(base(p)));
+    if (/mormon|bom|book of mormon/.test(m)) pushIf(['BOM1.jpg','BOM2.jpg','BOM3.jpg']);
+    if (/houdini/.test(m)) pushIf(['HOUDINI1.jpg','HOUDINI2.webp','HOUDINI3.webp']);
+    if (/wicked/.test(m)) pushIf(['WICKED1.webp','WICKED2.jpg','WICKED3.jpg']);
+    if (/les\s?mis|miserables/.test(m)) pushIf(['LESMIS1.jpg','LESMIS2.jpg','LESMIS3.png']);
+    if (/audrey|little shop/.test(m)) pushIf(['AUDREY1.jpg']);
+    // if server provided images
+    if (Array.isArray(item.images) && item.images.length) {
+      return item.images.map(u => (u.startsWith('http')?u:`/static/${u}`));
+    }
+    return paths.slice(0, 5);
+  }
+
+  // Initialize a simple fading slideshow inside a .mc-slideshow
+  function initMiniSlideshow(container){
+    try {
+      const slides = Array.from(container.querySelectorAll('.mc-slide'));
+      if (!slides.length) return;
+      let idx = 0;
+      function show(n){
+        slides[idx]?.classList.remove('active');
+        idx = (n + slides.length) % slides.length;
+        slides[idx]?.classList.add('active');
+      }
+      const prevBtn = container.querySelector('.mc-nav.prev');
+      const nextBtn = container.querySelector('.mc-nav.next');
+      prevBtn && prevBtn.addEventListener('click', (e)=>{ e.stopPropagation(); show(idx-1); restart(); });
+      nextBtn && nextBtn.addEventListener('click', (e)=>{ e.stopPropagation(); show(idx+1); restart(); });
+      let timer = null;
+      function start(){ stop(); timer = setInterval(()=> show(idx+1), 4000); }
+      function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+      function restart(){ start(); }
+      container.addEventListener('mouseenter', stop);
+      container.addEventListener('mouseleave', start);
+      start();
+    } catch(e) { /* ignore */ }
   }
 
   // Controlled details behaviour:
