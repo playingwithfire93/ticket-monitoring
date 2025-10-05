@@ -653,12 +653,23 @@ def shows_page():
     grouped = {}
     for ev in events:
         key = (ev.get('musical') or ev.get('title') or 'Sin título').strip()
-        g = grouped.setdefault(key, {'title': key, 'id': key, 'dates': [], 'image': '/static/placeholder.jpg', 'short': ''})
+        g = grouped.setdefault(key, {
+            'title': key,
+            'id': key,
+            'dates': [],
+            'image': ev.get('image') or '/static/BOM1.jpg',
+            'short': ev.get('short') or '',
+            'url': ev.get('url') or '#',
+            'location': ev.get('location') or ''
+        })
         g['dates'].append(ev.get('start'))
     shows = []
     for k,v in grouped.items():
-        dates = sorted(d for d in v['dates'] if d)
-        v['range'] = dates[0] + ((' → ' + dates[dates.length-1]) if len(dates)>1 else '')
+        dates = sorted([d for d in v['dates'] if d])
+        if dates:
+            v['range'] = dates[0] + ((' → ' + dates[-1]) if len(dates) > 1 else '')
+        else:
+            v['range'] = ''
         shows.append(v)
     return render_template('shows.html', shows=shows)
 

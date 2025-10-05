@@ -16,6 +16,7 @@
   </style>
   </head>
 <body class="pink-theme">
+<<<<<<< HEAD
   <header class="catalog-hero">
     <div class="catalog-hero-inner">
       <nav class="breadcrumb" aria-label="Ruta">
@@ -39,10 +40,45 @@
           <option value="az">A–Z</option>
           <option value="date">Fecha</option>
         </select>
+=======
+  <header class="hero listing-header">
+    <div class="hero-inner">
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="/">Inicio</a>
+        <span class="sep" aria-hidden="true">›</span>
+        <span class="current">Musicales</span>
+      </nav>
+
+      <h1>Cartelera de musicales</h1>
+      <p class="lead">Explora musicales por ciudad, fecha o género — con vibes cute en rosa.</p>
+
+      <div class="toolbar">
+        <div class="search-row">
+          <input id="search" placeholder="Buscar musical, teatro..." />
+          <select id="city" class="sort-select">
+            <option value="">Todas las ciudades</option>
+            <option value="madrid">Madrid</option>
+          </select>
+        </div>
+        <div class="meta-inline">
+          <span class="results-count" aria-live="polite">{{ (shows|length) or 0 }} resultados</span>
+          <label class="sort-wrap">
+            <span class="sr-only">Ordenar por</span>
+            <select class="sort-select" id="sort">
+              <option value="popular">Más populares</option>
+              <option value="fecha">Próximas fechas</option>
+              <option value="titulo">Título (A–Z)</option>
+            </select>
+          </label>
+        </div>
+>>>>>>> f67f56e503d5bd6b3f0b305b47d983bc69581767
       </div>
+
+      <div class="chips" id="genre-chips"></div>
     </div>
   </header>
 
+<<<<<<< HEAD
   <main class="container catalog">
     <aside class="catalog-sidebar" aria-label="Filtros">
       <div class="side-card">
@@ -60,6 +96,24 @@
         <div class="price-row">
           <input type="range" id="price" min="0" max="200" step="10" value="200">
           <div class="price-val"><span id="price-val">≤ 200€</span></div>
+=======
+  <main class="container">
+    <section class="grid shows-grid" id="shows-grid">
+      <!-- Ejemplo de card = se genera desde servidor o JS -->
+      {% for s in shows %}
+      <article class="card show-card" data-title="{{ s.title }}">
+        <div class="poster">
+          <img src="{{ s.image }}" alt="{{ s.title }}" class="poster-img" />
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">{{ s.title }}</h3>
+          <p class="meta">{{ s.location }} · {{ s.range }}</p>
+          <p class="card-desc">{{ s.short }}</p>
+          <div class="card-actions">
+            <a class="btn btn-primary" href="{{ s.url }}" target="_blank">Entradas</a>
+            <button class="btn btn-outline js-add-calendar" data-id="{{ s.id }}">Añadir calendario</button>
+          </div>
+>>>>>>> f67f56e503d5bd6b3f0b305b47d983bc69581767
         </div>
       </div>
     </aside>
@@ -105,6 +159,7 @@
   </main>
 
   <script>
+<<<<<<< HEAD
     (function(){
       const grid = document.getElementById('shows-grid');
       const q = document.getElementById('q');
@@ -178,6 +233,56 @@
 
       // initial
       apply();
+=======
+    // entradas-like UX: filter + sort + live count + sample chips
+    (function(){
+      const grid = document.getElementById('shows-grid');
+      const cards = grid ? Array.from(grid.querySelectorAll('.show-card')) : [];
+      const input = document.getElementById('search');
+      const sortSel = document.getElementById('sort');
+      const countEl = document.querySelector('.results-count');
+      const chips = document.getElementById('genre-chips');
+
+      function normalize(s){ return String(s||'').toLowerCase().trim(); }
+
+      function apply(){
+        const q = normalize(input && input.value);
+        // filter
+        cards.forEach(c => {
+          const t = normalize(c.dataset.title || c.querySelector('.card-title')?.textContent);
+          c.style.display = (!q || (t && t.includes(q))) ? '' : 'none';
+        });
+        // collect visible and sort
+        const visible = cards.filter(c => c.style.display !== 'none');
+        const mode = sortSel && sortSel.value || 'popular';
+        if (mode === 'titulo') {
+          visible.sort((a,b)=> (a.dataset.title||'').localeCompare(b.dataset.title||''));
+        }
+        // re-append in sorted order
+        if (grid) visible.forEach(c => grid.appendChild(c));
+        // update count
+        if (countEl) countEl.textContent = `${visible.length} resultados`;
+      }
+
+      input && input.addEventListener('input', apply);
+      sortSel && sortSel.addEventListener('change', apply);
+      if (cards.length) apply();
+
+      // demo chips (can wire to real genres later)
+      if (chips && !chips.dataset.inited) {
+        chips.dataset.inited = '1';
+        ['Familiar','Clásico','Comedia','Drama','Magia'].forEach(name => {
+          const btn = document.createElement('button');
+          btn.className = 'chip';
+          btn.type = 'button';
+          btn.textContent = name;
+          btn.addEventListener('click', () => {
+            if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+          });
+          chips.appendChild(btn);
+        });
+      }
+>>>>>>> f67f56e503d5bd6b3f0b305b47d983bc69581767
     })();
   </script>
 </body>
