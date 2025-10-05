@@ -4,6 +4,7 @@
 
   // DOM
   const tableBody = document.getElementById('table-body');
+  const cardsGrid = document.getElementById('cards-grid');
   const search = document.getElementById('search');
   const noData = document.getElementById('no-data');
   const lastCheckedEl = document.getElementById('last-checked');
@@ -548,6 +549,8 @@
       td.appendChild(retry);
       tr.appendChild(td);
       tableBody.appendChild(tr);
+      // also refresh cards grid for empty state
+      try { if (typeof renderCards === 'function') renderCards(list); } catch(e){}
       return;
     }
 
@@ -557,6 +560,80 @@
       tableBody.appendChild(buildSummaryRow(item, i));
       tableBody.appendChild(buildDetailsRow(item, i));
     });
+    // also render cards on each render
+    try { if (typeof renderCards === 'function') renderCards(list); } catch(e){}
+  }
+
+  // --------------- Cards grid (hover/click expandable) ---------------
+  function buildCard(item, idx){
+    const card = document.createElement('article');
+    card.className = 'monitor-card';
+    card.dataset.idx = idx;
+
+    const header = document.createElement('div');
+    header.className = 'mc-header';
+    const title = document.createElement('div');
+    title.className = 'mc-title';
+    title.textContent = item.musical || item.name || 'Sin nombre';
+    const sub = document.createElement('div');
+    sub.className = 'mc-sub';
+    const urlNum = (item.urls && item.urls.length) ? item.urls.length : 0;
+    const k = keyForItem(item);
+    const ch = (changesMap && changesMap[k]) ? changesMap[k] : { added:0, removed:0, total:0 };
+    sub.textContent = `${urlNum} URL · +${ch.added}/-${ch.removed}`;
+    header.appendChild(title);
+    header.appendChild(sub);
+
+    const body = document.createElement('div');
+    body.className = 'mc-body';
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = ch.total > 0 ? `${ch.total} cambios` : 'Sin cambios';
+    body.appendChild(badge);
+
+    const details = document.createElement('div');
+    details.className = 'mc-details';
+    const urls = document.createElement('div');
+    urls.className = 'urls';
+    (item.urls||[]).forEach(u=>{
+      const a = document.createElement('a');
+      a.className = 'url-chip';
+      a.href = u.startsWith('http') ? u : 'https://' + u;
+      a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.textContent = (typeof labelForUrl === 'function') ? labelForUrl(item.musical || item.name, u) : (u.replace(/^https?:\/\//,''));
+      urls.appendChild(a);
+    });
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn ghost small';
+    viewBtn.textContent = 'Ver cambios';
+    viewBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); try{ showChangesForItem(item, k);}catch(e){} });
+    const seenBtn = document.createElement('button');
+    seenBtn.className = 'btn primary small';
+    seenBtn.textContent = 'Marcar visto';
+    seenBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); markItemAsSeen(item); });
+    actions.appendChild(viewBtn);
+    actions.appendChild(seenBtn);
+    details.appendChild(urls);
+    details.appendChild(actions);
+
+    card.appendChild(header);
+    card.appendChild(body);
+    card.appendChild(details);
+
+    // hover and click expand
+    card.addEventListener('mouseenter', ()=> card.classList.add('hover'));
+    card.addEventListener('mouseleave', ()=> card.classList.remove('hover'));
+    card.addEventListener('click', ()=> card.classList.toggle('open'));
+    return card;
+  }
+
+  function renderCards(list){
+    if (!cardsGrid) return;
+    cardsGrid.innerHTML = '';
+    if (!list || !list.length) return;
+    list.forEach((item,i)=> cardsGrid.appendChild(buildCard(item,i)));
   }
 
   // Controlled details behaviour:

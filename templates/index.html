@@ -81,7 +81,7 @@
 
     <!-- Table / List -->
     <section id="list" class="list-section fade-in">
-      <table class="musicals-table" aria-label="Monitored musicals">
+      <table class="musicals-table" aria-label="Monitored musicals" style="display:none">
         <thead>
           <tr>
             <th aria-hidden="true"></th>
@@ -96,6 +96,12 @@
       </table>
 
       <div id="no-data" class="no-data" hidden>No musicals yet — add one ✨</div>
+    </section>
+
+    <!-- Cards Grid -->
+    <section id="cards" class="cards-section fade-in" aria-labelledby="cards-title">
+      <h2 id="cards-title" class="visually-hidden">Monitored musicals (cards)</h2>
+      <div id="cards-grid" class="monitor-cards"></div>
     </section>
 
     <!-- Inline suggestion card (non-overlay) -->
