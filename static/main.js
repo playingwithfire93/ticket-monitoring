@@ -1006,6 +1006,14 @@
         try { showNotificationPopup(`${added.length} cambios detectados ✨`, 3500); } catch(e) {}
         // NEW: lightweight celebration visual (non-blocking)
         try { celebrate(Math.min(28, Math.max(10, added.length * 6))); } catch(e) {}
+        // Also open a detailed popup for the first changed item
+        try {
+          const firstKey = added[0];
+          const item = (musicals || []).find(it => keyForItem(it) === firstKey);
+          if (item && typeof showChangesForItem === 'function') {
+            showChangesForItem(item, firstKey);
+          }
+        } catch(e) { /* ignore */ }
       }
       prevChangeKeys = newKeys;
       initialLoadDone = true;
