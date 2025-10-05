@@ -10,6 +10,7 @@
   const lastCheckedEl = document.getElementById('last-checked');
   const arToggle = document.getElementById('toggle-refresh');
   const arState = document.getElementById('ar-state');
+  const lastChangesEl = document.getElementById('last-changes');
   const modal = document.getElementById('modal');
   const modalTitle = document.getElementById('modal-title');
   const modalList = document.getElementById('modal-list');
@@ -1012,6 +1013,16 @@
           const item = (musicals || []).find(it => keyForItem(it) === firstKey);
           if (item && typeof showChangesForItem === 'function') {
             showChangesForItem(item, firstKey);
+          }
+        } catch(e) { /* ignore */ }
+        // stamp last changes time
+        try {
+          if (lastChangesEl) {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth()+1).padStart(2,'0');
+            const day = String(d.getDate()).padStart(2,'0');
+            lastChangesEl.textContent = `${y}-${m}-${day}`;
           }
         } catch(e) { /* ignore */ }
       }
