@@ -57,6 +57,7 @@
   let intervalId = null;
   let currentIndex = 0;
   let slideAutoId = null;
+  let extraCardItems = [];
 
   // session snapshot key (keeps baseline for "since you logged in")
   const SESSION_SNAP_KEY = 'tm_session_snapshot_v1';
@@ -664,9 +665,49 @@
 
   function renderCards(list){
     if (!cardsGrid) return;
+    // merge monitored list with extra items (events/suggestions) not already present
+    const have = new Set((list||[]).map(it => keyForItem(it)));
+    const extras = (extraCardItems||[]).filter(it => !have.has(keyForItem(it)));
+    const merged = [...(list||[]), ...extras];
     cardsGrid.innerHTML = '';
-    if (!list || !list.length) return;
-    list.forEach((item,i)=> cardsGrid.appendChild(buildCard(item,i)));
+    if (!merged.length) return;
+    merged.forEach((item,i)=> cardsGrid.appendChild(buildCard(item,i)));
+  }
+
+  // Load extra cards from events.json and suggestions.json (optional)
+  async function loadExtraData(){
+    const outs = [];
+    try {
+      // events.json provides schedule info
+      const r = await fetch('/events.json', { cache: 'no-store' });
+      if (r.ok) {
+        const evs = await r.json();
+        (Array.isArray(evs)?evs:[]).forEach(ev => {
+          const name = ev.musical || ev.title || '';
+          if (!name) return;
+          const range = (ev.start && ev.end) ? `${ev.start} — ${ev.end}` : '';
+          outs.push({ name, musical: name, location: ev.location || '', range, urls: [], images: [] });
+        });
+      }
+    } catch(e) { /* ignore */ }
+    try {
+      // suggestions.json: siteName/siteUrl
+      const r = await fetch('/suggestions.json', { cache: 'no-store' });
+      if (r.ok) {
+        const sug = await r.json();
+        (Array.isArray(sug)?sug:[]).forEach(s => {
+          const name = s.siteName || '';
+          if (!name) return;
+          const url = s.siteUrl || '';
+          outs.push({ name, musical: name, location: '', range: '', urls: url ? [url] : [], images: [] });
+        });
+      }
+    } catch(e) { /* ignore */ }
+    // de-dupe by key
+    const seen = new Set();
+    extraCardItems = outs.filter(it => { const k = keyForItem(it); if (seen.has(k)) return false; seen.add(k); return true; });
+    // refresh cards if already rendered
+    try { renderCards(musicals); } catch(e){}
   }
 
   // Map item to available static images
@@ -1090,6 +1131,8 @@
 
   window.addEventListener('load', () => { setTimeout(fetchData, 600); });
   window.plusSlides = (n) => { showSlide(currentIndex + n); stopSlideAuto(); };
+  // kick off loading of extra cards in background
+  try { loadExtraData(); } catch(e){}
 })();
 
 /* quick test helper: call /admin/test-telegram and show a popup with the result */
