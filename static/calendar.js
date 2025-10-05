@@ -137,17 +137,30 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           const filtered = applyFilter(allEventsCache);
 
+          // helpers: parse YYYY-MM-DD as local date and format local date back to YYYY-MM-DD
+          function parseLocalDate(isoDate) {
+            if (!isoDate) return null;
+            const [y, m, d] = isoDate.split('-').map(n => parseInt(n, 10));
+            return new Date(y, (m||1) - 1, d || 1);
+          }
+          function formatLocalDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          }
+
           // Expand multi-day events into per-day events, skipping ONLY Mondays (leave Mondays empty)
           const expanded = [];
           filtered.forEach(ev => {
-            const s = new Date(ev.start);
-            const e = ev.end ? new Date(ev.end) : new Date(ev.start);
-            s.setHours(0,0,0,0);
-            e.setHours(0,0,0,0);
+            const s = parseLocalDate(ev.start);
+            const e = parseLocalDate(ev.end || ev.start);
+            if (!s || !e) return;
+            // iterate local dates inclusive
             for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-              // skip Mondays (1) only — Sundays (0) WILL be included
+              // skip Mondays only (1)
               if (d.getDay() === 1) continue;
-              const dayStr = d.toISOString().split('T')[0];
+              const dayStr = formatLocalDate(d);
               const key = (ev.musical || ev.title || '').toString();
               const bg = pickColorFor(key);
               const textColor = isLightColor(bg) ? '#111827' : '#ffffff';
@@ -165,8 +178,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
           // final safety: only remove Mondays (should already be skipped)
           const final = expanded.filter(e => {
-            const dt = new Date(e.start);
-            return dt.getDay() !== 1;
+            const dt = parseLocalDate(e.start);
+            return dt && dt.getDay() !== 1;
           });
 
           successCallback(final);
