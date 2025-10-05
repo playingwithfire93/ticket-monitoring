@@ -1231,3 +1231,52 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{padding:6px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,0.04);cursor:pointer;color:var(--pink-700);font-weight:600}
 
+/* Calendar page — align with theme subtly */
+.fc .fc-toolbar-title{ font-family: "Playfair Display", serif; color:#c43ea6 }
+.fc .fc-button{ background: linear-gradient(90deg,#ff7ab6,#a07bff); border:0; border-radius: 999px; padding: 6px 10px }
+.fc .fc-button:hover{ filter: brightness(1.05) }
+.fc .fc-daygrid-day.fc-day-today{ background: linear-gradient(180deg, #fff7fb, #fff); }
+.fc .monday-label{ position:absolute; top:4px; right:4px; background:#f7eaf4; color:#8a6a7d; padding:2px 6px; border-radius:6px; font-size:11px }
+
+/* Listing header inspired by entradas.com vibes */
+.listing-header{ border-bottom: 1px solid rgba(0,0,0,0.04); background: linear-gradient(180deg, rgba(255,107,179,0.06), rgba(255,200,230,0.03)); padding: 26px 0 18px; }
+.listing-header .breadcrumb{ display:flex; align-items:center; gap:8px; font-size:13px; color:#9b6b86; margin-bottom:8px }
+.listing-header .breadcrumb a{ color:#c43ea6; text-decoration:none; font-weight:600 }
+.listing-header .breadcrumb .sep{ opacity:.6 }
+.listing-header .breadcrumb .current{ color:#9b6b86 }
+.listing-header .toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:8px }
+.listing-header .meta-inline{ display:flex; align-items:center; gap:10px }
+.listing-header .results-count{ color:#6b4f5f; font-size:13px }
+.listing-header .sort-select{ padding:8px 10px; border-radius:999px; border:1px solid rgba(0,0,0,0.06); background:#fff }
+
+/* Shows grid cards — poster-first, ticket CTAs prominent */
+.shows-grid{ grid-template-columns: repeat(4, 1fr); gap: 16px }
+@media (max-width: 1100px){ .shows-grid{ grid-template-columns: repeat(3, 1fr) } }
+@media (max-width: 820px){ .shows-grid{ grid-template-columns: repeat(2, 1fr) } }
+@media (max-width: 560px){ .shows-grid{ grid-template-columns: 1fr } }
+
+/* compact top controls on very small screens */
+@media (max-width:560px){
+  .listing-header .toolbar{ flex-direction: column; align-items: stretch }
+  .listing-header .search-row{ width:100% }
+  .listing-header .search-row input{ width:100% }
+  .listing-header .meta-inline{ width:100%; justify-content: space-between }
+}
+
+.show-card{ overflow: hidden; position: relative; padding: 0; border-radius: 14px }
+.show-card .poster{ aspect-ratio: 3 / 4; background:#fef7fb; overflow:hidden }
+.show-card .poster-img{ width:100%; height:100%; object-fit:cover; display:block; transition: transform .35s ease }
+.show-card:hover .poster-img{ transform: scale(1.04) }
+.show-card .card-body{ padding: 12px 14px 16px }
+.show-card .card-title{ font-size: 15px; line-height:1.15; margin: 0 0 4px; color:#2b1f2a }
+.show-card .meta{ font-size: 12px; color:#86627a }
+.show-card .card-desc{ display:none }
+.show-card .card-actions{ margin-top: 10px }
+.show-card .btn-primary{ background: linear-gradient(90deg,#ff7ab6,#a07bff); border-radius: 999px; padding: 8px 12px }
+.show-card .btn-outline{ border-radius: 999px }
+
+/* Cute tag chips row (hero) */
+.listing-header .chips{ margin-top: 10px }
+.chip{ background: #fff; border:1px solid rgba(230,210,220,0.8); color:#c43ea6 }
+.chip:hover{ border-color: rgba(255,110,196,0.8) }
+
