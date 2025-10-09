@@ -32,8 +32,22 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Create database tables
 with app.app_context():
-    db.create_all()
-    app.logger.info("Database initialized")
+    try:
+        db.create_all()
+        app.logger.info("Database initialized")
+        
+        # Verificar si existen las columnas nuevas, si no, recrear
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        columns = [col['name'] for col in inspector.get_columns('musicals')]
+        
+        if 'updated_at' not in columns:
+            app.logger.warning("Database schema outdated, recreating tables...")
+            db.drop_all()
+            db.create_all()
+            app.logger.info("Database recreated successfully")
+    except Exception as e:
+        app.logger.error(f"Database initialization error: {e}")
 
 # ==================== AUTHENTICATION ====================
 def require_auth(f):
@@ -209,19 +223,29 @@ def index():
     musicals = load_urls()
     grouped = group_urls_by_musical(musicals)
     
-    # Enrich with database info
+    # Enrich with database info (with error handling)
     for item in grouped:
         name = item.get('name', '')
-        musical = Musical.query.filter_by(name=name).first()
-        if musical:
-            item['last_updated'] = musical.updated_at.isoformat() if musical.updated_at else None
-            item['total_links'] = len(musical.links)
-            item['musical_id'] = musical.id
-            last_change = MusicalChange.query.filter_by(musical_id=musical.id).order_by(MusicalChange.changed_at.desc()).first()
-            if last_change:
-                item['last_change_type'] = last_change.change_type
-                item['last_change_date'] = last_change.changed_at.isoformat()
-        else:
+        try:
+            musical = Musical.query.filter_by(name=name).first()
+            if musical:
+                # Usar getattr con default por si falta la columna
+                item['last_updated'] = getattr(musical, 'updated_at', None)
+                if item['last_updated']:
+                    item['last_updated'] = item['last_updated'].isoformat()
+                item['total_links'] = len(musical.links)
+                item['musical_id'] = musical.id
+                
+                last_change = MusicalChange.query.filter_by(musical_id=musical.id).order_by(MusicalChange.changed_at.desc()).first()
+                if last_change:
+                    item['last_change_type'] = last_change.change_type
+                    item['last_change_date'] = last_change.changed_at.isoformat()
+            else:
+                item['last_updated'] = None
+                item['total_links'] = len(item.get('urls', []))
+                item['musical_id'] = None
+        except Exception as e:
+            app.logger.warning(f"Error enriching musical {name}: {e}")
             item['last_updated'] = None
             item['total_links'] = len(item.get('urls', []))
             item['musical_id'] = None
