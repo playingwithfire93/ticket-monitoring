@@ -23,6 +23,11 @@ DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
+# Añadir logging de configuración al iniciar
+app.logger.info(f"Telegram configured: {bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)}")
+app.logger.info(f"Discord Alerts configured: {bool(DISCORD_WEBHOOK_ALERTS)}")
+app.logger.info(f"Discord Suggestions configured: {bool(DISCORD_WEBHOOK_SUGGESTIONS)}")
+
 # ==================== FLASK APP SETUP ====================
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
@@ -130,14 +135,27 @@ def send_discord_webhook(message_text, webhook_type="alert"):
         return {"ok": False, "reason": f"discord-{webhook_type}-not-configured"}
     
     try:
-        r = requests.post(webhook_url, json={"content": message_text}, timeout=6)
+        # Discord requiere formato específico
+        payload = {
+            "content": message_text,
+            "username": "Ticket Monitor Bot"  # Añadir nombre
+        }
         
-        if r.ok:
+        headers = {"Content-Type": "application/json"}
+        r = requests.post(webhook_url, json=payload, headers=headers, timeout=10)
+        
+        # Discord devuelve 204 No Content en éxito (no JSON)
+        if r.status_code in [200, 204]:
             app.logger.info(f"Discord notification sent ({webhook_type})")
+            return {"ok": True, "status": r.status_code}
         else:
-            app.logger.error(f"Discord error ({webhook_type}): {r.status_code}")
+            error_msg = r.text[:200] if r.text else f"Status {r.status_code}"
+            app.logger.error(f"Discord error ({webhook_type}): {error_msg}")
+            return {"ok": False, "status": r.status_code, "error": error_msg}
         
-        return {"ok": r.ok, "status": r.status_code}
+    except requests.exceptions.Timeout:
+        app.logger.error(f"Discord webhook timeout ({webhook_type})")
+        return {"ok": False, "error": "timeout"}
     except Exception as e:
         app.logger.exception(f"send_discord_webhook failed ({webhook_type})")
         return {"ok": False, "error": str(e)}
