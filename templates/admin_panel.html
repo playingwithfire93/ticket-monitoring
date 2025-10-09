@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de Administración</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .admin-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    
+    .admin-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .admin-section h2 {
+      margin-top: 0;
+      color: #d94f8f;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .button-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .admin-btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    
+    .btn-primary {
+      background: #d94f8f;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #c03e7a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(217, 79, 143, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #6366f1;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #4f46e5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #059669;
+    }
+    
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #d97706;
+    }
+    
+    .notification-result {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .result-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    
+    .result-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    
+    .result-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+    
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      padding: 8px 16px;
+      background: #f3f4f6;
+      color: #374151;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    
+    .nav-link:hover {
+      background: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>🎭 Panel de Administración</h1>
+    
+    <div class="nav-links">
+      <a href="/" class="nav-link">🏠 Inicio</a>
+      <a href="/admin/suggestions" class="nav-link">📝 Sugerencias</a>
+      <a href="/admin/monitoring-list" class="nav-link">📊 Lista de monitoreo</a>
+      <a href="/admin/musicals" class="nav-link">🎵 Musicales (JSON)</a>
+    </div>
+
+    <!-- Notifications Testing -->
+    <div class="admin-section">
+      <h2>🔔 Testear Notificaciones</h2>
+      <p>Envía mensajes de prueba a los canales configurados para verificar que funcionan correctamente.</p>
+      
+      <div class="button-group">
+        <button class="admin-btn btn-primary" onclick="testNotification('alert')">
+          📢 Test Alertas
+        </button>
+        <button class="admin-btn btn-primary" onclick="testNotification('suggestion')">
+          💡 Test Sugerencias
+        </button>
+      </div>
+      
+      <div id="notification-result" class="notification-result"></div>
+    </div>
+
+    <!-- Monitoring -->
+    <div class="admin-section">
+      <h2>🔍 Monitoreo</h2>
+      <p>Forzar verificación de todas las URLs monitorizadas.</p>
+      
+      <div class="button-group">
+        <button class="admin-btn btn-secondary" onclick="checkNow()">
+          🔄 Verificar Ahora
+        </button>
+      </div>
+      
+      <div id="check-result" class="notification-result"></div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="admin-section">
+      <h2>🔗 Enlaces Rápidos</h2>
+      <div class="button-group">
+        <a href="/admin/suggestions" class="admin-btn btn-success">
+          📝 Ver Sugerencias
+        </a>
+        <a href="/admin/monitoring-list" class="admin-btn btn-warning">
+          📊 Lista Monitoreo
+        </a>
+        <a href="/calendar" class="admin-btn btn-secondary">
+          📅 Calendario
+        </a>
+        <a href="/shows" class="admin-btn btn-secondary">
+          🎭 Shows
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function testNotification(type) {
+      const btn = event.target;
+      const resultDiv = document.getElementById('notification-result');
+      
+      btn.classList.add('loading');
+      btn.textContent = '⏳ Enviando...';
+      resultDiv.style.display = 'none';
+      
+      try {
+        const response = await fetch('/admin/test-notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ type: type })
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.results.success_count > 0) {
+          resultDiv.className = 'notification-result result-success';
+          resultDiv.innerHTML = `
+            <strong>✅ Test enviado correctamente</strong><br>
+            Telegram: ${data.results.telegram.ok ? '✅ OK' : '❌ Error'}<br>
+            Discord: ${data.results.discord.ok ? '✅ OK' : '❌ Error'}<br>
+            <small>${data.results.success_count} de ${data.results.total_channels} canales funcionando</small>
+          `;
+        } else {
+          resultDiv.className = 'notification-result result-error';
+          resultDiv.innerHTML = `
+            <strong>❌ Error enviando notificaciones</strong><br>
+            Telegram: ${data.results.telegram.reason || 'Error'}<br>
+            Discord: ${data.results.discord.reason || 'Error'}<br>
+            <small>Verifica las variables de entorno</small>
+          `;
+        }
+      } catch (error) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'notification-result result-error';
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+      } finally {
+        btn.classList.remove('loading');
+        btn.textContent = type === 'alert' ? '📢 Test Alertas' : '💡 Test Sugerencias';
+      }
+    }
+
+    async function checkNow() {
+      const btn = event.target;
+      const resultDiv = document.getElementById('check-result');
+      
+      btn.classList.add('loading');
+      btn.textContent = '⏳ Verificando...';
+      resultDiv.style.display = 'none';
+      
+      try {
+        const response = await fetch('/admin/check-now', {
+          method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.errors.length === 0) {
+          resultDiv.className = 'notification-result result-success';
+          resultDiv.innerHTML = `
+            <strong>✅ Verificación completada</strong><br>
+            ${data.checked} URLs verificadas, sin errores detectados.
+          `;
+        } else {
+          resultDiv.className = 'notification-result result-warning';
+          resultDiv.innerHTML = `
+            <strong>⚠️ Verificación completada con errores</strong><br>
+            ${data.checked} URLs verificadas<br>
+            ${data.errors.length} errores encontrados<br>
+            <small>Revisa los logs para más detalles</small>
+          `;
+        }
+      } catch (error) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'notification-result result-error';
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+      } finally {
+        btn.classList.remove('loading');
+        btn.textContent = '🔄 Verificar Ahora';
+      }
+    }
+  </script>
+</body>
+</html>

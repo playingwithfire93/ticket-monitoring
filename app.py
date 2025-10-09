@@ -317,6 +317,12 @@ Razón: {suggestion['reason'] or 'No especificada'}
     return jsonify({"ok": True, "suggestion": suggestion, "notifications": notify_results}), 201
 
 # ==================== ADMIN ROUTES ====================
+@app.route("/admin")
+@require_auth
+def admin_panel():
+    """Admin panel with test notifications button."""
+    return render_template("admin_panel.html")
+
 @app.route("/admin/suggestions")
 @require_auth
 def admin_suggestions():
