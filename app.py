@@ -14,6 +14,7 @@ from flask import Flask, render_template, jsonify, request, Response
 from flask_socketio import SocketIO
 from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
+from models import db, Musical, MusicalLink
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -26,7 +27,15 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Crear tablas al iniciar
+with app.app_context():
+    db.create_all()
+    app.logger.info("Database initialized")
 
 # Admin authentication decorator
 def require_auth(f):
@@ -731,7 +740,7 @@ if __name__ == "__main__":
 @app.route("/admin/suggestions/<int:idx>/approve", methods=["POST"])
 @require_auth
 def approve_suggestion(idx):
-    """Aprobar sugerencia: moverla a urls.json y eliminarla de suggestions.json"""
+    """Aprobar sugerencia: guardar en BD y eliminar de suggestions.json"""
     try:
         with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
             suggestions = json.load(f)
@@ -743,12 +752,32 @@ def approve_suggestion(idx):
     
     sug = suggestions.pop(idx)
     
-    # Añadir a urls.json
-    urls = load_urls()
-    name = sug.get("siteName") or sug.get("musical") or "Sin nombre"
-    url = sug.get("siteUrl") or sug.get("url") or ""
+    name = (sug.get("siteName") or sug.get("musical") or "Sin nombre").strip()
+    url = (sug.get("siteUrl") or sug.get("url") or "").strip()
+    notes = sug.get("reason") or sug.get("message") or ""
     
-    # Buscar si ya existe el musical
+    if not name or not url:
+        return jsonify({"error": "invalid suggestion data"}), 400
+    
+    # Buscar o crear musical en BD
+    musical = Musical.query.filter_by(name=name).first()
+    if not musical:
+        musical = Musical(name=name, description=notes)
+        db.session.add(musical)
+        db.session.flush()
+        app.logger.info(f"Created new musical: {name}")
+    
+    # Añadir enlace si no existe ya
+    existing_link = MusicalLink.query.filter_by(musical_id=musical.id, url=url).first()
+    if not existing_link:
+        link = MusicalLink(musical_id=musical.id, url=url, notes=notes)
+        db.session.add(link)
+        app.logger.info(f"Added link {url} to {name}")
+    
+    db.session.commit()
+    
+    # También añadir a urls.json para compatibilidad con sistema actual
+    urls = load_urls()
     found = False
     for item in urls:
         if (item.get("musical") or item.get("name")) == name:
@@ -760,16 +789,14 @@ def approve_suggestion(idx):
     if not found:
         urls.append({"musical": name, "urls": [url]})
     
-    # Guardar urls.json actualizado
     with URLS_FILE.open("w", encoding="utf-8") as f:
         json.dump(urls, f, indent=2, ensure_ascii=False)
     
-    # Guardar suggestions.json sin la sugerencia aprobada
+    # Eliminar sugerencia
     with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
         json.dump(suggestions, f, indent=2, ensure_ascii=False)
     
-    return jsonify({"ok": True, "approved": sug})
-
+    return jsonify({"ok": True, "approved": sug, "musical": musical.to_dict()})
 
 @app.route("/admin/suggestions/<int:idx>/reject", methods=["POST"])
 @require_auth
@@ -790,3 +817,10 @@ def reject_suggestion(idx):
         json.dump(suggestions, f, indent=2, ensure_ascii=False)
     
     return jsonify({"ok": True, "rejected": rejected})
+
+@app.route("/admin/musicals")
+@require_auth
+def admin_musicals():
+    """Ver todos los musicales en la base de datos"""
+    musicals = Musical.query.all()
+    return jsonify([m.to_dict() for m in musicals])
