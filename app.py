@@ -3,41 +3,39 @@ from pathlib import Path
 import json
 import os
 import requests
-import time
-import hashlib
-import difflib
-import html as _html
-import smtplib
-import ssl
-from email.message import EmailMessage
 from flask import Flask, render_template, jsonify, request, Response
 from flask_socketio import SocketIO
 from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
 from models import db, Musical, MusicalLink, MusicalChange
 
+# ==================== CONFIGURATION ====================
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
 SUGGESTIONS_FILE = BASE / "suggestions.json"
 EVENTS_FILE = BASE / "events.json"
 UTC = timezone.utc
 
+# Environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
+DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
+# ==================== FLASK APP SETUP ====================
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Crear tablas al iniciar
+# Create database tables
 with app.app_context():
     db.create_all()
     app.logger.info("Database initialized")
 
-# Admin authentication decorator
+# ==================== AUTHENTICATION ====================
 def require_auth(f):
     """Decorator to require HTTP Basic Auth for admin routes."""
     @wraps(f)
@@ -52,7 +50,7 @@ def require_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-
+# ==================== DATA HELPERS ====================
 def load_urls():
     """Load raw list from urls.json (returns list of {musical, urls})."""
     try:
@@ -64,36 +62,154 @@ def load_urls():
         pass
     return []
 
-
 def group_urls_by_musical(urls_list):
-    """Return dict {musical_name: [url,...]}"""
-    grouped = {}
+    """Return list of dicts with musical names and their URLs."""
+    grouped = []
+    seen = set()
     for item in urls_list:
         name = item.get("musical") or item.get("name") or "Sin nombre"
-        grouped.setdefault(name, []).extend(item.get("urls", []) or [])
+        if name not in seen:
+            seen.add(name)
+            grouped.append({
+                'name': name,
+                'urls': item.get("urls", [])
+            })
     return grouped
 
-
-def save_suggestion(suggestion):
+def load_events():
+    """Load events from events.json."""
     try:
-        if SUGGESTIONS_FILE.exists():
-            with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
-                suggestions = json.load(f)
-        else:
-            suggestions = []
+        with EVENTS_FILE.open('r', encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
-        suggestions = []
-    suggestions.append(suggestion)
-    with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
-        json.dump(suggestions, f, indent=2, ensure_ascii=False)
+        return []
 
+# ==================== NOTIFICATION SYSTEM ====================
+def send_telegram_notification(message_text):
+    """Send plain-text notification to Telegram."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        app.logger.warning("Telegram not configured")
+        return {"ok": False, "reason": "telegram-not-configured"}
+    
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message_text}
+        r = requests.post(url, json=payload, timeout=6)
+        data = r.json() if r.ok else {"status": r.status_code}
+        
+        if r.ok:
+            app.logger.info("Telegram notification sent")
+        else:
+            app.logger.error(f"Telegram error: {data}")
+        
+        return {"ok": r.ok, "resp": data}
+    except Exception as e:
+        app.logger.exception("send_telegram_notification failed")
+        return {"ok": False, "error": str(e)}
 
+def send_discord_webhook(message_text, webhook_type="alert"):
+    """Send notification to Discord via webhook."""
+    webhook_url = DISCORD_WEBHOOK_SUGGESTIONS if webhook_type == "suggestion" else DISCORD_WEBHOOK_ALERTS
+    
+    if not webhook_url:
+        app.logger.warning(f"Discord webhook ({webhook_type}) not configured")
+        return {"ok": False, "reason": f"discord-{webhook_type}-not-configured"}
+    
+    try:
+        r = requests.post(webhook_url, json={"content": message_text}, timeout=6)
+        
+        if r.ok:
+            app.logger.info(f"Discord notification sent ({webhook_type})")
+        else:
+            app.logger.error(f"Discord error ({webhook_type}): {r.status_code}")
+        
+        return {"ok": r.ok, "status": r.status_code}
+    except Exception as e:
+        app.logger.exception(f"send_discord_webhook failed ({webhook_type})")
+        return {"ok": False, "error": str(e)}
+
+def notify_all_channels(message_text, channel_type="alert"):
+    """Send notification to ALL configured channels (Telegram + Discord)."""
+    results = {}
+    
+    results["telegram"] = send_telegram_notification(message_text)
+    results["discord"] = send_discord_webhook(message_text, webhook_type=channel_type)
+    
+    success_count = sum(1 for r in results.values() if r.get("ok"))
+    results["success_count"] = success_count
+    results["total_channels"] = 2
+    
+    return results
+
+# ==================== MONITORING SYSTEM ====================
+def check_all_urls(send_notifications=False):
+    """Check all monitored URLs for availability."""
+    musicals = load_urls()
+    results = {"checked": 0, "errors": []}
+    
+    for item in musicals:
+        name = item.get("musical") or item.get("name") or "Unknown"
+        urls = item.get("urls") or []
+        
+        for url in urls:
+            results["checked"] += 1
+            
+            try:
+                r = requests.head(url, timeout=5, allow_redirects=True)
+                
+                if r.status_code >= 400:
+                    results["errors"].append({"musical": name, "url": url, "status": r.status_code})
+                    
+                    if send_notifications:
+                        alert = f"⚠️ Error monitorizando {name}\n\nURL: {url}\nEstado: {r.status_code}"
+                        notify_all_channels(alert, channel_type="alert")
+                
+            except Exception as e:
+                results["errors"].append({"musical": name, "url": url, "error": str(e)})
+                
+                if send_notifications:
+                    alert = f"❌ Error accediendo a {name}\n\nURL: {url}\nError: {str(e)[:200]}"
+                    notify_all_channels(alert, channel_type="alert")
+    
+    return results
+
+# ==================== TEMPLATE FILTERS ====================
+@app.template_filter('format_date')
+def format_date(date_str):
+    """Convert ISO date to human-readable format."""
+    if not date_str:
+        return ''
+    
+    try:
+        if isinstance(date_str, str):
+            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        else:
+            dt = date_str
+        
+        now = datetime.now(timezone.utc)
+        diff = now - dt.replace(tzinfo=timezone.utc)
+        seconds = diff.total_seconds()
+        
+        if seconds < 60:
+            return 'Ahora'
+        elif seconds < 3600:
+            return f'Hace {int(seconds/60)}m'
+        elif seconds < 86400:
+            return f'Hace {int(seconds/3600)}h'
+        elif seconds < 604800:
+            return f'Hace {int(seconds/86400)}d'
+        else:
+            return dt.strftime('%d %b')
+    except Exception:
+        return ''
+
+# ==================== PUBLIC ROUTES ====================
 @app.route("/")
 def index():
     musicals = load_urls()
     grouped = group_urls_by_musical(musicals)
     
-    # Enriquecer con datos de la BD (último cambio, total enlaces)
+    # Enrich with database info
     for item in grouped:
         name = item.get('name', '')
         musical = Musical.query.filter_by(name=name).first()
@@ -101,7 +217,6 @@ def index():
             item['last_updated'] = musical.updated_at.isoformat() if musical.updated_at else None
             item['total_links'] = len(musical.links)
             item['musical_id'] = musical.id
-            # Último cambio significativo
             last_change = MusicalChange.query.filter_by(musical_id=musical.id).order_by(MusicalChange.changed_at.desc()).first()
             if last_change:
                 item['last_change_type'] = last_change.change_type
@@ -113,36 +228,95 @@ def index():
     
     return render_template("index.html", grouped_urls=grouped)
 
+@app.route("/calendar")
+def calendar_page():
+    grouped = group_urls_by_musical(load_urls())
+    return render_template("calendar.html", grouped_urls=grouped)
+
+@app.route("/shows")
+def shows_page():
+    events = load_events()
+    grouped = {}
+    for ev in events:
+        key = (ev.get('musical') or ev.get('title') or 'Sin título').strip()
+        g = grouped.setdefault(key, {
+            'title': key, 'id': key, 'dates': [],
+            'image': ev.get('image') or '/static/BOM1.jpg',
+            'short': ev.get('short') or '',
+            'url': ev.get('url') or '#',
+            'location': ev.get('location') or ''
+        })
+        g['dates'].append(ev.get('start'))
+    
+    shows = []
+    for v in grouped.values():
+        dates = sorted([d for d in v['dates'] if d])
+        v['range'] = dates[0] + (f' → {dates[-1]}' if len(dates) > 1 else '') if dates else ''
+        shows.append(v)
+    
+    return render_template('shows.html', shows=shows)
+
+@app.route("/health")
+def health():
+    return jsonify({"ok": True, "time": datetime.now(UTC).isoformat()})
+
+# ==================== API ROUTES ====================
+@app.route("/api/events")
+def api_events():
+    try:
+        return jsonify(load_events())
+    except Exception:
+        app.logger.exception("api_events failed")
+        return jsonify([]), 500
+
 @app.route("/api/monitored-urls")
 def api_monitored_urls():
-    """Return raw list for debugging/JS consumption."""
     return jsonify(load_urls())
 
+@app.route("/api/suggest-site", methods=["POST"])
+def api_suggest_site():
+    """Public endpoint: save suggestion and notify all channels."""
+    data = request.get_json(silent=True) or {}
+    
+    suggestion = {
+        "siteName": data.get("siteName", ""),
+        "siteUrl": data.get("siteUrl", ""),
+        "reason": data.get("reason", ""),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if not suggestion["siteName"] or not suggestion["siteUrl"]:
+        return jsonify({"error": "siteName and siteUrl required"}), 400
+    
+    # Save to file
+    try:
+        with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
+            suggestions = json.load(f)
+    except Exception:
+        suggestions = []
+    
+    suggestions.append(suggestion)
+    
+    with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(suggestions, f, indent=2, ensure_ascii=False)
+    
+    app.logger.info(f"New suggestion: {suggestion['siteName']}")
+    
+    # Notify
+    message = f"""🎭 Nueva sugerencia de musical
 
-@app.route("/api/monitored-status")
-def api_monitored_status():
-    """
-    Optionally perform a simple GET for each url and return status.
-    This is synchronous and intended for manual use / small lists.
-    """
-    results = []
-    for item in load_urls():
-        musical = item.get("musical", "")
-        for url in item.get("urls", []):
-            try:
-                r = requests.get(url, timeout=8)
-                status = f"{r.status_code}"
-            except Exception as e:
-                status = f"err: {str(e)}"
-            results.append({
-                "musical": musical,
-                "url": url,
-                "status": status,
-                "checked_at": datetime.now(UTC).isoformat()
-            })
-    return jsonify(results)
+**{suggestion['siteName']}**
+🔗 {suggestion['siteUrl']}
 
+Razón: {suggestion['reason'] or 'No especificada'}
 
+📅 {suggestion['timestamp']}"""
+    
+    notify_results = notify_all_channels(message, channel_type="suggestion")
+    
+    return jsonify({"ok": True, "suggestion": suggestion, "notifications": notify_results}), 201
+
+# ==================== ADMIN ROUTES ====================
 @app.route("/admin/suggestions")
 @require_auth
 def admin_suggestions():
@@ -153,7 +327,6 @@ def admin_suggestions():
         suggestions = []
     return render_template("suggestions.html", suggestions=suggestions)
 
-
 @app.route("/admin/monitoring-list")
 @require_auth
 def monitoring_list():
@@ -161,605 +334,36 @@ def monitoring_list():
     grouped = group_urls_by_musical(musicals)
     return render_template("monitoring_list.html", musicals=musicals, grouped=grouped)
 
-
-@app.route("/api/suggest-site", methods=["POST"])
-def suggest_site():
-    data = request.get_json(silent=True) or {}
-    site_name = (data.get("siteName") or data.get("site_name") or "").strip()
-    site_url = (data.get("siteUrl") or data.get("site_url") or "").strip()
-    reason = (data.get("reason") or "").strip()
-    if not site_name or not site_url:
-        return jsonify({"error": "Nombre y URL obligatorios"}), 400
-    if not site_url.startswith(("http://", "https://")):
-        return jsonify({"error": "URL debe empezar con http:// o https://"}), 400
-
-    suggestion = {
-        "siteName": site_name,
-        "siteUrl": site_url,
-        "reason": reason,
-        "timestamp": datetime.now(UTC).isoformat(),
-    }
-    save_suggestion(suggestion)
-
-    # optional: emit event for admin UI via socketio
-    try:
-        socketio.emit("new_suggestion", suggestion, namespace="/admin")
-    except Exception:
-        pass
-
-    return jsonify({"success": True})
-
-
-# small helper to reload urls file via HTTP (admin)
-@app.route("/admin/reload-urls", methods=["POST"])
+@app.route("/admin/musicals")
 @require_auth
-def reload_urls():
-    # simply attempt to load; return basic result
-    loaded = load_urls()
-    return jsonify({"loaded": len(loaded)})
+def admin_musicals():
+    musicals = Musical.query.all()
+    return jsonify([m.to_dict() for m in musicals])
 
-
-# Simple Telegram sender helper (uses TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from env)
-TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TG_CHAT = os.getenv('TELEGRAM_CHAT_ID')
-
-_last_sent = {'ts': 0, 'msg': None}
-_MIN_INTERVAL = 3.0  # seconds between identical messages
-
-def send_telegram_message(text):
-    if not TG_TOKEN or not TG_CHAT:
-        app.logger.warning('Telegram not configured: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing')
-        return {'ok': False, 'reason': 'not-configured'}
-
-    now = time.time()
-    if now - _last_sent['ts'] < _MIN_INTERVAL and _last_sent['msg'] == text:
-        app.logger.info('Telegram rate limit: skipping duplicate message')
-        return {'ok': False, 'reason': 'rate-limited'}
-
-    url = f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage'
-    payload = {'chat_id': TG_CHAT, 'text': text, 'parse_mode': 'HTML'}
-    try:
-        r = requests.post(url, json=payload, timeout=8)
-        try:
-            data = r.json()
-        except Exception:
-            data = {'raw_text': r.text}
-        app.logger.info('Telegram send: status=%s resp=%s', r.status_code, data)
-        if not r.ok or not data.get('ok', False):
-            return {'ok': False, 'status_code': r.status_code, 'resp': data}
-        _last_sent['ts'] = now
-        _last_sent['msg'] = text
-        return data
-    except Exception as e:
-        app.logger.exception('Exception when sending Telegram message')
-        return {'ok': False, 'reason': str(e)}
-
-@app.route('/admin/test-telegram', methods=['POST'])
-@require_auth
-def admin_test_telegram():
-    token = os.getenv('TELEGRAM_BOT_TOKEN')
-    # accept either TELEGRAM_CHAT or TELEGRAM_CHAT_ID (Render shows TELEGRAM_CHAT_ID)
-    chat = os.getenv('TELEGRAM_CHAT') or os.getenv('TELEGRAM_CHAT_ID') or os.getenv('TELEGRAM_CHAT_ID'.upper())
-    if not token or not chat:
-        return jsonify({
-            'ok': False,
-            'error': 'Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT (or TELEGRAM_CHAT_ID) env vars',
-            'found_token': bool(token),
-            'found_chat': bool(chat)
-        }), 400
-
-    body = request.get_json(silent=True) or {}
-    text = body.get('text', 'Test desde Ticket Monitor ✅')
-
-    url = f'https://api.telegram.org/bot{token}/sendMessage'
-    try:
-        res = requests.post(url, json={'chat_id': chat, 'text': text}, timeout=10)
-        res.raise_for_status()
-        return jsonify({'ok': True, 'result': res.json()})
-    except requests.RequestException as e:
-        # include response body/status if available
-        resp = getattr(e, 'response', None)
-        return jsonify({
-            'ok': False,
-            'error': str(e),
-            'status_code': resp.status_code if resp is not None else None,
-            'response_text': resp.text if resp is not None else None
-        }), 500
-
-# Monitor state (persist last seen content hashes + body)
-MONITOR_STATE_FILE = BASE / "monitor_state.json"
-try:
-    if MONITOR_STATE_FILE.exists():
-        with MONITOR_STATE_FILE.open("r", encoding="utf-8") as f:
-            raw = json.load(f)
-        # support legacy format where values were plain hash strings
-        _prev_hashes = {}
-        if isinstance(raw, dict):
-            for url, val in raw.items():
-                if isinstance(val, str):
-                    _prev_hashes[url] = {"hash": val, "body": ""}
-                elif isinstance(val, dict) and "hash" in val:
-                    # keep existing structure
-                    _prev_hashes[url] = {"hash": val.get("hash"), "body": val.get("body", "")}
-    else:
-        _prev_hashes = {}
-except Exception:
-    _prev_hashes = {}
-
-def _save_state():
-    try:
-        # persist mapping url -> {hash, body}
-        with MONITOR_STATE_FILE.open("w", encoding="utf-8") as f:
-            json.dump(_prev_hashes, f, ensure_ascii=False, indent=2)
-    except Exception:
-        app.logger.exception("Could not save monitor state")
-
-def _hash_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()
-
-# Try to reuse BoMtickets helpers (non-mandatory)
-try:
-    import BoMtickets as bm
-except Exception:
-    bm = None
-
-# JSON-style Telegram alert (image optional) — match BoMtickets format
-def send_telegram_json_alert(url, changes_text, timestamp=None, image_path=None):
-    """
-    Send a Telegram notification that mirrors the JSON-format used in BoMtickets.
-    Sends image (if provided) via sendPhoto, then a pretty-printed JSON message
-    inside a Markdown code block.
-    """
-    if not TG_TOKEN or not TG_CHAT:
-        app.logger.warning('Telegram not configured for JSON alert')
-        return {'ok': False, 'reason': 'not-configured'}
-
-    # 1) try to send image first (ignore failures)
-    if image_path:
-        try:
-            photo_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendPhoto'
-            if os.path.exists(image_path):
-                with open(image_path, 'rb') as imgf:
-                    files = {'photo': imgf}
-                    data = {'chat_id': TG_CHAT}
-                    requests.post(photo_url, data=data, files=files, timeout=15)
-        except Exception:
-            app.logger.debug('send_telegram_json_alert: sending photo failed', exc_info=True)
-
-    # 2) prepare JSON payload and send as pretty-printed code block
-    payload = {
-        "type": "ticket_alert",
-        "url": url,
-        "timestamp": timestamp or datetime.now(UTC).isoformat(),
-        "changes_truncated": (changes_text or "")[:3900],
-        "changes_full_length": len(changes_text or "")
-    }
-    msg = "```json\n" + json.dumps(payload, ensure_ascii=False, indent=2) + "\n```"
-
-    send_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage'
-    try:
-        r = requests.post(send_url, json={'chat_id': TG_CHAT, 'text': msg, 'parse_mode': 'Markdown'}, timeout=8)
-        try:
-            return r.json()
-        except Exception:
-            return {'ok': r.ok, 'status_code': r.status_code, 'text': r.text}
-    except Exception as e:
-        app.logger.exception('send_telegram_json_alert failed')
-        return {'ok': False, 'reason': str(e)}
-
-def send_telegram_pretty_alert(url, changes, timestamp=None, image_path=None):
-    """
-    Send a Telegram alert that matches the attached screenshot:
-      - Send photo (if available)
-      - Send a nicely formatted HTML message:
-          🎭 <b>Ticket Alert!</b>
-          🌐 URL: <a href="...">...</a>
-          ⏱ Cambio detectado: ...
-          📄 Cambios:
-          <pre>...diff...</pre>
-    Truncates the changes to fit Telegram limits and marks truncation.
-    """
-    if not TG_TOKEN or not TG_CHAT:
-        app.logger.warning('Telegram not configured: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing')
-        return {'ok': False, 'reason': 'not-configured'}
-
-    ts = timestamp or datetime.now(UTC).isoformat()
-    # Telegram message max ~4096 chars; reserve some room for other text
-    MAX_PAYLOAD = 3800
-    changes = changes or ""
-    truncated = changes if len(changes) <= MAX_PAYLOAD else changes[:MAX_PAYLOAD] + "\n\n...[truncated]"
-
-    # Escape for HTML, but keep pre block to preserve diff formatting
-    escaped_url = _html.escape(url or "")
-    escaped_changes = _html.escape(truncated)
-
-    # Build message in HTML
-    html_msg = (
-        "🎭 <b>Ticket Alert!</b>\n"
-        f"🌐 URL: <a href=\"{escaped_url}\">{escaped_url}</a>\n"
-        f"⏱ Cambio detectado: {_html.escape(ts)}\n"
-        "📄 Cambios:\n"
-        f"<pre>{escaped_changes}</pre>"
-    )
-
-    # 1) Send image first (ignore failures)
-    if image_path:
-        try:
-            if os.path.exists(image_path):
-                photo_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendPhoto'
-                with open(image_path, 'rb') as ph:
-                    files = {'photo': ph}
-                    data = {'chat_id': TG_CHAT}
-                    # Don't rely on caption (could be truncated); send message separately
-                    requests.post(photo_url, data=data, files=files, timeout=12)
-        except Exception:
-            app.logger.debug('send_telegram_pretty_alert: sending photo failed', exc_info=True)
-
-    # 2) Send formatted message (HTML)
-    send_url = f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage'
-    try:
-        r = requests.post(send_url, json={'chat_id': TG_CHAT, 'text': html_msg, 'parse_mode': 'HTML'}, timeout=10)
-        try:
-            data = r.json()
-        except Exception:
-            data = {'status_code': r.status_code, 'text': r.text}
-        app.logger.info('Telegram pretty send: status=%s', r.status_code)
-        return {'ok': r.ok, 'resp': data}
-    except Exception as e:
-        app.logger.exception('send_telegram_pretty_alert failed')
-        return {'ok': False, 'reason': str(e)}
-
-def check_all_urls(send_notifications=True):
-    """Fetch all monitored URLs, detect content changes and notify."""
-    app.logger.debug("Running check_all_urls")
-    changes = []
-    for item in load_urls():
-        musical = item.get("musical") or item.get("name") or "Sin nombre"
-        for url in item.get("urls", []) or []:
-            try:
-                r = requests.get(url, timeout=10)
-                body = r.text or ""
-                h = _hash_text(body)
-            except Exception as e:
-                app.logger.warning("Error fetching %s: %s", url, e)
-                body = ""
-                h = None
-
-            prev_entry = _prev_hashes.get(url)
-            prev_hash = prev_entry.get("hash") if prev_entry else None
-
-            if h is None:
-                continue
-
-            if prev_entry is None:
-                # first time: store hash + body
-                _prev_hashes[url] = {"hash": h, "body": body}
-                continue
-
-            if prev_hash != h:
-                # compute diff between previous body and current body
-                prev_body = prev_entry.get("body", "") or ""
-                diff_lines = list(difflib.unified_diff(
-                    prev_body.splitlines(), body.splitlines(),
-                    fromfile='before', tofile='after', lineterm=''
-                ))
-                changes_text = "\n".join(diff_lines).strip()
-                if not changes_text:
-                    # fallback if diff generator produced nothing
-                    changes_text = "Contenido cambiado (no se pudo generar diff)."
-
-                # update stored state
-                _prev_hashes[url] = {"hash": h, "body": body}
-
-                change = {
-                    "musical": musical,
-                    "url": url,
-                    "when": datetime.now(UTC).isoformat()
-                }
-                changes.append(change)
-                try:
-                    socketio.emit("monitor_change", change, namespace="/")
-                except Exception:
-                    app.logger.exception("socketio emit failed")
-
-                if send_notifications:
-                    # try to get image asset from BoMtickets module (if available)
-                    image_path = None
-                    try:
-                        if bm and hasattr(bm, 'get_alert_assets'):
-                            sp, ip = bm.get_alert_assets(url)
-                            image_path = ip if ip and os.path.exists(ip) else None
-                    except Exception:
-                        image_path = None
-
-                    # fallback: choose a random matching image from static/
-                    if not image_path:
-                        try:
-                            image_path = get_random_musical_image(musical)
-                            if image_path and not os.path.exists(image_path):
-                                image_path = None
-                        except Exception:
-                            image_path = None
-
-                    # send Telegram pretty alert with the diff text
-                    try:
-                        send_telegram_pretty_alert(url, changes_text, timestamp=change["when"], image_path=image_path)
-                    except Exception:
-                        app.logger.exception("Failed to send Telegram pretty alert")
-
-                    # send same payload to Discord alerts webhook if configured
-                    try:
-                        send_discord_json_alert(url, changes_text, timestamp=change["when"])
-                    except Exception:
-                        app.logger.exception("Discord notify failed")
-
-    if changes:
-        _save_state()
-    return {"checked": True, "changes": len(changes), "details": changes}
-
-# admin endpoint to force a check now (useful for testing)
 @app.route("/admin/check-now", methods=["POST"])
 @require_auth
 def admin_check_now():
-    res = check_all_urls(send_notifications=True)
-    return jsonify(res)
+    results = check_all_urls(send_notifications=True)
+    return jsonify(results)
 
-# background scheduler to run periodic checks
-POLL_INTERVAL_SECONDS = 30  # was 5, increase to 30 (or 60) to avoid overlapping job runs
-scheduler = BackgroundScheduler()
-scheduler.add_job(lambda: check_all_urls(send_notifications=True), "interval", seconds=POLL_INTERVAL_SECONDS, id="monitor_job")
-scheduler.start()
-
-# >>> Removed duplicate imports and duplicate /api/monitored-urls route that caused Flask AssertionError.
-# The api_monitored_urls route is already defined above; keeping only the first definition.
-
-import os, requests
-from flask import request, jsonify
-
-# Replace existing /suggest handler (SendGrid) with this Gmail/SMTP version
-@app.route('/suggest', methods=['POST'])
-def suggest_smtp():
-    """
-    Unified /suggest handler:
-      - Try Slack webhook (if configured)
-      - Then Discord suggestions webhook (if configured)
-      - If none succeeded, fall back to SMTP using env vars
-    """
+@app.route("/admin/test-notifications", methods=["POST"])
+@require_auth
+def admin_test_notifications():
     data = request.get_json(silent=True) or {}
-    name = (data.get('name') or '').strip()
-    sender = (data.get('email') or '').strip() or os.getenv('SUGGEST_SMTP_USER') or f'no-reply@{os.getenv("HOSTNAME","local")}'
-    message_body = (data.get('message') or '').strip()
-    musical = (data.get('musical') or '').strip()
-    url = (data.get('url') or '').strip()
-
-    if not message_body:
-        return jsonify({'ok': False, 'error': 'message required'}), 400
-
-    remote = request.remote_addr
-    timestamp = datetime.now(UTC).isoformat()
-    payload_text = (
-        f"*Nueva sugerencia* · {timestamp}\n"
-        f"Nombre: {name or '—'}\n"
-        f"Email: {sender or '—'}\n"
-        f"Musical: {musical or '—'}\n"
-        f"Link: {url or '—'}\n\n"
-        f"Mensaje:\n{message_body}\n\n"
-        f"_IP: {remote}_"
-    )
-
-    sent_via = []
-
-    # Try Discord suggestions webhook
-    try:
-        if DISCORD_WEBHOOK_SUGGESTIONS:
-            resd = send_discord_suggestion(payload_text)
-            if resd.get("ok"):
-                sent_via.append("discord")
-    except Exception:
-        app.logger.exception("Discord notify failed")
-
-    # If either handled it, persist + emit and return success
-    if sent_via:
-        save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
-        try:
-            socketio.emit("new_suggestion", {"name": name, "musical": musical, "url": url, "message": message_body}, namespace="/admin")
-        except Exception:
-            pass
-        return jsonify({"ok": True, "via": sent_via})
-
-    # Fallback to SMTP if no webhook handled it
-    to_email = os.getenv('SUGGEST_TO_EMAIL')
-    smtp_host = os.getenv('SUGGEST_SMTP_HOST', 'smtp.gmail.com')
-    smtp_port = int(os.getenv('SUGGEST_SMTP_PORT', '587'))
-    smtp_user = os.getenv('SUGGEST_SMTP_USER')
-    smtp_pass = os.getenv('SUGGEST_SMTP_PASS')
-
-    if not to_email or not smtp_host or not smtp_user or not smtp_pass:
-        return jsonify({'ok': False, 'error': 'SMTP not configured and no webhooks configured'}), 500
-
-    msg = EmailMessage()
-    msg['Subject'] = 'Sugerencia desde Ticket Monitor'
-    msg['From'] = f'{name or "Usuario"} <{smtp_user}>'
-    msg['To'] = to_email
-    msg.set_content(f'Nombre: {name}\nEmail: {sender}\nMusical: {musical}\nLink: {url}\n\nMensaje:\n{message_body}\n\nOrigen: {remote}\nTimestamp: {timestamp}')
-
-    try:
-        if smtp_port == 465:
-            smtp = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
-        else:
-            smtp = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-        smtp.login(smtp_user, smtp_pass)
-        smtp.send_message(msg)
-        smtp.quit()
-        save_suggestion({"name": name, "email": sender, "musical": musical, "url": url, "message": message_body, "timestamp": timestamp})
-        try:
-            socketio.emit("new_suggestion", {"name": name, "musical": musical, "url": url, "message": message_body}, namespace="/admin")
-        except Exception:
-            pass
-        return jsonify({'ok': True, 'via': 'smtp'})
-    except Exception as e:
-        app.logger.exception('Failed to send suggestion via SMTP')
-        return jsonify({'ok': False, 'error': str(e)}), 500
-
-@app.route("/health", methods=["GET"])
-def health():
-    """Simple health check for uptime monitors."""
-    return jsonify({"ok": True, "time": datetime.now(UTC).isoformat()}), 200
-
-def send_email_via_smtp(subject: str, body: str, to_addrs: list):
-    """
-    Minimal SMTP sender using env vars:
-      SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SENDER_EMAIL
-    """
-    host = os.environ.get("SMTP_HOST")
-    port = int(os.environ.get("SMTP_PORT", "587"))
-    user = os.environ.get("SMTP_USER")
-    pwd = os.environ.get("SMTP_PASS")
-    sender = os.environ.get("SENDER_EMAIL", user)
-    if not host or not user or not pwd:
-        app.logger.warning("SMTP not configured (SMTP_HOST/SMTP_USER/SMTP_PASS missing)")
-        return {"ok": False, "error": "smtp-not-configured"}
-
-    msg = EmailMessage()
-    msg["From"] = sender
-    msg["To"] = ", ".join(to_addrs)
-    msg["Subject"] = subject
-    msg.set_content(body)
-
-    context = ssl.create_default_context()
-    try:
-        with smtplib.SMTP(host, port, timeout=15) as s:
-            s.starttls(context=context)
-            s.login(user, pwd)
-            s.send_message(msg)
-        return {"ok": True}
-    except Exception as e:
-        app.logger.exception("send_email_via_smtp failed")
-        return {"ok": False, "error": str(e)}
-
-DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS") or os.getenv("DISCORD_WEBHOOK_URL")
-DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
-
-def send_discord_suggestion(payload_text: str) -> dict:
-    """
-    Send a plain-text suggestion to the suggestions webhook (DISCORD_WEBHOOK_SUGGESTIONS).
-    """
-    if not DISCORD_WEBHOOK_SUGGESTIONS:
-        return {"ok": False, "reason": "discord-suggestions-not-configured"}
-    try:
-        r = requests.post(DISCORD_WEBHOOK_SUGGESTIONS, json={"content": payload_text}, timeout=6)
-        try:
-            data = r.json()
-        except Exception:
-            data = {"status_code": r.status_code, "text": r.text}
-        return {"ok": r.ok, "resp": data}
-    except Exception as e:
-        app.logger.exception("send_discord_suggestion failed")
-        return {"ok": False, "error": str(e)}
-
-def send_discord_json_alert(url, changes_text, timestamp=None):
-    """
-    Send the JSON-style alert payload to the alerts webhook (DISCORD_WEBHOOK_ALERTS).
-    Posts a pretty-printed JSON code block similar to Telegram.
-    """
-    if not DISCORD_WEBHOOK_ALERTS:
-        app.logger.debug("Discord alerts webhook not configured (DISCORD_WEBHOOK_ALERTS missing)")
-        return {"ok": False, "reason": "not-configured"}
-
-    payload = {
-        "type": "ticket_alert",
-        "url": url,
-        "timestamp": timestamp or datetime.now(UTC).isoformat(),
-        "changes_truncated": (changes_text or "")[:3900],
-        "changes_full_length": len(changes_text or "")
-    }
-    text = "```json\n" + json.dumps(payload, ensure_ascii=False, indent=2) + "\n```"
-    try:
-        r = requests.post(DISCORD_WEBHOOK_ALERTS, json={"content": text}, timeout=8)
-        try:
-            data = r.json()
-        except Exception:
-            data = {"status_code": r.status_code, "text": r.text}
-        app.logger.info("Discord alert send: status=%s resp=%s", r.status_code, data)
-        return {"ok": r.ok, "resp": data}
-    except Exception as e:
-        app.logger.exception("send_discord_json_alert failed")
-        return {"ok": False, "reason": str(e)}
-
-def load_events():
-    try:
-        with EVENTS_FILE.open('r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-@app.route('/shows')
-def shows_page():
-    events = load_events()
-    # agrupa por musical y genera mini-datos para la vista
-    grouped = {}
-    for ev in events:
-        key = (ev.get('musical') or ev.get('title') or 'Sin título').strip()
-        g = grouped.setdefault(key, {
-            'title': key,
-            'id': key,
-            'dates': [],
-            'image': ev.get('image') or '/static/BOM1.jpg',
-            'short': ev.get('short') or '',
-            'url': ev.get('url') or '#',
-            'location': ev.get('location') or ''
-        })
-        g['dates'].append(ev.get('start'))
-    shows = []
-    for k,v in grouped.items():
-        dates = sorted([d for d in v['dates'] if d])
-        if dates:
-            v['range'] = dates[0] + ((' → ' + dates[-1]) if len(dates) > 1 else '')
-        else:
-            v['range'] = ''
-        shows.append(v)
-    return render_template('shows.html', shows=shows)
-
-@app.route("/calendar")
-def calendar_page():
-    """
-    Página del calendario (cliente carga /api/events).
-    grouped_urls se pasa por compatibilidad si la plantilla la usa.
-    """
-    grouped = group_urls_by_musical(load_urls())
-    return render_template("calendar.html", grouped_urls=grouped)
-
-
-@app.route("/api/events", methods=["GET"])
-def api_events():
-    """
-    Devuelve la lista de eventos (events.json) en JSON.
-    """
-    try:
-        events = load_events()
-        return jsonify(events)
-    except Exception:
-        app.logger.exception("api_events failed")
-        return jsonify([]), 500
-
-# >>> Re-add the app runner at EOF so it runs after all routes are defined
-if __name__ == "__main__":
-    # Development friendly: auto-reload and run socketio
-    try:
-        socketio.run(app, host="0.0.0.0", port=5000, debug=True)
-    finally:
-        try:
-            scheduler.shutdown(wait=False)
-        except Exception:
-            pass
+    channel_type = data.get("type", "alert")
+    
+    if channel_type == "suggestion":
+        test_message = "🧪 Test de SUGERENCIAS desde Ticket Monitor\n\nSi ves este mensaje, funciona."
+    else:
+        test_message = "🧪 Test de ALERTAS desde Ticket Monitor\n\nSi ves este mensaje, funciona."
+    
+    results = notify_all_channels(test_message, channel_type=channel_type)
+    
+    return jsonify({"message": f"Test sent ({channel_type})", "results": results})
 
 @app.route("/admin/suggestions/<int:idx>/approve", methods=["POST"])
 @require_auth
 def approve_suggestion(idx):
-    """Aprobar sugerencia: guardar en BD y eliminar de suggestions.json"""
     try:
         with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
             suggestions = json.load(f)
@@ -770,69 +374,46 @@ def approve_suggestion(idx):
         return jsonify({"error": "suggestion not found"}), 404
     
     sug = suggestions.pop(idx)
-    
     name = (sug.get("siteName") or sug.get("musical") or "Sin nombre").strip()
     url = (sug.get("siteUrl") or sug.get("url") or "").strip()
     notes = sug.get("reason") or sug.get("message") or ""
     
     if not name or not url:
-        return jsonify({"error": "invalid suggestion data"}), 400
+        return jsonify({"error": "invalid suggestion"}), 400
     
-    # Buscar o crear musical en BD
+    # Create or update musical in DB
     musical = Musical.query.filter_by(name=name).first()
-    is_new_musical = False
+    is_new = not musical
     
     if not musical:
         musical = Musical(name=name, description=notes)
         db.session.add(musical)
         db.session.flush()
-        is_new_musical = True
-        app.logger.info(f"Created new musical: {name}")
         
-        # Registrar creación
         change = MusicalChange(
-            musical_id=musical.id,
-            change_type='created',
+            musical_id=musical.id, change_type='created',
             description=f"Musical '{name}' creado desde sugerencia",
-            changed_by='admin',
-            metadata=json.dumps({'source': 'suggestion', 'notes': notes})
+            changed_by='admin', extra_data=json.dumps({'source': 'suggestion'})  # ← CAMBIAR metadata a extra_data
         )
         db.session.add(change)
     
-    # Añadir enlace si no existe ya
-    existing_link = MusicalLink.query.filter_by(musical_id=musical.id, url=url).first()
-    if not existing_link:
+    # Add link if not exists
+    existing = MusicalLink.query.filter_by(musical_id=musical.id, url=url).first()
+    if not existing:
         link = MusicalLink(musical_id=musical.id, url=url, notes=notes, status='active')
         db.session.add(link)
-        app.logger.info(f"Added link {url} to {name}")
         
-        # Registrar adición de enlace
         change = MusicalChange(
-            musical_id=musical.id,
-            change_type='link_added',
+            musical_id=musical.id, change_type='link_added',
             description=f"Enlace añadido: {url[:50]}...",
-            changed_by='admin',
-            metadata=json.dumps({'url': url, 'notes': notes, 'source': 'suggestion'})
+            changed_by='admin', extra_data=json.dumps({'url': url})  # ← CAMBIAR metadata a extra_data
         )
         db.session.add(change)
-        
-        # Actualizar updated_at del musical
         musical.updated_at = datetime.now(timezone.utc)
-    
-    # Registrar aprobación de sugerencia
-    if not is_new_musical:
-        change = MusicalChange(
-            musical_id=musical.id,
-            change_type='approved',
-            description=f"Sugerencia aprobada",
-            changed_by='admin',
-            metadata=json.dumps({'suggestion': sug})
-        )
-        db.session.add(change)
     
     db.session.commit()
     
-    # También añadir a urls.json para compatibilidad
+    # Update urls.json for compatibility
     urls = load_urls()
     found = False
     for item in urls:
@@ -848,7 +429,7 @@ def approve_suggestion(idx):
     with URLS_FILE.open("w", encoding="utf-8") as f:
         json.dump(urls, f, indent=2, ensure_ascii=False)
     
-    # Eliminar sugerencia
+    # Remove suggestion
     with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
         json.dump(suggestions, f, indent=2, ensure_ascii=False)
     
@@ -857,7 +438,6 @@ def approve_suggestion(idx):
 @app.route("/admin/suggestions/<int:idx>/reject", methods=["POST"])
 @require_auth
 def reject_suggestion(idx):
-    """Rechazar sugerencia: solo eliminarla de suggestions.json"""
     try:
         with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
             suggestions = json.load(f)
@@ -874,45 +454,23 @@ def reject_suggestion(idx):
     
     return jsonify({"ok": True, "rejected": rejected})
 
-@app.route("/admin/musicals")
-@require_auth
-def admin_musicals():
-    """Ver todos los musicales en la base de datos"""
-    musicals = Musical.query.all()
-    return jsonify([m.to_dict() for m in musicals])
+# ==================== BACKGROUND SCHEDULER ====================
+POLL_INTERVAL_SECONDS = 300  # 5 minutes
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    lambda: check_all_urls(send_notifications=True),
+    "interval",
+    seconds=POLL_INTERVAL_SECONDS,
+    id="monitor_job"
+)
+scheduler.start()
 
-from datetime import datetime, timezone
-
-# Template filter para fechas legibles
-@app.template_filter('format_date')
-def format_date(date_str):
-    """Convierte ISO date a formato legible (ej: '2 días', 'hace 3h', '15 oct')"""
-    if not date_str:
-        return ''
-    
+# ==================== APP RUNNER ====================
+if __name__ == "__main__":
     try:
-        if isinstance(date_str, str):
-            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-        else:
-            dt = date_str
-        
-        now = datetime.now(timezone.utc)
-        diff = now - dt.replace(tzinfo=timezone.utc)
-        
-        seconds = diff.total_seconds()
-        
-        if seconds < 60:
-            return 'Ahora'
-        elif seconds < 3600:
-            mins = int(seconds / 60)
-            return f'Hace {mins}m'
-        elif seconds < 86400:
-            hours = int(seconds / 3600)
-            return f'Hace {hours}h'
-        elif seconds < 604800:  # 7 días
-            days = int(seconds / 86400)
-            return f'Hace {days}d'
-        else:
-            return dt.strftime('%d %b')
-    except Exception:
-        return ''
+        socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    finally:
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass

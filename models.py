@@ -23,7 +23,7 @@ class Musical(db.Model):
             'links': [link.to_dict() for link in self.links],
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'recent_changes': [change.to_dict() for change in self.changes[:5]]  # últimos 5 cambios
+            'recent_changes': [change.to_dict() for change in self.changes[:5]]
         }
 
 class MusicalLink(db.Model):
@@ -34,7 +34,7 @@ class MusicalLink(db.Model):
     notes = db.Column(db.String(500), default='')
     added_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_checked = db.Column(db.DateTime, nullable=True)
-    status = db.Column(db.String(50), default='active')  # active, error, removed
+    status = db.Column(db.String(50), default='active')
     musical = db.relationship('Musical', back_populates='links')
 
     def to_dict(self):
@@ -51,11 +51,11 @@ class MusicalChange(db.Model):
     __tablename__ = 'musical_changes'
     id = db.Column(db.Integer, primary_key=True)
     musical_id = db.Column(db.Integer, db.ForeignKey('musicals.id'), nullable=False)
-    change_type = db.Column(db.String(50), nullable=False)  # created, link_added, link_removed, updated, approved
+    change_type = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text, default='')
     changed_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    changed_by = db.Column(db.String(100), default='system')  # system, admin, user
-    metadata = db.Column(db.Text, default='{}')  # JSON string para datos extra
+    changed_by = db.Column(db.String(100), default='system')
+    extra_data = db.Column(db.Text, default='{}')  # ← CAMBIADO de 'metadata' a 'extra_data'
     musical = db.relationship('Musical', back_populates='changes')
 
     def to_dict(self):
@@ -66,5 +66,5 @@ class MusicalChange(db.Model):
             'description': self.description,
             'changed_at': self.changed_at.isoformat() if self.changed_at else None,
             'changed_by': self.changed_by,
-            'metadata': json.loads(self.metadata) if self.metadata else {}
+            'extra_data': json.loads(self.extra_data) if self.extra_data else {}
         }
