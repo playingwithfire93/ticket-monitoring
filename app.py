@@ -15,7 +15,7 @@ import html as _html
 import difflib
 import random
 import re
-import uuid
+from html import unescape
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
