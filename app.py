@@ -23,17 +23,17 @@ DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
-# Añadir logging de configuración al iniciar
-app.logger.info(f"Telegram configured: {bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)}")
-app.logger.info(f"Discord Alerts configured: {bool(DISCORD_WEBHOOK_ALERTS)}")
-app.logger.info(f"Discord Suggestions configured: {bool(DISCORD_WEBHOOK_SUGGESTIONS)}")
-
 # ==================== FLASK APP SETUP ====================
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Log configuration status
+print(f"✅ Telegram configured: {bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)}")
+print(f"✅ Discord Alerts configured: {bool(DISCORD_WEBHOOK_ALERTS)}")
+print(f"✅ Discord Suggestions configured: {bool(DISCORD_WEBHOOK_SUGGESTIONS)}")
 
 # Create database tables
 with app.app_context():
@@ -138,13 +138,13 @@ def send_discord_webhook(message_text, webhook_type="alert"):
         # Discord requiere formato específico
         payload = {
             "content": message_text,
-            "username": "Ticket Monitor Bot"  # Añadir nombre
+            "username": "Ticket Monitor Bot"
         }
         
         headers = {"Content-Type": "application/json"}
         r = requests.post(webhook_url, json=payload, headers=headers, timeout=10)
         
-        # Discord devuelve 204 No Content en éxito (no JSON)
+        # Discord devuelve 204 No Content en éxito
         if r.status_code in [200, 204]:
             app.logger.info(f"Discord notification sent ({webhook_type})")
             return {"ok": True, "status": r.status_code}
