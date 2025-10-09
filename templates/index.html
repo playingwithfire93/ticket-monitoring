@@ -64,7 +64,35 @@
     <!-- Cards Grid -->
     <section id="cards" class="cards-section fade-in" aria-labelledby="cards-title">
       <h2 id="cards-title" class="visually-hidden">Monitored musicals (cards)</h2>
-      <div id="cards-grid" class="monitor-cards"></div>
+      <div id="cards-grid" class="monitor-cards">
+        {% for item in musicals %}
+        <article class="show-card" data-musical="{{ item.name }}">
+          <div class="card-image-wrap">
+            <!-- ...existing carousel code... -->
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">{{ item.name }}</h3>
+            
+            <!-- NUEVO: Mostrar última actualización -->
+            <div class="card-meta-row">
+              <p class="card-meta">
+                {{ item.total_links }} URL{{ 's' if item.total_links != 1 else '' }} 
+                · +0 ⚠ 0
+              </p>
+              {% if item.last_updated %}
+              <p class="card-last-update" title="Última actualización">
+                🕒 {{ format_date(item.last_updated) }}
+              </p>
+              {% endif %}
+            </div>
+            
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" style="width:0%"></div>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
     </section>
 
     <!-- Inline suggestion card (non-overlay) -->

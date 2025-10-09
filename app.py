@@ -14,7 +14,7 @@ from flask import Flask, render_template, jsonify, request, Response
 from flask_socketio import SocketIO
 from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
-from models import db, Musical, MusicalLink
+from models import db, Musical, MusicalLink, MusicalChange
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -92,7 +92,26 @@ def save_suggestion(suggestion):
 def index():
     musicals = load_urls()
     grouped = group_urls_by_musical(musicals)
-    return render_template("index.html", musicals=musicals, grouped_urls=grouped)
+    
+    # Enriquecer con datos de la BD (último cambio, total enlaces)
+    for item in grouped:
+        name = item.get('name', '')
+        musical = Musical.query.filter_by(name=name).first()
+        if musical:
+            item['last_updated'] = musical.updated_at.isoformat() if musical.updated_at else None
+            item['total_links'] = len(musical.links)
+            item['musical_id'] = musical.id
+            # Último cambio significativo
+            last_change = MusicalChange.query.filter_by(musical_id=musical.id).order_by(MusicalChange.changed_at.desc()).first()
+            if last_change:
+                item['last_change_type'] = last_change.change_type
+                item['last_change_date'] = last_change.changed_at.isoformat()
+        else:
+            item['last_updated'] = None
+            item['total_links'] = len(item.get('urls', []))
+            item['musical_id'] = None
+    
+    return render_template("index.html", grouped_urls=grouped)
 
 @app.route("/api/monitored-urls")
 def api_monitored_urls():
@@ -761,22 +780,59 @@ def approve_suggestion(idx):
     
     # Buscar o crear musical en BD
     musical = Musical.query.filter_by(name=name).first()
+    is_new_musical = False
+    
     if not musical:
         musical = Musical(name=name, description=notes)
         db.session.add(musical)
         db.session.flush()
+        is_new_musical = True
         app.logger.info(f"Created new musical: {name}")
+        
+        # Registrar creación
+        change = MusicalChange(
+            musical_id=musical.id,
+            change_type='created',
+            description=f"Musical '{name}' creado desde sugerencia",
+            changed_by='admin',
+            metadata=json.dumps({'source': 'suggestion', 'notes': notes})
+        )
+        db.session.add(change)
     
     # Añadir enlace si no existe ya
     existing_link = MusicalLink.query.filter_by(musical_id=musical.id, url=url).first()
     if not existing_link:
-        link = MusicalLink(musical_id=musical.id, url=url, notes=notes)
+        link = MusicalLink(musical_id=musical.id, url=url, notes=notes, status='active')
         db.session.add(link)
         app.logger.info(f"Added link {url} to {name}")
+        
+        # Registrar adición de enlace
+        change = MusicalChange(
+            musical_id=musical.id,
+            change_type='link_added',
+            description=f"Enlace añadido: {url[:50]}...",
+            changed_by='admin',
+            metadata=json.dumps({'url': url, 'notes': notes, 'source': 'suggestion'})
+        )
+        db.session.add(change)
+        
+        # Actualizar updated_at del musical
+        musical.updated_at = datetime.now(timezone.utc)
+    
+    # Registrar aprobación de sugerencia
+    if not is_new_musical:
+        change = MusicalChange(
+            musical_id=musical.id,
+            change_type='approved',
+            description=f"Sugerencia aprobada",
+            changed_by='admin',
+            metadata=json.dumps({'suggestion': sug})
+        )
+        db.session.add(change)
     
     db.session.commit()
     
-    # También añadir a urls.json para compatibilidad con sistema actual
+    # También añadir a urls.json para compatibilidad
     urls = load_urls()
     found = False
     for item in urls:
@@ -824,3 +880,39 @@ def admin_musicals():
     """Ver todos los musicales en la base de datos"""
     musicals = Musical.query.all()
     return jsonify([m.to_dict() for m in musicals])
+
+from datetime import datetime, timezone
+
+# Template filter para fechas legibles
+@app.template_filter('format_date')
+def format_date(date_str):
+    """Convierte ISO date a formato legible (ej: '2 días', 'hace 3h', '15 oct')"""
+    if not date_str:
+        return ''
+    
+    try:
+        if isinstance(date_str, str):
+            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        else:
+            dt = date_str
+        
+        now = datetime.now(timezone.utc)
+        diff = now - dt.replace(tzinfo=timezone.utc)
+        
+        seconds = diff.total_seconds()
+        
+        if seconds < 60:
+            return 'Ahora'
+        elif seconds < 3600:
+            mins = int(seconds / 60)
+            return f'Hace {mins}m'
+        elif seconds < 86400:
+            hours = int(seconds / 3600)
+            return f'Hace {hours}h'
+        elif seconds < 604800:  # 7 días
+            days = int(seconds / 86400)
+            return f'Hace {days}d'
+        else:
+            return dt.strftime('%d %b')
+    except Exception:
+        return ''
