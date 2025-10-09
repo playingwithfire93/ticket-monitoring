@@ -1,23 +1,11 @@
-import json
-import os
-import time
-import requests
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, render_template, jsonify, request
+import json
+import os
+import requests
+from flask import Flask, render_template, jsonify, request, Response
 from flask_socketio import SocketIO
-import hashlib
-from apscheduler.schedulers.background import BackgroundScheduler
-import smtplib
-from email.message import EmailMessage
-import ssl
-import html as _html
-import difflib
-import random
-import re
-from html import unescape
 from functools import wraps
-from flask import request, Response
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -25,8 +13,27 @@ SUGGESTIONS_FILE = BASE / "suggestions.json"
 EVENTS_FILE = BASE / "events.json"
 UTC = timezone.utc
 
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Admin authentication decorator
+def require_auth(f):
+    """Decorator to require HTTP Basic Auth for admin routes."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or auth.password != ADMIN_PASSWORD:
+            return Response(
+                'Acceso denegado. Introduce la contraseña de administrador.\n',
+                401,
+                {'WWW-Authenticate': 'Basic realm="Admin Area"'}
+            )
+        return f(*args, **kwargs)
+    return decorated
 
 
 def load_urls():
@@ -712,23 +719,6 @@ if __name__ == "__main__":
             scheduler.shutdown(wait=False)
         except Exception:
             pass
-
-# Admin password (set via env var ADMIN_PASSWORD, fallback to 'admin123')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
-
-def require_auth(f):
-    """Decorator to require HTTP Basic Auth for admin routes."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or auth.password != ADMIN_PASSWORD:
-            return Response(
-                'Acceso denegado. Introduce la contraseña de administrador.\n',
-                401,
-                {'WWW-Authenticate': 'Basic realm="Admin Area"'}
-            )
-        return f(*args, **kwargs)
-    return decorated
 
 @app.route("/admin/suggestions/<int:idx>/approve", methods=["POST"])
 @require_auth
