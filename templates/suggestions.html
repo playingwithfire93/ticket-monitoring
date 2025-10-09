@@ -1,32 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Sugerencias de Sitios</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="utf-8">
+  <title>Sugerencias pendientes</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .suggestion-card { border: 1px solid #e0e0e0; padding: 16px; margin: 12px 0; border-radius: 8px; background: #fafafa; }
+    .suggestion-card h3 { margin: 0 0 8px; color: #d94f8f; }
+    .suggestion-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-approve { background: #4caf50; color: white; padding: 8px 12px; border: 0; border-radius: 6px; cursor: pointer; }
+    .btn-reject { background: #f44336; color: white; padding: 8px 12px; border: 0; border-radius: 6px; cursor: pointer; }
+  </style>
 </head>
 <body>
-    <h1>Sugerencias Recibidas</h1>
+  <div class="container">
+    <h1>Sugerencias pendientes</h1>
     {% if suggestions %}
-        {% for i, suggestion in enumerate(suggestions) %}
-            <div class="suggestion-card">
-                <div class="suggestion-header">
-                    <div class="suggestion-title">{{ suggestion.siteName }}</div>
-                    <div class="suggestion-id">#{{ i }}</div>
-                </div>
-                <div class="suggestion-details">
-                    <p><strong>URL:</strong> <a href="{{ suggestion.siteUrl }}" target="_blank">{{ suggestion.siteUrl }}</a></p>
-                    <p><strong>Razón:</strong> {{ suggestion.reason or 'No especificada' }}</p>
-                    <p><strong>Fecha:</strong> {{ suggestion.fecha_legible }}</p>
-                    <p><strong>Status:</strong> {{ suggestion.status or 'Pendiente' }}</p>
-                </div>
-            </div>
-        {% endfor %}
+      {% for sug in suggestions %}
+      <div class="suggestion-card" data-index="{{ loop.index0 }}">
+        <h3>{{ sug.siteName or sug.musical or 'Sin nombre' }}</h3>
+        <p><strong>URL:</strong> <a href="{{ sug.siteUrl or sug.url }}" target="_blank">{{ sug.siteUrl or sug.url }}</a></p>
+        <p><strong>Razón:</strong> {{ sug.reason or sug.message or '—' }}</p>
+        <p><small>{{ sug.timestamp }}</small></p>
+        <div class="suggestion-actions">
+          <button class="btn-approve" onclick="handleSuggestion({{ loop.index0 }}, 'approve')">✅ Aprobar</button>
+          <button class="btn-reject" onclick="handleSuggestion({{ loop.index0 }}, 'reject')">❌ Rechazar</button>
+        </div>
+      </div>
+      {% endfor %}
     {% else %}
-        <h2>No hay sugerencias aún</h2>
+      <p>No hay sugerencias pendientes.</p>
     {% endif %}
-    <div style="text-align: center; margin-top: 40px;">
-        <a href="/" class="nav-btn">Página Principal</a>
-    </div>
+  </div>
+
+  <script>
+    async function handleSuggestion(idx, action) {
+      try {
+        const res = await fetch(`/admin/suggestions/${idx}/${action}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          alert(`Sugerencia ${action === 'approve' ? 'aprobada' : 'rechazada'} correctamente`);
+          location.reload();
+        } else {
+          alert('Error: ' + (data.error || 'unknown'));
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+  </script>
 </body>
 </html>

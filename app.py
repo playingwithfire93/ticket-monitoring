@@ -16,6 +16,8 @@ import difflib
 import random
 import re
 from html import unescape
+from functools import wraps
+from flask import request, Response
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"
@@ -98,7 +100,19 @@ def api_monitored_status():
     return jsonify(results)
 
 
+@app.route("/admin/suggestions")
+@require_auth
+def admin_suggestions():
+    try:
+        with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
+            suggestions = json.load(f)
+    except Exception:
+        suggestions = []
+    return render_template("suggestions.html", suggestions=suggestions)
+
+
 @app.route("/admin/monitoring-list")
+@require_auth
 def monitoring_list():
     musicals = load_urls()
     grouped = group_urls_by_musical(musicals)
@@ -133,18 +147,9 @@ def suggest_site():
     return jsonify({"success": True})
 
 
-@app.route("/admin/suggestions")
-def admin_suggestions():
-    try:
-        with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
-            suggestions = json.load(f)
-    except Exception:
-        suggestions = []
-    return render_template("suggestions.html", suggestions=suggestions)
-
-
 # small helper to reload urls file via HTTP (admin)
 @app.route("/admin/reload-urls", methods=["POST"])
+@require_auth
 def reload_urls():
     # simply attempt to load; return basic result
     loaded = load_urls()
@@ -187,6 +192,7 @@ def send_telegram_message(text):
         return {'ok': False, 'reason': str(e)}
 
 @app.route('/admin/test-telegram', methods=['POST'])
+@require_auth
 def admin_test_telegram():
     token = os.getenv('TELEGRAM_BOT_TOKEN')
     # accept either TELEGRAM_CHAT or TELEGRAM_CHAT_ID (Render shows TELEGRAM_CHAT_ID)
@@ -450,6 +456,7 @@ def check_all_urls(send_notifications=True):
 
 # admin endpoint to force a check now (useful for testing)
 @app.route("/admin/check-now", methods=["POST"])
+@require_auth
 def admin_check_now():
     res = check_all_urls(send_notifications=True)
     return jsonify(res)
@@ -705,3 +712,83 @@ if __name__ == "__main__":
             scheduler.shutdown(wait=False)
         except Exception:
             pass
+
+# Admin password (set via env var ADMIN_PASSWORD, fallback to 'admin123')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+
+def require_auth(f):
+    """Decorator to require HTTP Basic Auth for admin routes."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or auth.password != ADMIN_PASSWORD:
+            return Response(
+                'Acceso denegado. Introduce la contraseña de administrador.\n',
+                401,
+                {'WWW-Authenticate': 'Basic realm="Admin Area"'}
+            )
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route("/admin/suggestions/<int:idx>/approve", methods=["POST"])
+@require_auth
+def approve_suggestion(idx):
+    """Aprobar sugerencia: moverla a urls.json y eliminarla de suggestions.json"""
+    try:
+        with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
+            suggestions = json.load(f)
+    except Exception:
+        return jsonify({"error": "no suggestions file"}), 404
+    
+    if idx >= len(suggestions):
+        return jsonify({"error": "suggestion not found"}), 404
+    
+    sug = suggestions.pop(idx)
+    
+    # Añadir a urls.json
+    urls = load_urls()
+    name = sug.get("siteName") or sug.get("musical") or "Sin nombre"
+    url = sug.get("siteUrl") or sug.get("url") or ""
+    
+    # Buscar si ya existe el musical
+    found = False
+    for item in urls:
+        if (item.get("musical") or item.get("name")) == name:
+            if url not in item.get("urls", []):
+                item.setdefault("urls", []).append(url)
+            found = True
+            break
+    
+    if not found:
+        urls.append({"musical": name, "urls": [url]})
+    
+    # Guardar urls.json actualizado
+    with URLS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(urls, f, indent=2, ensure_ascii=False)
+    
+    # Guardar suggestions.json sin la sugerencia aprobada
+    with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(suggestions, f, indent=2, ensure_ascii=False)
+    
+    return jsonify({"ok": True, "approved": sug})
+
+
+@app.route("/admin/suggestions/<int:idx>/reject", methods=["POST"])
+@require_auth
+def reject_suggestion(idx):
+    """Rechazar sugerencia: solo eliminarla de suggestions.json"""
+    try:
+        with SUGGESTIONS_FILE.open("r", encoding="utf-8") as f:
+            suggestions = json.load(f)
+    except Exception:
+        return jsonify({"error": "no suggestions file"}), 404
+    
+    if idx >= len(suggestions):
+        return jsonify({"error": "suggestion not found"}), 404
+    
+    rejected = suggestions.pop(idx)
+    
+    with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(suggestions, f, indent=2, ensure_ascii=False)
+    
+    return jsonify({"ok": True, "rejected": rejected})
