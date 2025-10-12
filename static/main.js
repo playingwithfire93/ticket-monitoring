@@ -1113,12 +1113,14 @@
     })();
   }
 
-  // Join Channels Popup (first visit only)
-  document.addEventListener('DOMContentLoaded', () => {
-    // Limpiar duplicados primero
-    document.querySelectorAll('#join-channels-popup').forEach((el, i) => {
-      if (i > 0) el.remove();
-    });
+  // ==================== JOIN CHANNELS POPUP ====================
+  // Show popup on first visit to invite users to Telegram/Discord
+  (function initJoinPopup() {
+    // Wait for DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initJoinPopup);
+      return;
+    }
 
     const POPUP_KEY = 'joinChannelsShown_v1';
     const popup = document.getElementById('join-channels-popup');
@@ -1126,16 +1128,17 @@
     const skipBtn = document.getElementById('join-skip-btn');
 
     if (!popup) {
-      console.warn('Join popup not found in DOM');
+      console.warn('⚠️ Join popup not found in DOM');
       return;
     }
 
-    // Show popup only if never shown before
+    // Check if already shown
     const hasShown = localStorage.getItem(POPUP_KEY);
     
     if (!hasShown) {
-      console.log('Showing join popup for first time');
+      console.log('🎭 Showing join channels popup for first time');
       
+      // Show after delay
       setTimeout(() => {
         popup.style.zIndex = '99999';
         popup.style.display = 'flex';
@@ -1145,7 +1148,7 @@
           popup.style.transition = 'opacity 0.3s ease';
           popup.style.opacity = '1';
         });
-      }, 1500);
+      }, 1800); // show after 1.8s
     }
 
     function hidePopup() {
@@ -1154,9 +1157,10 @@
         popup.style.display = 'none';
       }, 300);
       localStorage.setItem(POPUP_KEY, 'true');
-      console.log('Join popup hidden and marked as shown');
+      console.log('✅ Join popup dismissed');
     }
 
+    // Close button
     if (closeBtn) {
       closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1165,6 +1169,7 @@
       });
     }
     
+    // Skip button
     if (skipBtn) {
       skipBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1173,20 +1178,20 @@
       });
     }
 
-    // Close on background click
+    // Click outside (on overlay)
     popup.addEventListener('click', (e) => {
       if (e.target === popup || e.target.classList.contains('join-popup-overlay')) {
         hidePopup();
       }
     });
 
-    // Close on ESC key
+    // ESC key
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && popup.style.display === 'flex') {
         hidePopup();
       }
     });
-  });
+  })();
 
   // init (use random first slide when enabled)
   renderTable(musicals);

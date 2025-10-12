@@ -133,92 +133,46 @@
     <small>Made with 💖 — dynamic cute monitor</small>
   </footer>
 
-  <div id="telegram-popup" class="notification-popup" role="dialog" aria-modal="true" aria-hidden="true" style="display:block;opacity:0;pointer-events:none;">
-    <div>
-      <strong class="np-title">Únete a nuestro Telegram</strong>
-      <div class="np-body" style="margin-top:6px;font-weight:600">Recibe alertas y novedades en tiempo real.</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
-      <a id="telegram-join" class="btn primary" href="https://t.me/TheBookOfMormonTicketsbot" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:8px 12px">Unirme</a>
-      <button id="telegram-dismiss" class="btn ghost" style="padding:8px 10px">No, gracias</button>
-    </div>
-    <button class="np-close" aria-label="Cerrar" id="telegram-close" style="position:absolute;top:8px;right:10px;background:transparent;border:0;font-size:18px;color:var(--accent)">×</button>
-  </div>
-
-  <button id="open-suggest" class="btn small">Sugerencias</button>
-
-  <!-- Suggestion modal (paste once inside <body>) -->
-  <div id="suggest-modal" class="modal" aria-hidden="true" style="display:none;">
-    <div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="suggest-title">
-      <button class="modal-close" id="suggest-close" aria-label="Cerrar" onclick="document.getElementById('suggest-modal').style.display='none'">×</button>
-      <h3 id="suggest-title">Enviar sugerencia</h3>
-      <form id="suggest-form">
-        <label>Nombre (opcional)<br><input name="name" type="text" placeholder="Tu nombre"></label>
-        <label>Email (opcional)<br><input name="email" type="email" placeholder="tu@correo.com"></label>
-        <label>Mensaje<br><textarea name="message" rows="4" required placeholder="Escribe tu sugerencia..."></textarea></label>
-        <div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem">
-          <button type="submit" class="btn primary">Enviar</button>
-          <button type="button" class="btn ghost" id="suggest-cancel" onclick="document.getElementById('suggest-modal').style.display='none'">Cancelar</button>
-          <div id="suggest-status" style="margin-left:auto;font-size:.9rem"></div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Añadir widget de calendario (pequeño preview + maximizable) -->
-<div id="calendar-widget" class="calendar-widget">
-  <div class="cw-header">
-    <strong>Calendario</strong>
-    <div class="cw-actions">
-      <button id="cw-max-btn" class="cw-btn" title="Maximizar">⤢</button>
-    </div>
-  </div>
-  <div class="cw-body">
-    <iframe id="cw-iframe" src="/calendar" title="Calendario" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-  </div>
-  <button id="cw-close-btn" class="cw-close" title="Cerrar">✕</button>
-</div>
-
-<!-- Join Channels Popup - DEBE ESTAR ANTES DE </body> -->
-<div id="join-channels-popup" class="join-popup" style="display:none;">
-  <div class="join-popup-overlay"></div>
-  <div class="join-popup-inner">
-    <button class="join-close" id="join-close-btn" aria-label="Cerrar" type="button">✕</button>
-    
-    <div class="join-header">
-      <h2>🎭 ¡Bienvenido a Ticket Monitor!</h2>
-      <p>Únete a nuestra comunidad para recibir alertas instantáneas</p>
-    </div>
-    
-    <div class="join-channels">
-      <a href="{{ telegram_url }}" 
-         target="_blank" 
-         rel="noopener noreferrer" 
-         class="join-btn telegram"
-         onclick="localStorage.setItem('joinChannelsShown_v1', 'true')">
-        <svg class="join-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.053 5.56-5.023c.242-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-        </svg>
-        <span>Únete al Bot de Telegram</span>
-      </a>
+  <!-- Join Channels Popup - DEBE ESTAR ANTES DE </body> -->
+  <div id="join-channels-popup" class="join-popup" style="display:none;">
+    <div class="join-popup-overlay"></div>
+    <div class="join-popup-inner">
+      <button class="join-close" id="join-close-btn" aria-label="Cerrar" type="button">✕</button>
       
-      <a href="{{ discord_url }}" 
-         target="_blank" 
-         rel="noopener noreferrer" 
-         class="join-btn discord"
-         onclick="localStorage.setItem('joinChannelsShown_v1', 'true')">
-        <svg class="join-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-        </svg>
-        <span>Únete a Discord</span>
-      </a>
+      <div class="join-header">
+        <h2>🎭 ¡Bienvenido a Ticket Monitor!</h2>
+        <p>Únete a nuestra comunidad para recibir alertas instantáneas</p>
+      </div>
+      
+      <div class="join-channels">
+        <a href="{{ telegram_url }}" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="join-btn telegram"
+           onclick="localStorage.setItem('joinChannelsShown_v1', 'true')">
+          <svg class="join-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.053 5.56-5.023c.242-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+          </svg>
+          <span>Únete al Bot de Telegram</span>
+        </a>
+        
+        <a href="{{ discord_url }}" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="join-btn discord"
+           onclick="localStorage.setItem('joinChannelsShown_v1', 'true')">
+          <svg class="join-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+          <span>Únete a Discord</span>
+        </a>
+      </div>
+      
+      <button class="join-skip" id="join-skip-btn" type="button">
+        Recordar más tarde
+      </button>
     </div>
-    
-    <button class="join-skip" id="join-skip-btn" type="button">
-      Recordar más tarde
-    </button>
   </div>
-</div>
 
   <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
   <script>
@@ -226,38 +180,6 @@
   </script>
   <!-- main script -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
-  <script>
-    // show Telegram popup on first visit (remember choice in localStorage)
-    (function(){
-      const KEY = 'telegramPopupSeen_v1';
-      if (localStorage.getItem(KEY)) return;
-      const popup = document.getElementById('telegram-popup');
-      if (!popup) return;
-      // show with small delay so it doesn't feel abrupt
-      setTimeout(() => {
-        popup.classList.add('show');
-        popup.style.opacity = 1;
-        popup.style.pointerEvents = 'auto';
-        popup.setAttribute('aria-hidden','false');
-      }, 700);
-
-      function hideAndRemember() {
-        try { localStorage.setItem(KEY, '1'); } catch(e){}
-        popup.classList.remove('show');
-        popup.style.opacity = 0;
-        popup.style.pointerEvents = 'none';
-        popup.setAttribute('aria-hidden','true');
-      }
-
-      document.getElementById('telegram-join').addEventListener('click', () => {
-        hideAndRemember();
-        // allow anchor to open in new tab (already target="_blank")
-      });
-      document.getElementById('telegram-dismiss').addEventListener('click', (e) => { e.preventDefault(); hideAndRemember(); });
-      document.getElementById('telegram-close').addEventListener('click', (e) => { e.preventDefault(); hideAndRemember(); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideAndRemember(); });
-    })();
-  </script>
   <script>
   (function(){
     // safe init: test-telegram (if existe) y control del modal de sugerencias (idempotente)
