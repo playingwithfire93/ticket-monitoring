@@ -1419,7 +1419,7 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
 }
 
 .join-close:hover {
-  color: #d94f8f;
+  color: var(--accent);
   transform: rotate(90deg);
 }
 
@@ -1431,7 +1431,7 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
 .join-header h2 {
   margin: 0 0 10px;
   font-size: 1.75rem;
-  color: #d94f8f;
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -1507,7 +1507,7 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
 .join-skip:hover {
   background: rgba(217, 79, 143, 0.05);
   border-color: rgba(217, 79, 143, 0.3);
-  color: #d94f8f;
+  color: var(--accent);
 }
 
 @keyframes fadeIn {
