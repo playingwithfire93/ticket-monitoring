@@ -8,6 +8,7 @@ from flask_socketio import SocketIO
 from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
 from models import db, Musical, MusicalLink, MusicalChange
+import config
 
 # ==================== CONFIGURATION ====================
 BASE = Path(__file__).parent
@@ -255,7 +256,12 @@ def index():
             item['total_links'] = len(item.get('urls', []))
             item['musical_id'] = None
     
-    return render_template("index.html", grouped_urls=grouped)
+    return render_template(
+        "index.html", 
+        grouped_urls=grouped,
+        telegram_url=config.TELEGRAM_CHANNEL_URL,
+        discord_url=config.DISCORD_SERVER_URL
+    )
 
 @app.route("/calendar")
 def calendar():

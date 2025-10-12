@@ -38,7 +38,7 @@ REQUEST_TIMEOUT = 5  # segundos
 # ==================== COMMUNITY LINKS ====================
 # Enlaces públicos para invitar usuarios
 TELEGRAM_CHANNEL_URL = os.getenv("TELEGRAM_CHANNEL_URL", "https://t.me/TheBookOfMormonTicketsbot")
-DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/bom-tickets")
+DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/wQgsmkTe")
 
 # ==================== HELPERS ====================
 def is_telegram_configured():
