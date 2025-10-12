@@ -1,0 +1,64 @@
+[
+  {
+    "id": "e3b0c442-0001-4f3a-9a1a-111111111111",
+    "title": "Houdini — Temporada",
+    "musical": "Houdini",
+    "start": "2025-10-09",
+    "end": "2025-12-01",
+    "allDay": true,
+    "location": "Madrid"
+  },
+  {
+    "id": "b7f3a1c2-0002-4d5b-8c2b-222222222222",
+    "title": "Wicked — Temporada",
+    "musical": "Wicked",
+    "start": "2025-10-03",
+    "end": "2026-02-01",
+    "allDay": true
+  },
+  {
+    "id": "c4d2e6f8-0003-4a7c-9d3c-333333333333",
+    "title": "Buscando a Audrey — Temporada (Madrid)",
+    "musical": "Buscando a Audrey",
+    "start": "2025-11-27",
+    "end": "2026-01-11",
+    "allDay": true,
+    "location": "Madrid"
+  },
+  {
+    "id": "d9a7b5e1-0004-4f2d-8e4d-444444444444",
+    "title": "The Book of Mormon — Temporada",
+    "musical": "The Book of Mormon",
+    "start": "2025-10-25",
+    "end": "2025-12-21",
+    "allDay": true,
+    "location": "Madrid"
+  },
+  {
+    "id": "a1c9f0b7-0005-4b6e-9f5e-555555555555",
+    "title": "Les Misérables — Temporada",
+    "musical": "Les Misérables",
+    "start": "2025-11-29",
+    "end": "2026-03-08",
+    "allDay": true,
+    "location": "Madrid"
+  },
+  {
+    "id": "f6e2b3c4-0006-498f-8a6f-666666666666",
+    "title": "Cabaret — Temporada",
+    "musical": "Cabaret",
+    "start": "2025-10-04",
+    "end": "2025-11-30",
+    "allDay": true,
+    "location": "Madrid"
+  },
+  {
+    "id": "9b4d7a2e-0007-4521-8b7a-777777777777",
+    "title": "Rent — Temporada",
+    "musical": "Rent",
+    "start": "2025-12-23",
+    "end": "2026-01-25",
+    "allDay": true,
+    "location": "Madrid"
+  }
+]

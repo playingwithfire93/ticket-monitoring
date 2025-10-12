@@ -1113,6 +1113,51 @@
     })();
   }
 
+  // Join Channels Popup (first visit only)
+  document.addEventListener('DOMContentLoaded', () => {
+    const POPUP_KEY = 'joinChannelsShown_v1';
+    const popup = document.getElementById('join-channels-popup');
+    const closeBtn = document.getElementById('join-close-btn');
+    const skipBtn = document.getElementById('join-skip-btn');
+
+    if (!popup) return;
+
+    // Show popup only if never shown before
+    if (!localStorage.getItem(POPUP_KEY)) {
+      setTimeout(() => {
+        popup.style.display = 'flex';
+        popup.style.opacity = '0';
+        requestAnimationFrame(() => {
+          popup.style.transition = 'opacity 0.3s ease';
+          popup.style.opacity = '1';
+        });
+      }, 1200); // show after 1.2s delay
+    }
+
+    function hidePopup() {
+      popup.style.opacity = '0';
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 300);
+      localStorage.setItem(POPUP_KEY, 'true');
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', hidePopup);
+    if (skipBtn) skipBtn.addEventListener('click', hidePopup);
+
+    // Close on background click
+    popup.addEventListener('click', (e) => {
+      if (e.target === popup) hidePopup();
+    });
+
+    // Close on ESC key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && popup.style.display !== 'none') {
+        hidePopup();
+      }
+    });
+  });
+
   // init (use random first slide when enabled)
   renderTable(musicals);
   updateLastChecked();
@@ -1582,6 +1627,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function prevSlide(){ show(idx - 1); }
 
     function start() { stop(); timer = setInterval(nextSlide, interval); container.classList.add('slideshow-playing'); }
+
     function stop() { if (timer) { clearInterval(timer); timer = null; container.classList.remove('slideshow-playing'); } }
 
     if (next) next.addEventListener('click', e => { e.preventDefault(); nextSlide(); start(); });
