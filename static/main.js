@@ -1115,23 +1115,37 @@
 
   // Join Channels Popup (first visit only)
   document.addEventListener('DOMContentLoaded', () => {
+    // Limpiar duplicados primero
+    document.querySelectorAll('#join-channels-popup').forEach((el, i) => {
+      if (i > 0) el.remove();
+    });
+
     const POPUP_KEY = 'joinChannelsShown_v1';
     const popup = document.getElementById('join-channels-popup');
     const closeBtn = document.getElementById('join-close-btn');
     const skipBtn = document.getElementById('join-skip-btn');
 
-    if (!popup) return;
+    if (!popup) {
+      console.warn('Join popup not found in DOM');
+      return;
+    }
 
     // Show popup only if never shown before
-    if (!localStorage.getItem(POPUP_KEY)) {
+    const hasShown = localStorage.getItem(POPUP_KEY);
+    
+    if (!hasShown) {
+      console.log('Showing join popup for first time');
+      
       setTimeout(() => {
+        popup.style.zIndex = '99999';
         popup.style.display = 'flex';
         popup.style.opacity = '0';
+        
         requestAnimationFrame(() => {
           popup.style.transition = 'opacity 0.3s ease';
           popup.style.opacity = '1';
         });
-      }, 1200); // show after 1.2s delay
+      }, 1500);
     }
 
     function hidePopup() {
@@ -1140,19 +1154,35 @@
         popup.style.display = 'none';
       }, 300);
       localStorage.setItem(POPUP_KEY, 'true');
+      console.log('Join popup hidden and marked as shown');
     }
 
-    if (closeBtn) closeBtn.addEventListener('click', hidePopup);
-    if (skipBtn) skipBtn.addEventListener('click', hidePopup);
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hidePopup();
+      });
+    }
+    
+    if (skipBtn) {
+      skipBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hidePopup();
+      });
+    }
 
     // Close on background click
     popup.addEventListener('click', (e) => {
-      if (e.target === popup) hidePopup();
+      if (e.target === popup || e.target.classList.contains('join-popup-overlay')) {
+        hidePopup();
+      }
     });
 
     // Close on ESC key
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && popup.style.display !== 'none') {
+      if (e.key === 'Escape' && popup.style.display === 'flex') {
         hidePopup();
       }
     });

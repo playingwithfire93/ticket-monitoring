@@ -35,6 +35,11 @@ ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 POLL_INTERVAL_SECONDS = int(os.getenv('POLL_INTERVAL', '300'))  # 5 minutos
 REQUEST_TIMEOUT = 5  # segundos
 
+# ==================== COMMUNITY LINKS ====================
+# Enlaces públicos para invitar usuarios
+TELEGRAM_CHANNEL_URL = os.getenv("TELEGRAM_CHANNEL_URL", "https://t.me/TheBookOfMormonTicketsbot")
+DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/bom-tickets")
+
 # ==================== HELPERS ====================
 def is_telegram_configured():
     """Check if Telegram is properly configured"""
