@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Shows - Ticket Monitor</title>
+  <title>Shows Monitoreados - Ticket Monitor</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="pink-theme">
@@ -15,23 +15,24 @@
     <nav class="breadcrumb">
       <a href="{{ url_for('index') }}" class="crumb">Inicio</a>
       <span class="sep">›</span>
-      <span class="crumb is-active">Shows</span>
+      <span class="crumb is-active">Shows Monitoreados</span>
     </nav>
-    <h1>Todos los Musicales</h1>
-    <p class="lead">Explora nuestra colección completa de shows</p>
+    <h1>🎭 Musicales en Seguimiento</h1>
+    <p class="lead">Todos los shows que estamos monitoreando para ti</p>
     
     <div class="catalog-searchbar">
       <div class="cs-input">
         <input type="search" id="q" placeholder="Buscar musical...">
       </div>
       <select id="sort">
+        <option value="recent">Más reciente</option>
         <option value="name">Nombre A-Z</option>
-        <option value="updated">Más reciente</option>
+        <option value="available">Disponibles primero</option>
       </select>
     </div>
     
     <div class="chips">
-      <button class="chip" data-filter="all">Todos</button>
+      <button class="chip active" data-filter="all">Todos ({{ musicals|length }})</button>
       <button class="chip" data-filter="available">Disponibles</button>
       <button class="chip" data-filter="soldout">Agotados</button>
     </div>
@@ -42,20 +43,35 @@
   <div class="listing-header">
     <div class="toolbar">
       <div class="meta-inline">
-        <span class="results-count">{{ musicals|length }} musicales</span>
+        <span class="results-count">{{ musicals|length }} musicales monitoreados</span>
       </div>
     </div>
   </div>
 
-  <div class="shows-grid grid">
+  <div class="shows-grid grid" id="shows-container">
     {% if musicals %}
       {% for musical in musicals %}
-      <div class="card show-card">
+      <div class="card show-card" 
+           data-name="{{ musical.name|lower }}" 
+           data-available="{{ musical.active_links > 0 }}"
+           data-updated="{{ musical.updated_at.timestamp() if musical.updated_at else 0 }}">
         <div class="poster">
           {% if musical.images and musical.images|length > 0 %}
             <img src="{{ musical.images[0] }}" alt="{{ musical.name }}" class="poster-img">
           {% else %}
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="{{ musical.name }}" class="poster-img">
+            <div class="poster-placeholder">
+              <span style="font-size: 3rem;">🎭</span>
+            </div>
+          {% endif %}
+          
+          {% if musical.active_links > 0 %}
+            <span class="badge" style="background: linear-gradient(135deg, #4ade80, #22c55e);">
+              ✓ Disponible
+            </span>
+          {% else %}
+            <span class="badge" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+              Agotado
+            </span>
           {% endif %}
         </div>
         
@@ -65,31 +81,147 @@
           <div class="meta">
             {% if musical.links %}
               <span>{{ musical.links|length }} enlaces</span>
+              {% if musical.active_links > 0 %}
+                <span> · {{ musical.active_links }} disponibles</span>
+              {% endif %}
             {% endif %}
             
             {% if musical.updated_at %}
-              <span>· Act. {{ musical.updated_at.strftime('%d/%m') }}</span>
+              <span> · Act. {{ musical.updated_at.strftime('%d/%m/%y %H:%M') }}</span>
             {% endif %}
           </div>
           
+          {% if musical.last_change_type %}
+            <div class="pill-row">
+              {% if musical.last_change_type == 'new_available' %}
+                <span class="pill" style="background: #d1fae5; color: #065f46;">
+                  🆕 Nuevas entradas
+                </span>
+              {% elif musical.last_change_type == 'became_available' %}
+                <span class="pill" style="background: #dbeafe; color: #1e40af;">
+                  ✨ Volvió disponible
+                </span>
+              {% elif musical.last_change_type == 'sold_out' %}
+                <span class="pill" style="background: #fee2e2; color: #991b1b;">
+                  ⚠️ Agotado
+                </span>
+              {% endif %}
+            </div>
+          {% endif %}
+          
           <div class="card-actions">
-            {% if musical.links and musical.links|length > 0 %}
-              <a href="{{ musical.links[0].url }}" target="_blank" class="btn btn-primary">Ver entradas</a>
+            {% if musical.active_links > 0 %}
+              <a href="{{ musical.links[0].url }}" 
+                 target="_blank" 
+                 class="btn btn-primary">
+                Ver entradas
+              </a>
             {% else %}
-              <button class="btn btn-outline" disabled>Sin enlaces</button>
+              <button class="btn btn-outline" disabled>
+                Sin disponibilidad
+              </button>
             {% endif %}
+            
+            <a href="{{ url_for('index') }}#musical-{{ musical.id }}" 
+               class="btn btn-outline"
+               style="font-size: 0.85rem; padding: 6px 10px;">
+              Ver detalles
+            </a>
           </div>
         </div>
       </div>
       {% endfor %}
     {% else %}
-      <div class="no-data">
-        <p>No hay musicales disponibles en este momento.</p>
+      <div class="no-data" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+        <h3 style="color: var(--pink-700); margin-bottom: 10px;">
+          🎭 No hay musicales en seguimiento
+        </h3>
+        <p style="color: var(--muted); margin-bottom: 20px;">
+          Comienza a añadir musicales al monitor desde el dashboard
+        </p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+          Ir al Dashboard
+        </a>
       </div>
     {% endif %}
   </div>
 </div>
 
 <script src="{{ url_for('static', filename='main.js') }}"></script>
+<script>
+// Búsqueda en vivo
+const searchInput = document.getElementById('q');
+const sortSelect = document.getElementById('sort');
+const filterChips = document.querySelectorAll('.chip[data-filter]');
+const showsContainer = document.getElementById('shows-container');
+
+let currentFilter = 'all';
+let currentSort = 'recent';
+
+// Búsqueda
+searchInput?.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase();
+  const cards = showsContainer.querySelectorAll('.show-card');
+  
+  cards.forEach(card => {
+    const name = card.dataset.name;
+    const matches = name.includes(query);
+    card.style.display = matches ? '' : 'none';
+  });
+});
+
+// Filtros
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    // Update active chip
+    filterChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    
+    currentFilter = chip.dataset.filter;
+    applyFilters();
+  });
+});
+
+// Ordenamiento
+sortSelect?.addEventListener('change', (e) => {
+  currentSort = e.target.value;
+  applySort();
+});
+
+function applyFilters() {
+  const cards = Array.from(showsContainer.querySelectorAll('.show-card'));
+  
+  cards.forEach(card => {
+    const available = card.dataset.available === 'True';
+    let show = true;
+    
+    if (currentFilter === 'available') {
+      show = available;
+    } else if (currentFilter === 'soldout') {
+      show = !available;
+    }
+    
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+function applySort() {
+  const cards = Array.from(showsContainer.querySelectorAll('.show-card'));
+  
+  cards.sort((a, b) => {
+    if (currentSort === 'name') {
+      return a.dataset.name.localeCompare(b.dataset.name);
+    } else if (currentSort === 'available') {
+      const aAvail = a.dataset.available === 'True' ? 1 : 0;
+      const bAvail = b.dataset.available === 'True' ? 1 : 0;
+      return bAvail - aAvail;
+    } else { // recent
+      return parseFloat(b.dataset.updated) - parseFloat(a.dataset.updated);
+    }
+  });
+  
+  cards.forEach(card => showsContainer.appendChild(card));
+}
+</script>
 </body>
 </html>
