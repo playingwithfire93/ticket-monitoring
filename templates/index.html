@@ -4,16 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>🎟️ Ticket Monitor Dashboard</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="pink-theme">
+
+  {% include 'components/header.html' %}
+
+  <!-- MANTENER tu header existente o usar el nuevo -->
   <header class="topbar">
     <div class="container topbar-inner">
       <div class="brand">
-        <!-- cute rounded badge (fallback to emoji) -->
         <div class="logo-badge" aria-hidden="true">🎟️</div>
          <h1>Ticket Monitor</h1>
          <p class="subtitle">Cute & dynamic musical watcher</p>

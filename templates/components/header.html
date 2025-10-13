@@ -2,7 +2,7 @@
   <div class="header-inner">
     <div class="header-left">
       <a href="{{ url_for('index') }}" class="logo-link">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Ticket Monitor" class="logo-img">
+        <div class="logo-badge" aria-hidden="true">🎟️</div>
         <span class="logo-text">Ticket Monitor</span>
       </a>
     </div>
@@ -11,7 +11,7 @@
       <a href="{{ url_for('index') }}" class="nav-link">Inicio</a>
       <a href="{{ url_for('shows') }}" class="nav-link">Shows</a>
       <a href="{{ url_for('calendar') }}" class="nav-link">Calendario</a>
-      <a href="{{ url_for('suggestions') }}" class="nav-link">Sugerencias</a>
+      <a href="{{ url_for('admin_suggestions') }}" class="nav-link">Sugerencias</a>
     </nav>
     
     <div class="header-right">
