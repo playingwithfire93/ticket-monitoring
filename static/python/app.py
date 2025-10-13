@@ -25,9 +25,9 @@ DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # ==================== FLASK APP SETUP ====================
-# Configurar paths relativos a la raíz del proyecto
+# Configurar paths - los templates están en static/html/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'static', 'html')  # ← CAMBIO AQUÍ
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 # Debug: mostrar estructura de archivos
@@ -56,16 +56,6 @@ if os.path.exists(TEMPLATE_DIR):
             print(f'{subindent}{file}')
 else:
     print(f"\n❌ TEMPLATE_DIR does not exist!")
-    # Intentar encontrar templates
-    print(f"\n🔍 Searching for 'templates' directory...")
-    for root, dirs, files in os.walk(BASE_DIR):
-        if 'templates' in dirs:
-            found_path = os.path.join(root, 'templates')
-            print(f"   Found: {found_path}")
-            if os.path.exists(os.path.join(found_path, 'index.html')):
-                print(f"   ✅ Contains index.html")
-                TEMPLATE_DIR = found_path
-                break
 
 print("=" * 60)
 
@@ -97,7 +87,6 @@ with app.app_context():
         from sqlalchemy import inspect
         inspector = inspect(db.engine)
         
-        # Check if musicals table exists
         if inspector.has_table('musicals'):
             columns = [col['name'] for col in inspector.get_columns('musicals')]
             
