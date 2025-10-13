@@ -44,58 +44,130 @@
 
   <main class="container">
 
-    <!-- Table / List -->
-    <section id="list" class="list-section fade-in">
-      <table class="musicals-table" aria-label="Monitored musicals" style="display:none">
-        <thead>
-          <tr>
-            <th aria-hidden="true"></th>
-            <th>Musical</th>
-            <th>URLs</th>
-            <th>Cambios</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <!-- populated by main.js -->
-        </tbody>
-      </table>
-
-      <div id="no-data" class="no-data" hidden>No musicals yet — add one ✨</div>
-    </section>
-
-    <!-- Cards Grid -->
-    <section id="cards" class="cards-section fade-in" aria-labelledby="cards-title">
-      <h2 id="cards-title" class="visually-hidden">Monitored musicals (cards)</h2>
-      <div id="cards-grid" class="monitor-cards">
-        {% for item in musicals %}
-        <article class="show-card" data-musical="{{ item.name }}">
-          <div class="card-image-wrap">
-            <!-- ...existing carousel code... -->
-          </div>
-          <div class="card-body">
-            <h3 class="card-title">{{ item.name }}</h3>
+    <!-- Hero Banner -->
+    <div class="catalog-hero">
+        <div class="catalog-hero-inner">
+            <h1>🎭 Ticket Monitor</h1>
+            <p class="lead">Monitorea disponibilidad de entradas para musicales en tiempo real</p>
             
-            <!-- NUEVO: Mostrar última actualización -->
-            <div class="card-meta-row">
-              <p class="card-meta">
-                {{ item.total_links }} URL{{ 's' if item.total_links != 1 else '' }} 
-                · +0 ⚠ 0
-              </p>
-              {% if item.last_updated %}
-              <p class="card-last-update" title="Última actualización">
-                🕒 {{ format_date(item.last_updated) }}
-              </p>
-              {% endif %}
+            <div class="header-actions">
+                <a href="{{ telegram_url }}" target="_blank" class="btn btn-telegram">
+                    <span class="icon">📱</span> Únete a Telegram
+                </a>
+                <a href="{{ discord_url }}" target="_blank" class="btn btn-discord">
+                    <span class="icon">💬</span> Únete a Discord
+                </a>
             </div>
-            
-            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-              <div class="progress-fill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="container">
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2>🎪 Musicales Monitoreados</h2>
+                <p class="section-subtitle">{{ grouped_urls|length }} musicales en seguimiento</p>
             </div>
-          </div>
-        </article>
-        {% endfor %}
-      </div>
-    </section>
+
+            {% if grouped_urls %}
+            <div class="musicals-grid">
+                {% for item in grouped_urls %}
+                <div class="musical-card">
+                    <div class="musical-card-header">
+                        <h3 class="musical-title">{{ item.name }}</h3>
+                        {% if item.last_updated %}
+                        <span class="badge badge-success">Actualizado</span>
+                        {% else %}
+                        <span class="badge badge-warning">Nuevo</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="musical-card-body">
+                        <div class="musical-stats">
+                            <div class="stat">
+                                <span class="stat-label">Enlaces</span>
+                                <span class="stat-value">{{ item.total_links }}</span>
+                            </div>
+                            {% if item.last_updated %}
+                            <div class="stat">
+                                <span class="stat-label">Última actualización</span>
+                                <span class="stat-value">{{ item.last_updated[:10] }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="musical-links">
+                            <h4>Enlaces monitoreados:</h4>
+                            <ul class="links-list">
+                                {% for url in item.urls %}
+                                <li>
+                                    <a href="{{ url }}" target="_blank" class="link-item">
+                                        <span class="link-icon">🔗</span>
+                                        <span class="link-text">{{ url[:50] }}...</span>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="musical-card-footer">
+                        {% if item.musical_id %}
+                        <a href="/shows#musical-{{ item.musical_id }}" class="btn btn-sm btn-primary">
+                            Ver detalles
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎭</div>
+                <h3>No hay musicales monitoreados</h3>
+                <p>Añade tu primer musical para empezar a monitorear entradas</p>
+                <button class="btn btn-primary" onclick="showSuggestionForm()">
+                    Sugerir Musical
+                </button>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🎫</div>
+                    <div class="stat-content">
+                        <h4>Total Enlaces</h4>
+                        <p class="stat-number">
+                            {% set total = namespace(value=0) %}
+                            {% for item in grouped_urls %}
+                                {% set total.value = total.value + item.total_links %}
+                            {% endfor %}
+                            {{ total.value }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🎪</div>
+                    <div class="stat-content">
+                        <h4>Musicales</h4>
+                        <p class="stat-number">{{ grouped_urls|length }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-content">
+                        <h4>Estado</h4>
+                        <p class="stat-status">✅ Activo</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <!-- Inline suggestion card (non-overlay) -->
     <section id="inline-suggest" class="suggestion-card fade-in" aria-labelledby="suggest-inline-title">
