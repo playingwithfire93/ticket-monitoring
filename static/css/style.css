@@ -1619,3 +1619,239 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
   }
 }
 
+/* ==================== SITE HEADER WITH SOCIAL LINKS (UPDATED) ==================== */
+.site-header {
+  background: linear-gradient(135deg, #fff0f6 0%, #ffe6f2 100%);
+  border-bottom: 3px solid #ffb3d9;
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(217, 79, 143, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.logo-link:hover {
+  transform: scale(1.05);
+}
+
+.logo-badge {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(217, 79, 143, 0.2);
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #d94f8f, #ff69b4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.nav-link {
+  padding: 8px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #8b4f6f;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  background: rgba(255, 105, 180, 0.1);
+  color: #d94f8f;
+  transform: translateY(-2px);
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, #ffb3d9, #ff69b4);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.social-links {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.social-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.social-btn:hover::before {
+  opacity: 1;
+}
+
+.social-btn:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.telegram-btn {
+  background: linear-gradient(135deg, #0088cc, #229ED9);
+  color: white;
+}
+
+.telegram-btn::before {
+  background: linear-gradient(135deg, #006699, #1a7fb8);
+}
+
+.telegram-btn:hover {
+  box-shadow: 0 6px 18px rgba(34, 158, 217, 0.4);
+}
+
+.discord-btn {
+  background: linear-gradient(135deg, #5865F2, #7289DA);
+  color: white;
+}
+
+.discord-btn::before {
+  background: linear-gradient(135deg, #4752c4, #5b6eaf);
+}
+
+.discord-btn:hover {
+  box-shadow: 0 6px 18px rgba(88, 101, 242, 0.4);
+}
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Responsive header */
+@media (max-width: 768px) {
+  .header-inner {
+    flex-wrap: wrap;
+    padding: 0 16px;
+    gap: 12px;
+  }
+  
+  .header-nav {
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .nav-link {
+    padding: 7px 12px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .logo-badge {
+    font-size: 1.5rem;
+  }
+  
+  .logo-img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .logo-text {
+    font-size: 1.1rem;
+  }
+  
+  .social-btn {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .social-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header {
+    padding: 10px 0;
+  }
+  
+  .logo-text {
+    display: none;
+  }
+  
+  .social-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .social-icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
