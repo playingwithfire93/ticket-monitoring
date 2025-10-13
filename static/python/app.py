@@ -27,7 +27,7 @@ ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 # ==================== FLASK APP SETUP ====================
 # Configurar paths - los templates están en static/html/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-TEMPLATE_DIR = os.path.join(BASE_DIR, 'static', 'html')  # ← CAMBIO AQUÍ
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'static', 'html')  # ✅ Correcto
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 # Debug: mostrar estructura de archivos
