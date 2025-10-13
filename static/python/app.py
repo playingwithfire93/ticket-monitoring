@@ -25,11 +25,6 @@ DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # ==================== FLASK APP SETUP ====================
-import os
-from flask import Flask, render_template, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-
 # Configurar paths relativos a la raíz del proyecto
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
@@ -47,6 +42,8 @@ db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Log configuration status
+print(f"📁 Template folder: {TEMPLATE_DIR}")
+print(f"📁 Static folder: {STATIC_DIR}")
 print(f"✅ Telegram configured: {bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)}")
 print(f"✅ Discord Alerts configured: {bool(DISCORD_WEBHOOK_ALERTS)}")
 print(f"✅ Discord Suggestions configured: {bool(DISCORD_WEBHOOK_SUGGESTIONS)}")
