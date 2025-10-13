@@ -10,18 +10,16 @@
 </head>
 <body class="pink-theme">
 
-  {% include 'components/header.html' %}
-
-  <!-- MANTENER tu header existente o usar el nuevo -->
+  <!-- Header único -->
   <header class="topbar">
     <div class="container topbar-inner">
       <div class="brand">
         <div class="logo-badge" aria-hidden="true">🎟️</div>
-         <h1>Ticket Monitor</h1>
-         <p class="subtitle">Cute & dynamic musical watcher</p>
-       </div>
+        <h1>Ticket Monitor</h1>
+        <p class="subtitle">Cute & dynamic musical watcher</p>
+      </div>
  
-       <div class="controls">
+      <div class="controls">
         <div class="search-wrap">
           <span class="search-icon" aria-hidden="true">🔎</span>
           <input id="search" placeholder="Buscar musical..." />
@@ -34,159 +32,156 @@
           </label>
           <span id="ar-state" class="ar-state">ON</span>
         </label>
-         <div class="last-checked">⏱️ <small class="lc-label">Last Checked</small> <span id="last-checked">--</span></div>
-         <div class="last-checked">📝 <small class="lc-label">Últimos cambios</small> <span id="last-changes">--</span></div>
+        <div class="last-checked">⏱️ <small class="lc-label">Last Checked</small> <span id="last-checked">--</span></div>
+        <div class="last-checked">📝 <small class="lc-label">Últimos cambios</small> <span id="last-changes">--</span></div>
         <a href="/shows" class="btn small" style="text-decoration:none">Ver cartelera</a>
-        <button id="test-telegram-btn" class="btn small telegram-btn"><span class="tg-icon" aria-hidden="true">✈️</span> Test Telegram</button>
-       </div>
-     </div>
-   </header>
+      </div>
+    </div>
+  </header>
 
   <main class="container">
-
     <!-- Hero Banner -->
     <div class="catalog-hero">
-        <div class="catalog-hero-inner">
-            <h1>🎭 Ticket Monitor</h1>
-            <p class="lead">Monitorea disponibilidad de entradas para musicales en tiempo real</p>
-            
-            <div class="header-actions">
-                <a href="{{ telegram_url }}" target="_blank" class="btn btn-telegram">
-                    <span class="icon">📱</span> Únete a Telegram
-                </a>
-                <a href="{{ discord_url }}" target="_blank" class="btn btn-discord">
-                    <span class="icon">💬</span> Únete a Discord
-                </a>
-            </div>
+      <div class="catalog-hero-inner">
+        <h1>🎭 Ticket Monitor</h1>
+        <p class="lead">Monitorea disponibilidad de entradas para musicales en tiempo real</p>
+        
+        <div class="header-actions">
+          <a href="{{ telegram_url }}" target="_blank" class="btn btn-telegram">
+            <span class="icon">📱</span> Únete a Telegram
+          </a>
+          <a href="{{ discord_url }}" target="_blank" class="btn btn-discord">
+            <span class="icon">💬</span> Únete a Discord
+          </a>
         </div>
+      </div>
     </div>
 
     <!-- Dashboard Content -->
-    <div class="container">
-        <section class="dashboard-section">
-            <div class="section-header">
-                <h2>🎪 Musicales Monitoreados</h2>
-                <p class="section-subtitle">{{ grouped_urls|length }} musicales en seguimiento</p>
-            </div>
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2>🎪 Musicales Monitoreados</h2>
+        <p class="section-subtitle">{{ grouped_urls|length }} musicales en seguimiento</p>
+      </div>
 
-            {% if grouped_urls %}
-            <div class="musicals-grid">
-                {% for item in grouped_urls %}
-                <div class="musical-card">
-                    <div class="musical-card-header">
-                        <h3 class="musical-title">{{ item.name }}</h3>
-                        {% if item.last_updated %}
-                        <span class="badge badge-success">Actualizado</span>
-                        {% else %}
-                        <span class="badge badge-warning">Nuevo</span>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="musical-card-body">
-                        <div class="musical-stats">
-                            <div class="stat">
-                                <span class="stat-label">Enlaces</span>
-                                <span class="stat-value">{{ item.total_links }}</span>
-                            </div>
-                            {% if item.last_updated %}
-                            <div class="stat">
-                                <span class="stat-label">Última actualización</span>
-                                <span class="stat-value">{{ item.last_updated[:10] }}</span>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="musical-links">
-                            <h4>Enlaces monitoreados:</h4>
-                            <ul class="links-list">
-                                {% for url in item.urls %}
-                                <li>
-                                    <a href="{{ url }}" target="_blank" class="link-item">
-                                        <span class="link-icon">🔗</span>
-                                        <span class="link-text">{{ url[:50] }}...</span>
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="musical-card-footer">
-                        {% if item.musical_id %}
-                        <a href="/shows#musical-{{ item.musical_id }}" class="btn btn-sm btn-primary">
-                            Ver detalles
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+      {% if grouped_urls %}
+      <div class="musicals-grid">
+        {% for item in grouped_urls %}
+        <div class="musical-card">
+          <div class="musical-card-header">
+            <h3 class="musical-title">{{ item.name }}</h3>
+            {% if item.last_updated %}
+            <span class="badge badge-success">Actualizado</span>
             {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">🎭</div>
-                <h3>No hay musicales monitoreados</h3>
-                <p>Añade tu primer musical para empezar a monitorear entradas</p>
-                <button class="btn btn-primary" onclick="showSuggestionForm()">
-                    Sugerir Musical
-                </button>
-            </div>
+            <span class="badge badge-warning">Nuevo</span>
             {% endif %}
-        </section>
-
-        <!-- Quick Stats -->
-        <section class="stats-section">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">🎫</div>
-                    <div class="stat-content">
-                        <h4>Total Enlaces</h4>
-                        <p class="stat-number">
-                            {% set total = namespace(value=0) %}
-                            {% for item in grouped_urls %}
-                                {% set total.value = total.value + item.total_links %}
-                            {% endfor %}
-                            {{ total.value }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">🎪</div>
-                    <div class="stat-content">
-                        <h4>Musicales</h4>
-                        <p class="stat-number">{{ grouped_urls|length }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">⚡</div>
-                    <div class="stat-content">
-                        <h4>Estado</h4>
-                        <p class="stat-status">✅ Activo</p>
-                    </div>
-                </div>
+          </div>
+          
+          <div class="musical-card-body">
+            <div class="musical-stats">
+              <div class="stat">
+                <span class="stat-label">Enlaces</span>
+                <span class="stat-value">{{ item.total_links }}</span>
+              </div>
+              {% if item.last_updated %}
+              <div class="stat">
+                <span class="stat-label">Última actualización</span>
+                <span class="stat-value">{{ item.last_updated[:10] }}</span>
+              </div>
+              {% endif %}
             </div>
-        </section>
-    </div>
 
-    <!-- Inline suggestion card (non-overlay) -->
+            <div class="musical-links">
+              <h4>Enlaces monitoreados:</h4>
+              <ul class="links-list">
+                {% for url in item.urls %}
+                <li>
+                  <a href="{{ url }}" target="_blank" class="link-item">
+                    <span class="link-icon">🔗</span>
+                    <span class="link-text">{{ url[:50] }}...</span>
+                  </a>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+
+          <div class="musical-card-footer">
+            {% if item.musical_id %}
+            <a href="/shows#musical-{{ item.musical_id }}" class="btn btn-sm btn-primary">
+              Ver detalles
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🎭</div>
+        <h3>No hay musicales monitoreados</h3>
+        <p>Añade tu primer musical para empezar a monitorear entradas</p>
+        <button class="btn btn-primary" onclick="document.getElementById('inline-suggest').scrollIntoView({behavior: 'smooth'})">
+          Sugerir Musical
+        </button>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🎫</div>
+          <div class="stat-content">
+            <h4>Total Enlaces</h4>
+            <p class="stat-number">
+              {% set total = namespace(value=0) %}
+              {% for item in grouped_urls %}
+                {% set total.value = total.value + item.total_links %}
+              {% endfor %}
+              {{ total.value }}
+            </p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🎪</div>
+          <div class="stat-content">
+            <h4>Musicales</h4>
+            <p class="stat-number">{{ grouped_urls|length }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-content">
+            <h4>Estado</h4>
+            <p class="stat-status">✅ Activo</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inline suggestion card -->
     <section id="inline-suggest" class="suggestion-card fade-in" aria-labelledby="suggest-inline-title">
-      <h3 id="suggest-inline-title">Enviar sugerencia</h3>
+      <h3 id="suggest-inline-title">💌 Enviar sugerencia</h3>
       <form id="inline-suggest-form" class="suggestion-form" novalidate>
         <div class="row">
-          <label>Nombre (opcional)<br><input name="name" type="text" placeholder="Tu nombre"></label>
-          <label>Email (opcional)<br><input name="email" type="email" placeholder="tu@correo.com"></label>
+          <label>Nombre del Musical *<br>
+            <input name="siteName" type="text" placeholder="Ej. The Book of Mormon" required>
+          </label>
+          <label>URL del sitio *<br>
+            <input name="siteUrl" type="url" placeholder="https://tickets.ejemplo.com" required>
+          </label>
         </div>
 
-        <div class="row">
-          <label>Musical<br><input name="musical" type="text" placeholder="Ej. The Book of Mormon"></label>
-          <label>Link<br><input name="url" type="url" placeholder="https://tickets.ejemplo.com/..."></label>
-        </div>
-
-        <label>Comentario / mensaje<br><textarea name="comment" rows="4" required placeholder="Escribe tu sugerencia o comentario..."></textarea></label>
+        <label>¿Por qué deberíamos monitorearlo?<br>
+          <textarea name="reason" rows="3" placeholder="Opcional: cuéntanos por qué te interesa este musical..."></textarea>
+        </label>
 
         <div class="suggest-controls">
-          <button type="submit" class="btn primary">Enviar</button>
+          <button type="submit" class="btn primary">✨ Enviar Sugerencia</button>
           <button type="reset" class="btn ghost">Limpiar</button>
           <div id="inline-suggest-status" class="suggest-status" aria-live="polite"></div>
         </div>
@@ -194,20 +189,11 @@
     </section>
   </main>
 
-  <!-- Modal para mostrar cambios (necesario para showChangesForItem) -->
-  <div id="modal" class="modal" aria-hidden="true" style="display:none;">
-    <div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="max-width:820px;">
-      <button id="modal-close" class="modal-close" aria-label="Cerrar" style="position:absolute;right:12px;top:10px;background:transparent;border:0;font-size:20px;cursor:pointer">×</button>
-      <h3 id="modal-title" style="margin:0 0 .5rem 0;font-size:1.05rem;font-weight:700"></h3>
-      <div id="modal-list"></div>
-    </div>
-  </div>
-
   <footer class="footer">
     <small>Made with 💖 — dynamic cute monitor</small>
   </footer>
 
-  <!-- Join Channels Popup (añadir antes de </body>) -->
+  <!-- Join Channels Popup -->
   <div id="join-channels-popup" class="join-popup" style="display:none;">
     <div class="join-popup-overlay"></div>
     <div class="join-popup-inner">
@@ -219,7 +205,7 @@
       </div>
       
       <div class="join-channels">
-        <a href="https://t.me/TheBookOfMormonTicketsbot" 
+        <a href="{{ telegram_url }}" 
            target="_blank" 
            rel="noopener noreferrer" 
            class="join-btn telegram"
@@ -230,7 +216,7 @@
           <span>Bot de Telegram</span>
         </a>
         
-        <a href="https://discord.gg/wQgsmkTe" 
+        <a href="{{ discord_url }}" 
            target="_blank" 
            rel="noopener noreferrer" 
            class="join-btn discord"
@@ -248,82 +234,74 @@
     </div>
   </div>
 
-  <script id="initial-data" type="application/json">{{ (musicals | default([])) | tojson }}</script>
-  <script>
-    const INITIAL_MUSICALS = JSON.parse(document.getElementById('initial-data').textContent || '[]');
-  </script>
-  <!-- main script -->
+  <!-- Scripts -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-  (function(){
-    // safe init: test-telegram (if existe) y control del modal de sugerencias (idempotente)
-    try {
-      // Test Telegram button (safe)
-      const testBtn = document.getElementById('test-telegram-btn');
-      if (testBtn && !testBtn.dataset.init) {
-        testBtn.dataset.init = '1';
-        testBtn.addEventListener('click', async () => {
-          try {
-            const res = await fetch('/admin/test-telegram', { method: 'POST' });
-            const j = await res.json().catch(()=>({ok:false}));
-            alert('Telegram test: ' + (j.ok ? 'OK' : JSON.stringify(j)));
-          } catch (e) {
-            alert('Error: ' + e);
-          }
+    // Suggestion form handler
+    document.getElementById('inline-suggest-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('inline-suggest-status');
+      const form = e.target;
+      
+      const data = {
+        siteName: form.siteName.value.trim(),
+        siteUrl: form.siteUrl.value.trim(),
+        reason: form.reason.value.trim()
+      };
+      
+      if (!data.siteName || !data.siteUrl) {
+        status.textContent = '⚠️ Por favor completa los campos obligatorios';
+        status.style.color = '#dc3545';
+        return;
+      }
+      
+      status.textContent = '⏳ Enviando...';
+      status.style.color = '#6c757d';
+      
+      try {
+        const res = await fetch('/api/suggest-site', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
-      }
-
-      // Suggestion modal controls (ensure close works even if main.js crashed)
-      const modal = document.getElementById('suggest-modal');
-      if (modal && !modal.dataset.safeInit) {
-        modal.dataset.safeInit = '1';
-        const openBtn = document.getElementById('open-suggest');
-        const closeBtn = document.getElementById('suggest-close');
-        const cancelBtn = document.getElementById('suggest-cancel');
-        const form = document.getElementById('suggest-form');
-        const status = document.getElementById('suggest-status');
-
-        const show = (v = true) => {
-          modal.style.display = v ? 'block' : 'none';
-          modal.setAttribute('aria-hidden', v ? 'false' : 'true');
-        };
-        if (openBtn) openBtn.addEventListener('click', () => show(true));
-        if (closeBtn) closeBtn.addEventListener('click', () => show(false));
-        if (cancelBtn) cancelBtn.addEventListener('click', () => show(false));
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') show(false); });
-
-        // Basic submit fallback (in case main.js handler not attached)
-        if (form && !form.dataset.safeSubmit) {
-          form.dataset.safeSubmit = '1';
-          form.addEventListener('submit', async (ev) => {
-            ev.preventDefault();
-            if (status) status.textContent = 'Enviando…';
-            const fd = new FormData(form);
-            const payload = {
-              name: (fd.get('name') || '').trim(),
-              email: (fd.get('email') || '').trim(),
-              message: (fd.get('message') || '').trim()
-            };
-            if (!payload.message) { if (status) status.textContent = 'Escribe un mensaje.'; return; }
-            try {
-              const res = await fetch('/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-              const j = await res.json().catch(()=>({ok:false}));
-              if (res.ok && j.ok) {
-                if (status) status.textContent = '¡Gracias! Enviado.';
-                setTimeout(()=>{ if (status) status.textContent=''; show(false); form.reset(); }, 1200);
-              } else {
-                if (status) status.textContent = 'Error: ' + (j.error || j.body || res.statusText);
-              }
-            } catch (e) {
-              if (status) status.textContent = 'Error de red';
-            }
-          });
+        
+        const result = await res.json();
+        
+        if (res.ok && result.ok) {
+          status.textContent = '✅ ¡Gracias! Tu sugerencia ha sido enviada';
+          status.style.color = '#28a745';
+          form.reset();
+          setTimeout(() => { status.textContent = ''; }, 3000);
+        } else {
+          status.textContent = '❌ Error: ' + (result.error || 'Intenta de nuevo');
+          status.style.color = '#dc3545';
         }
+      } catch (err) {
+        status.textContent = '❌ Error de conexión';
+        status.style.color = '#dc3545';
       }
-    } catch (err) {
-      console.error('Safe inline init failed', err);
+    });
+
+    // Join channels popup
+    const joinPopup = document.getElementById('join-channels-popup');
+    const joinCloseBtn = document.getElementById('join-close-btn');
+    const joinSkipBtn = document.getElementById('join-skip-btn');
+    
+    // Mostrar popup solo si no se ha mostrado antes
+    if (!localStorage.getItem('joinChannelsShown_v1')) {
+      setTimeout(() => {
+        joinPopup.style.display = 'block';
+      }, 2000);
     }
-  })();
+    
+    joinCloseBtn?.addEventListener('click', () => {
+      joinPopup.style.display = 'none';
+      localStorage.setItem('joinChannelsShown_v1', 'true');
+    });
+    
+    joinSkipBtn?.addEventListener('click', () => {
+      joinPopup.style.display = 'none';
+    });
   </script>
 </body>
 </html>
