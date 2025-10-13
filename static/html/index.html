@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <!-- Dashboard Content -->
+    <!-- Dashboard Content con Cards Slideshow -->
     <section class="dashboard-section">
       <div class="section-header">
         <h2>🎪 Musicales Monitoreados</h2>
@@ -67,53 +67,137 @@
       {% if grouped_urls %}
       <div class="musicals-grid">
         {% for item in grouped_urls %}
-        <div class="musical-card">
-          <div class="musical-card-header">
-            <h3 class="musical-title">{{ item.name }}</h3>
-            {% if item.last_updated %}
-            <span class="badge badge-success">Actualizado</span>
+        <article class="musical-card" data-musical-id="{{ item.musical_id or '' }}">
+          <!-- Slideshow de imágenes -->
+          <div class="musical-slideshow">
+            {% if item.images and item.images|length > 0 %}
+              <div class="slideshow-container">
+                {% for image in item.images %}
+                <div class="slide {% if loop.first %}active{% endif %}">
+                  <img src="{{ image }}" alt="{{ item.name }}" loading="lazy">
+                </div>
+                {% endfor %}
+                
+                {% if item.images|length > 1 %}
+                <button class="slide-prev" onclick="changeSlide(this, -1)" aria-label="Imagen anterior">‹</button>
+                <button class="slide-next" onclick="changeSlide(this, 1)" aria-label="Siguiente imagen">›</button>
+                
+                <div class="slide-dots">
+                  {% for image in item.images %}
+                  <span class="dot {% if loop.first %}active{% endif %}" onclick="goToSlide(this, {{ loop.index0 }})"></span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
             {% else %}
-            <span class="badge badge-warning">Nuevo</span>
+              <div class="slideshow-placeholder">
+                <div class="placeholder-icon">🎭</div>
+                <p>{{ item.name }}</p>
+              </div>
             {% endif %}
           </div>
+
+          <!-- Header de la card -->
+          <div class="musical-card-header">
+            <h3 class="musical-title">{{ item.name }}</h3>
+            <div class="badges">
+              {% if item.last_updated %}
+              <span class="badge badge-success">Actualizado</span>
+              {% else %}
+              <span class="badge badge-warning">Nuevo</span>
+              {% endif %}
+              
+              {% if item.last_change_type %}
+              <span class="badge badge-info">{{ item.last_change_type }}</span>
+              {% endif %}
+            </div>
+          </div>
           
+          <!-- Body de la card -->
           <div class="musical-card-body">
             <div class="musical-stats">
               <div class="stat">
-                <span class="stat-label">Enlaces</span>
-                <span class="stat-value">{{ item.total_links }}</span>
+                <span class="stat-icon">🔗</span>
+                <div class="stat-info">
+                  <span class="stat-label">Enlaces</span>
+                  <span class="stat-value">{{ item.total_links }}</span>
+                </div>
               </div>
+              
               {% if item.last_updated %}
               <div class="stat">
-                <span class="stat-label">Última actualización</span>
-                <span class="stat-value">{{ item.last_updated[:10] }}</span>
+                <span class="stat-icon">📅</span>
+                <div class="stat-info">
+                  <span class="stat-label">Actualizado</span>
+                  <span class="stat-value">{{ item.last_updated[:10] }}</span>
+                </div>
               </div>
               {% endif %}
             </div>
 
+            <!-- Enlaces monitoreados -->
             <div class="musical-links">
-              <h4>Enlaces monitoreados:</h4>
+              <h4 class="links-title">
+                <span class="icon">🎫</span> 
+                Enlaces monitoreados ({{ item.urls|length }})
+              </h4>
               <ul class="links-list">
-                {% for url in item.urls %}
+                {% for url in item.urls[:3] %}
                 <li>
-                  <a href="{{ url }}" target="_blank" class="link-item">
+                  <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="link-item">
                     <span class="link-icon">🔗</span>
-                    <span class="link-text">{{ url[:50] }}...</span>
+                    <span class="link-text">{{ url|replace('https://', '')|replace('http://', '')[:40] }}...</span>
+                    <span class="link-external">↗</span>
+                  </a>
+                </li>
+                {% endfor %}
+                
+                {% if item.urls|length > 3 %}
+                <li class="more-links">
+                  <button class="btn-text" onclick="toggleAllLinks(this)">
+                    Ver {{ item.urls|length - 3 }} enlaces más...
+                  </button>
+                </li>
+                {% endif %}
+              </ul>
+              
+              {% if item.urls|length > 3 %}
+              <ul class="links-list-extra" style="display:none;">
+                {% for url in item.urls[3:] %}
+                <li>
+                  <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="link-item">
+                    <span class="link-icon">🔗</span>
+                    <span class="link-text">{{ url|replace('https://', '')|replace('http://', '')[:40] }}...</span>
+                    <span class="link-external">↗</span>
                   </a>
                 </li>
                 {% endfor %}
               </ul>
+              {% endif %}
             </div>
-          </div>
 
-          <div class="musical-card-footer">
-            {% if item.musical_id %}
-            <a href="/shows#musical-{{ item.musical_id }}" class="btn btn-sm btn-primary">
-              Ver detalles
-            </a>
+            {% if item.last_change_date %}
+            <div class="last-change">
+              <span class="change-icon">📝</span>
+              <span class="change-text">Último cambio: {{ item.last_change_date[:10] }}</span>
+            </div>
             {% endif %}
           </div>
-        </div>
+
+          <!-- Footer de la card -->
+          <div class="musical-card-footer">
+            {% if item.musical_id %}
+            <a href="/shows#musical-{{ item.musical_id }}" class="btn btn-primary">
+              <span>Ver detalles completos</span>
+              <span class="btn-icon">→</span>
+            </a>
+            {% else %}
+            <button class="btn btn-outline" disabled>
+              Sin detalles disponibles
+            </button>
+            {% endif %}
+          </div>
+        </article>
         {% endfor %}
       </div>
       {% else %}
@@ -122,6 +206,7 @@
         <h3>No hay musicales monitoreados</h3>
         <p>Añade tu primer musical para empezar a monitorear entradas</p>
         <button class="btn btn-primary" onclick="document.getElementById('inline-suggest').scrollIntoView({behavior: 'smooth'})">
+          <span class="icon">✨</span>
           Sugerir Musical
         </button>
       </div>
@@ -237,7 +322,60 @@
   <!-- Scripts -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-    // Suggestion form handler
+    // ==================== SLIDESHOW FUNCTIONALITY ====================
+    function changeSlide(button, direction) {
+      const container = button.closest('.slideshow-container');
+      const slides = container.querySelectorAll('.slide');
+      const dots = container.querySelectorAll('.dot');
+      
+      let currentIndex = Array.from(slides).findIndex(s => s.classList.contains('active'));
+      slides[currentIndex].classList.remove('active');
+      dots[currentIndex]?.classList.remove('active');
+      
+      currentIndex = (currentIndex + direction + slides.length) % slides.length;
+      
+      slides[currentIndex].classList.add('active');
+      dots[currentIndex]?.classList.add('active');
+    }
+    
+    function goToSlide(dot, index) {
+      const container = dot.closest('.slideshow-container');
+      const slides = container.querySelectorAll('.slide');
+      const dots = container.querySelectorAll('.dot');
+      
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active'));
+      
+      slides[index].classList.add('active');
+      dots[index].classList.add('active');
+    }
+    
+    // Auto-play slideshow (opcional)
+    setInterval(() => {
+      document.querySelectorAll('.slideshow-container').forEach(container => {
+        if (container.querySelectorAll('.slide').length > 1) {
+          const nextBtn = container.querySelector('.slide-next');
+          if (nextBtn) changeSlide(nextBtn, 1);
+        }
+      });
+    }, 5000);
+
+    // ==================== TOGGLE EXTRA LINKS ====================
+    function toggleAllLinks(button) {
+      const card = button.closest('.musical-card');
+      const extraLinks = card.querySelector('.links-list-extra');
+      
+      if (extraLinks.style.display === 'none') {
+        extraLinks.style.display = 'block';
+        button.textContent = 'Ver menos...';
+      } else {
+        extraLinks.style.display = 'none';
+        const hiddenCount = extraLinks.querySelectorAll('li').length;
+        button.textContent = `Ver ${hiddenCount} enlaces más...`;
+      }
+    }
+
+    // ==================== SUGGESTION FORM ====================
     document.getElementById('inline-suggest-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const status = document.getElementById('inline-suggest-status');
@@ -282,12 +420,11 @@
       }
     });
 
-    // Join channels popup
+    // ==================== JOIN POPUP ====================
     const joinPopup = document.getElementById('join-channels-popup');
     const joinCloseBtn = document.getElementById('join-close-btn');
     const joinSkipBtn = document.getElementById('join-skip-btn');
     
-    // Mostrar popup solo si no se ha mostrado antes
     if (!localStorage.getItem('joinChannelsShown_v1')) {
       setTimeout(() => {
         joinPopup.style.display = 'block';
