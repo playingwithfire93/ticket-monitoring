@@ -30,6 +30,45 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
+# Debug: mostrar estructura de archivos
+print("=" * 60)
+print("🔍 DEBUGGING FILE STRUCTURE")
+print("=" * 60)
+print(f"📁 __file__: {__file__}")
+print(f"📁 BASE: {BASE}")
+print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"📁 TEMPLATE_DIR: {TEMPLATE_DIR}")
+print(f"📁 STATIC_DIR: {STATIC_DIR}")
+
+# Verificar si los directorios existen
+print(f"\n✅ Templates dir exists: {os.path.exists(TEMPLATE_DIR)}")
+print(f"✅ Static dir exists: {os.path.exists(STATIC_DIR)}")
+
+# Listar archivos en TEMPLATE_DIR si existe
+if os.path.exists(TEMPLATE_DIR):
+    print(f"\n📄 Files in TEMPLATE_DIR:")
+    for root, dirs, files in os.walk(TEMPLATE_DIR):
+        level = root.replace(TEMPLATE_DIR, '').count(os.sep)
+        indent = ' ' * 2 * level
+        print(f'{indent}{os.path.basename(root)}/')
+        subindent = ' ' * 2 * (level + 1)
+        for file in files:
+            print(f'{subindent}{file}')
+else:
+    print(f"\n❌ TEMPLATE_DIR does not exist!")
+    # Intentar encontrar templates
+    print(f"\n🔍 Searching for 'templates' directory...")
+    for root, dirs, files in os.walk(BASE_DIR):
+        if 'templates' in dirs:
+            found_path = os.path.join(root, 'templates')
+            print(f"   Found: {found_path}")
+            if os.path.exists(os.path.join(found_path, 'index.html')):
+                print(f"   ✅ Contains index.html")
+                TEMPLATE_DIR = found_path
+                break
+
+print("=" * 60)
+
 app = Flask(
     __name__,
     template_folder=TEMPLATE_DIR,
@@ -42,11 +81,12 @@ db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Log configuration status
-print(f"📁 Template folder: {TEMPLATE_DIR}")
-print(f"📁 Static folder: {STATIC_DIR}")
+print(f"\n📱 Configuration Status:")
 print(f"✅ Telegram configured: {bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)}")
 print(f"✅ Discord Alerts configured: {bool(DISCORD_WEBHOOK_ALERTS)}")
 print(f"✅ Discord Suggestions configured: {bool(DISCORD_WEBHOOK_SUGGESTIONS)}")
+print(f"✅ Template folder set to: {app.template_folder}")
+print(f"✅ Static folder set to: {app.static_folder}")
 
 # Create database tables
 with app.app_context():
@@ -56,13 +96,20 @@ with app.app_context():
         
         from sqlalchemy import inspect
         inspector = inspect(db.engine)
-        columns = [col['name'] for col in inspector.get_columns('musicals')]
         
-        if 'updated_at' not in columns:
-            app.logger.warning("Database schema outdated, recreating tables...")
-            db.drop_all()
+        # Check if musicals table exists
+        if inspector.has_table('musicals'):
+            columns = [col['name'] for col in inspector.get_columns('musicals')]
+            
+            if 'updated_at' not in columns:
+                app.logger.warning("Database schema outdated, recreating tables...")
+                db.drop_all()
+                db.create_all()
+                app.logger.info("Database recreated successfully")
+        else:
+            app.logger.info("Creating database tables for the first time...")
             db.create_all()
-            app.logger.info("Database recreated successfully")
+            
     except Exception as e:
         app.logger.error(f"Database initialization error: {e}")
 
@@ -284,18 +331,13 @@ def calendar():
 def shows():
     """Lista solo los musicales que estás monitoreando (en la base de datos)"""
     try:
-        # Obtener solo los musicales que tienes en tu sistema de monitoreo
         musicals = Musical.query.all()
         
-        # Enriquecer con información de links y última actualización
         for musical in musicals:
-            musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()  # ← CAMBIAR ESTA LÍNEA
-            
-            # Contar enlaces activos vs agotados
+            musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
             musical.active_links = sum(1 for link in musical.links if link.is_available)
             musical.sold_out_links = len(musical.links) - musical.active_links
             
-            # Obtener el último cambio
             last_change = MusicalChange.query.filter_by(
                 musical_id=musical.id
             ).order_by(MusicalChange.changed_at.desc()).first()
@@ -304,7 +346,6 @@ def shows():
                 musical.last_change_type = last_change.change_type
                 musical.last_change_date = last_change.changed_at
         
-        # Ordenar por última actualización (más reciente primero)
         musicals = sorted(musicals, key=lambda x: x.updated_at or datetime.min, reverse=True)
         
         return render_template("shows.html", musicals=musicals)
