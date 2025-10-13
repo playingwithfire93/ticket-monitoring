@@ -270,29 +270,35 @@ def calendar():
 
 @app.route("/shows")
 def shows():
-    events = load_events()
-    grouped = {}
-    
-    for ev in events:
-        key = (ev.get('musical') or ev.get('title') or 'Sin título').strip()
-        g = grouped.setdefault(key, {
-            'title': key,
-            'id': key,
-            'dates': [],
-            'image': ev.get('image') or '/static/BOM1.jpg',
-            'short': ev.get('short') or '',
-            'url': ev.get('url') or '#',
-            'location': ev.get('location') or ''
-        })
-        g['dates'].append(ev.get('start'))
-    
-    shows = []
-    for v in grouped.values():
-        dates = sorted([d for d in v['dates'] if d])
-        v['range'] = dates[0] + (f' → {dates[-1]}' if len(dates) > 1 else '') if dates else ''
-        shows.append(v)
-    
-    return render_template('shows.html', shows=shows)
+    """Lista solo los musicales que estás monitoreando (en la base de datos)"""
+    try:
+        # Obtener solo los musicales que tienes en tu sistema de monitoreo
+        musicals = Musical.query.all()
+        
+        # Enriquecer con información de links y última actualización
+        for musical in musicals:
+            musical.links = Link.query.filter_by(musical_id=musical.id).all()
+            
+            # Contar enlaces activos vs agotados
+            musical.active_links = sum(1 for link in musical.links if link.is_available)
+            musical.sold_out_links = len(musical.links) - musical.active_links
+            
+            # Obtener el último cambio
+            last_change = MusicalChange.query.filter_by(
+                musical_id=musical.id
+            ).order_by(MusicalChange.changed_at.desc()).first()
+            
+            if last_change:
+                musical.last_change_type = last_change.change_type
+                musical.last_change_date = last_change.changed_at
+        
+        # Ordenar por última actualización (más reciente primero)
+        musicals = sorted(musicals, key=lambda x: x.updated_at or datetime.min, reverse=True)
+        
+        return render_template("shows.html", musicals=musicals)
+    except Exception as e:
+        app.logger.error(f"Error in /shows route: {e}")
+        return render_template("shows.html", musicals=[])
 
 # ==================== API ROUTES ====================
 @app.route("/api/events")
