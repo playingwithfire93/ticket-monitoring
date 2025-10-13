@@ -289,7 +289,7 @@ def shows():
         
         # Enriquecer con información de links y última actualización
         for musical in musicals:
-            musical.links = Link.query.filter_by(musical_id=musical.id).all()
+            musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()  # ← CAMBIAR ESTA LÍNEA
             
             # Contar enlaces activos vs agotados
             musical.active_links = sum(1 for link in musical.links if link.is_available)
