@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <!-- Dashboard Content con Cards Slideshow -->
+    <!-- Dashboard Content con Cards -->
     <section class="dashboard-section">
       <div class="section-header">
         <h2>🎪 Musicales Monitoreados</h2>
@@ -68,33 +68,12 @@
       <div class="musicals-grid">
         {% for item in grouped_urls %}
         <article class="musical-card" data-musical-id="{{ item.musical_id or '' }}">
-          <!-- Slideshow de imágenes -->
+          <!-- Placeholder para imágenes -->
           <div class="musical-slideshow">
-            {% if item.images and item.images|length > 0 %}
-              <div class="slideshow-container">
-                {% for image in item.images %}
-                <div class="slide {% if loop.first %}active{% endif %}">
-                  <img src="{{ image }}" alt="{{ item.name }}" loading="lazy">
-                </div>
-                {% endfor %}
-                
-                {% if item.images|length > 1 %}
-                <button class="slide-prev" onclick="changeSlide(this, -1)" aria-label="Imagen anterior">‹</button>
-                <button class="slide-next" onclick="changeSlide(this, 1)" aria-label="Siguiente imagen">›</button>
-                
-                <div class="slide-dots">
-                  {% for image in item.images %}
-                  <span class="dot {% if loop.first %}active{% endif %}" onclick="goToSlide(this, {{ loop.index0 }})"></span>
-                  {% endfor %}
-                </div>
-                {% endif %}
-              </div>
-            {% else %}
-              <div class="slideshow-placeholder">
-                <div class="placeholder-icon">🎭</div>
-                <p>{{ item.name }}</p>
-              </div>
-            {% endif %}
+            <div class="slideshow-placeholder">
+              <div class="placeholder-icon">🎭</div>
+              <p>{{ item.name }}</p>
+            </div>
           </div>
 
           <!-- Header de la card -->
@@ -322,44 +301,6 @@
   <!-- Scripts -->
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-    // ==================== SLIDESHOW FUNCTIONALITY ====================
-    function changeSlide(button, direction) {
-      const container = button.closest('.slideshow-container');
-      const slides = container.querySelectorAll('.slide');
-      const dots = container.querySelectorAll('.dot');
-      
-      let currentIndex = Array.from(slides).findIndex(s => s.classList.contains('active'));
-      slides[currentIndex].classList.remove('active');
-      dots[currentIndex]?.classList.remove('active');
-      
-      currentIndex = (currentIndex + direction + slides.length) % slides.length;
-      
-      slides[currentIndex].classList.add('active');
-      dots[currentIndex]?.classList.add('active');
-    }
-    
-    function goToSlide(dot, index) {
-      const container = dot.closest('.slideshow-container');
-      const slides = container.querySelectorAll('.slide');
-      const dots = container.querySelectorAll('.dot');
-      
-      slides.forEach(s => s.classList.remove('active'));
-      dots.forEach(d => d.classList.remove('active'));
-      
-      slides[index].classList.add('active');
-      dots[index].classList.add('active');
-    }
-    
-    // Auto-play slideshow (opcional)
-    setInterval(() => {
-      document.querySelectorAll('.slideshow-container').forEach(container => {
-        if (container.querySelectorAll('.slide').length > 1) {
-          const nextBtn = container.querySelector('.slide-next');
-          if (nextBtn) changeSlide(nextBtn, 1);
-        }
-      });
-    }, 5000);
-
     // ==================== TOGGLE EXTRA LINKS ====================
     function toggleAllLinks(button) {
       const card = button.closest('.musical-card');
