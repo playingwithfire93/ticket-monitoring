@@ -279,6 +279,15 @@ def index():
     musicals = load_urls()
     grouped = group_urls_by_musical(musicals)
     
+    # ==================== DEBUG ====================
+    print("=" * 60)
+    print("🔍 DEBUG INDEX ROUTE")
+    print(f"📊 Total musicals loaded: {len(musicals)}")
+    print(f"📊 Total grouped: {len(grouped)}")
+    for item in grouped[:3]:  # Mostrar solo los primeros 3
+        print(f"  - {item.get('name')}: {len(item.get('urls', []))} URLs")
+    print("=" * 60)
+    
     for item in grouped:
         name = item.get('name', '')
         try:
@@ -298,11 +307,16 @@ def index():
                 item['last_updated'] = None
                 item['total_links'] = len(item.get('urls', []))
                 item['musical_id'] = None
+                
         except Exception as e:
             app.logger.warning(f"Error enriching musical {name}: {e}")
             item['last_updated'] = None
             item['total_links'] = len(item.get('urls', []))
             item['musical_id'] = None
+    
+    # ==================== DEBUG FINAL ====================
+    print(f"✅ Sending {len(grouped)} musicals to template")
+    print("=" * 60)
     
     return render_template(
         "index.html", 
