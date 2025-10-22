@@ -1,5 +1,15 @@
 import requests
 from datetime import datetime
+import sys
+from pathlib import Path
+
+# Añadir la raíz del proyecto al path
+ROOT_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
+from app import app, db
+from models import Musical, MusicalLink
+import config
 
 URLS = [
     # ██╗    ██╗██╗ ██████╗██╗  ██╗███████╗██████╗ 

@@ -2,9 +2,15 @@
 Script de migración: importa todos los musicales y enlaces de urls.json a la BD (musicals.db)
 Evita duplicados y reporta el progreso.
 """
-from app import app, db, Musical, MusicalLink
-import json
+import sys
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
+from app import app, db
+from models import Musical, MusicalLink
+import json
 
 BASE = Path(__file__).parent
 URLS_FILE = BASE / "urls.json"

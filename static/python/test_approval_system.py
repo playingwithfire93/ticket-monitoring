@@ -9,6 +9,14 @@ import json
 import requests
 from datetime import datetime, UTC
 from dotenv import load_dotenv
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
+from app import app
+import config
 
 load_dotenv()
 

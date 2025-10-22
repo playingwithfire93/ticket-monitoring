@@ -1,8 +1,14 @@
 """
 Actualiza la base de datos añadiendo los campos de tracking de cambios
 """
+
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
 from app import app, db
-from models import Musical, MusicalLink, MusicalChange
 
 def upgrade_database():
     with app.app_context():

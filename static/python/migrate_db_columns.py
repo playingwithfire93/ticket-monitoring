@@ -1,7 +1,15 @@
 """
 Migración: Añade columnas faltantes a la BD existente sin perder datos
 """
+
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
 from app import app, db
+from models import Musical
 from sqlalchemy import text
 
 def migrate_database():
