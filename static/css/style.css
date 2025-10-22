@@ -1184,95 +1184,18 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
 
 /* Nueva paleta rosa */
 :root{
-  --pink-50:#fff0f6;
-  --pink-100:#ffe6f0;
-  --pink-300:#ff9fcf;
-  --pink-500:#ff6bb3;
-  --pink-700:#d94f8f;
-  --muted:#6b7280;
-  --card-bg: #ffffff;
-  --radius:14px;
-  --maxw:1100px;
+  --pink-50: #fff0f6;
+  --pink-100: #ffe6f0;
+  --pink-200: #ffd5ea;
+  --pink-300: #ff9fcf;
+  --pink-500: #ff6bb3;
+  --pink-600: #ff2f8f;
+  --pink-700: #d94f8f;
+  --pink-800: #c43ea6;
+  --pink-900: #a12a7a;
+  --text: #222;
+  --muted: #7b5a6f;
 }
-*{box-sizing:border-box}
-body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#111;font-family:Inter,system-ui,Arial;margin:0;padding:0}
-.container{max-width:var(--maxw);margin:22px auto;padding:0 18px}
-
-/* Hero */
-.hero{background:linear-gradient(90deg,rgba(255,107,179,0.08),rgba(255,200,230,0.06));padding:28px 0;border-bottom:1px solid rgba(0,0,0,0.03)}
-.hero-inner{max-width:var(--maxw);margin:0 auto;padding:0 18px}
-.hero h1{color:var(--pink-700);margin:0 0 6px;font-size:28px}
-.hero .lead{color:var(--muted);margin:0 0 12px}
-
-/* search row */
-.search-row{display:flex;gap:10px;align-items:center}
-.search-row input, .search-row select{padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.06);min-width:220px}
-
-/* Filters */
-.filters{display:flex;align-items:center;gap:12px;margin:18px 0}
-
-/* Grid of cards */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-@media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr)} }
-@media (max-width:640px){ .grid{grid-template-columns:1fr} }
-
-.card{background:var(--card-bg);border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px rgba(16,24,40,0.06);display:flex;flex-direction:column}
-.card-img{width:100%;height:180px;object-fit:cover;display:block}
-.card-body{padding:12px 14px 18px;display:flex;flex-direction:column;gap:8px}
-.card-title{margin:0;font-size:16px;color:var(--pink-700)}
-.meta{font-size:13px;color:var(--muted);margin:0}
-.card-desc{flex:1;color:#444;font-size:14px;margin:6px 0}
-.card-actions{display:flex;gap:8px}
-.btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
-.btn-primary{background:var(--pink-500);color:#fff}
-.btn-outline{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--pink-700)}
-
-/* small helpers */
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{padding:6px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,0.04);cursor:pointer;color:var(--pink-700);font-weight:600}
-
-/* Catalog page (inspired by entradas.com list layout) */
-.catalog-hero{background:linear-gradient(90deg,rgba(255,107,179,0.08),rgba(160,123,255,0.08));padding:24px 0;border-bottom:1px solid rgba(0,0,0,0.03)}
-.catalog-hero-inner{max-width:var(--maxw);margin:0 auto;padding:0 18px}
-.breadcrumb{display:flex;align-items:center;gap:8px;margin:4px 0 10px 0;font-size:13px;color:var(--muted)}
-.breadcrumb .crumb{color:var(--pink-700);text-decoration:none}
-.breadcrumb .crumb.is-active{color:#111;pointer-events:none}
-.breadcrumb .sep{opacity:.5}
-.catalog-hero h1{margin:0 0 6px 0;color:var(--pink-700);font-size:28px}
-.catalog-hero .lead{margin:0 0 14px;color:var(--muted)}
-.catalog-searchbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.catalog-searchbar input, .catalog-searchbar select{padding:10px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.06)}
-.catalog-searchbar .cs-input{flex:1 1 280px}
-.catalog-searchbar #q{width:100%}
-
-.catalog{display:grid;grid-template-columns:260px 1fr;gap:18px}
-@media (max-width: 900px){ .catalog{grid-template-columns:1fr} }
-.catalog-sidebar{position:sticky;top:12px;align-self:start;display:flex;flex-direction:column;gap:12px}
-.side-card{background:var(--card-bg);border-radius:var(--radius);box-shadow:0 10px 30px rgba(16,24,40,0.06);padding:12px}
-.side-title{display:block;font-weight:700;color:var(--pink-700);margin-bottom:8px}
-.side-row{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px;color:#444}
-.price-row{display:flex;flex-direction:column;gap:6px}
-.price-row input[type="range"]{width:100%}
-.price-val{font-size:13px;color:var(--muted)}
-.chip.active{background:var(--pink-100);border-color:var(--pink-300)}
-
-.catalog-content{display:flex;flex-direction:column;gap:12px}
-.catalog-toolbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(0,0,0,0.04);border-radius:10px;padding:10px}
-.catalog-toolbar .spacer{flex:1}
-.catalog-toolbar .count{font-weight:700;color:#333}
-.catalog-toolbar select{padding:8px 10px;border-radius:999px;border:1px solid rgba(0,0,0,0.06)}
-
-.show-card .image-wrap{position:relative;display:block}
-.show-card .badge{position:absolute;left:10px;top:10px;background:var(--pink-500);color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
-.show-card .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-.pill{padding:4px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,0.04);color:var(--pink-700);font-weight:600;font-size:12px}
-
-/* Calendar page — align with theme subtly */
-.fc .fc-toolbar-title{ font-family: "Playfair Display", serif; color:#c43ea6 }
-.fc .fc-button{ background: linear-gradient(90deg,#ff7ab6,#a07bff); border:0; border-radius: 999px; padding: 6px 10px }
-.fc .fc-button:hover{ filter: brightness(1.05) }
-.fc .fc-daygrid-day.fc-day-today{ background: linear-gradient(180deg, #fff7fb, #fff); }
-.fc .monday-label{ position:absolute; top:4px; right:4px; background:#f7eaf4; color:#8a6a7d; padding:2px 6px; border-radius:6px; font-size:11px }
 
 /* ==================== MUSICAL CARDS ==================== */
 .musicals-grid {
@@ -1661,4 +1584,68 @@ body.pink-theme{background:linear-gradient(180deg,var(--pink-50),#fff);color:#11
   .slideshow-placeholder p {
     font-size: 1rem;
   }
+}
+
+/* EMERGENCY FIX - Force cards to show */
+.dashboard-section {
+  margin: 40px 0;
+  padding: 20px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: #d94f8f;
+  margin: 0 0 8px;
+}
+
+.musicals-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+  gap: 24px !important;
+  margin-top: 24px !important;
+}
+
+.musical-card {
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px rgba(217, 79, 143, 0.15) !important;
+  overflow: hidden !important;
+}
+
+.musical-slideshow {
+  width: 100% !important;
+  height: 200px !important;
+  background: linear-gradient(135deg, #fce4ec, #f8bbd0) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.slideshow-placeholder {
+  text-align: center !important;
+}
+
+.placeholder-icon {
+  font-size: 4rem !important;
+  opacity: 0.6 !important;
+}
+
+.musical-card-header,
+.musical-card-body,
+.musical-card-footer {
+  padding: 20px !important;
+}
+
+.musical-title {
+  font-size: 1.3rem !important;
+  color: #d94f8f !important;
+  font-weight: 700 !important;
+  margin: 0 0 12px !important;
 }
