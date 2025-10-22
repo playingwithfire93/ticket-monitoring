@@ -64,11 +64,9 @@ else:
 
 print("=" * 60)
 
-app = Flask(
-    __name__,
-    template_folder=TEMPLATE_DIR,
-    static_folder=STATIC_DIR
-)
+app = Flask(__name__,
+           static_folder='static',
+           static_url_path='/static')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -281,54 +279,14 @@ def check_all_urls():
 # ==================== ROUTES ====================
 @app.route("/")
 def index():
-    musicals = load_urls()
-    grouped = group_urls_by_musical(musicals)
-    
-    # ==================== DEBUG ====================
-    print("=" * 60)
-    print("🔍 DEBUG INDEX ROUTE")
-    print(f"📊 Total musicals loaded: {len(musicals)}")
-    print(f"📊 Total grouped: {len(grouped)}")
-    for item in grouped[:3]:  # Mostrar solo los primeros 3
-        print(f"  - {item.get('name')}: {len(item.get('urls', []))} URLs")
-    print("=" * 60)
-    
-    for item in grouped:
-        name = item.get('name', '')
-        try:
-            musical = Musical.query.filter_by(name=name).first()
-            if musical:
-                item['last_updated'] = getattr(musical, 'updated_at', None)
-                if item['last_updated']:
-                    item['last_updated'] = item['last_updated'].isoformat()
-                item['total_links'] = len(musical.links)
-                item['musical_id'] = musical.id
-                
-                last_change = MusicalChange.query.filter_by(musical_id=musical.id).order_by(MusicalChange.changed_at.desc()).first()
-                if last_change:
-                    item['last_change_type'] = last_change.change_type
-                    item['last_change_date'] = last_change.changed_at.isoformat()
-            else:
-                item['last_updated'] = None
-                item['total_links'] = len(item.get('urls', []))
-                item['musical_id'] = None
-                
-        except Exception as e:
-            app.logger.warning(f"Error enriching musical {name}: {e}")
-            item['last_updated'] = None
-            item['total_links'] = len(item.get('urls', []))
-            item['musical_id'] = None
-    
-    # ==================== DEBUG FINAL ====================
-    print(f"✅ Sending {len(grouped)} musicals to template")
-    print("=" * 60)
-    
-    return render_template(
-        "index.html", 
-        grouped_urls=grouped,
-        telegram_url=config.TELEGRAM_CHANNEL_URL,
-        discord_url=config.DISCORD_SERVER_URL
-    )
+    """Página principal con el dashboard"""
+    with app.app_context():
+        musicals = Musical.query.all()
+        return render_template(
+            'index.html',
+            musicals=musicals,
+            config=config
+        )
 
 @app.route("/calendar")
 def calendar():
