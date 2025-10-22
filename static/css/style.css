@@ -1607,16 +1607,17 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
   gap: 24px !important;
-  margin-top: 24px !important;
+  margin: 24px 0 !important;
 }
 
 .musical-card {
   display: flex !important;
   flex-direction: column !important;
   background: white !important;
+  border: 2px solid #ffc0cb !important;
   border-radius: 16px !important;
-  box-shadow: 0 4px 12px rgba(217, 79, 143, 0.15) !important;
   overflow: hidden !important;
+  min-height: 400px !important;
 }
 
 .musical-slideshow {
@@ -1628,24 +1629,54 @@ body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
   justify-content: center !important;
 }
 
-.slideshow-placeholder {
-  text-align: center !important;
-}
-
 .placeholder-icon {
   font-size: 4rem !important;
-  opacity: 0.6 !important;
+  display: block !important;
 }
 
-.musical-card-header,
-.musical-card-body,
-.musical-card-footer {
+.slideshow-placeholder p {
+  font-size: 1.2rem !important;
+  color: #d94f8f !important;
+  font-weight: bold !important;
+  margin: 8px 0 0 !important;
+}
+
+.musical-card_header,
+.musical-card_body,
+.musical-card_footer {
   padding: 20px !important;
+  display: block !important;
 }
 
 .musical-title {
-  font-size: 1.3rem !important;
+  font-size: 1.4rem !important;
   color: #d94f8f !important;
   font-weight: 700 !important;
-  margin: 0 0 12px !important;
+  margin: 0 !important;
+}
+
+.badge {
+  display: inline-block !important;
+  padding: 4px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  margin: 8px 4px 0 0 !important;
+}
+
+.badge-success {
+  background: #d4edda !important;
+  color: #155724 !important;
+}
+
+.btn-primary {
+  display: inline-block !important;
+  padding: 12px 24px !important;
+  background: #d94f8f !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
 }
