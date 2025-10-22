@@ -57,7 +57,52 @@
       </div>
     </div>
 
-    <!-- Dashboard Content con Cards -->
+    <!-- 🔍 DEBUG TEST CARD (temporal) -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2>🔍 Test Debug</h2>
+        <p>grouped_urls tiene: {{ grouped_urls|length }} elementos</p>
+      </div>
+      
+      <!-- Card de prueba hardcodeada -->
+      <div class="musicals-grid">
+        <article class="musical-card">
+          <div class="musical-slideshow">
+            <div class="slideshow-placeholder">
+              <div class="placeholder-icon">🎭</div>
+              <p>Test Musical</p>
+            </div>
+          </div>
+          
+          <div class="musical-card-header">
+            <h3 class="musical-title">Test Musical Hardcoded</h3>
+            <div class="badges">
+              <span class="badge badge-success">Test</span>
+            </div>
+          </div>
+          
+          <div class="musical-card-body">
+            <div class="musical-stats">
+              <div class="stat">
+                <span class="stat-icon">🔗</span>
+                <div class="stat-info">
+                  <span class="stat-label">Enlaces</span>
+                  <span class="stat-value">3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="musical-card-footer">
+            <button class="btn btn-primary">
+              <span>Test Button</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Dashboard Content con Cards (original) -->
     <section class="dashboard-section">
       <div class="section-header">
         <h2>🎪 Musicales Monitoreados</h2>
