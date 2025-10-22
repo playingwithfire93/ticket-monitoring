@@ -12,8 +12,13 @@ import config
 
 # ==================== CONFIGURATION ====================
 BASE = Path(__file__).parent
-URLS_FILE = BASE / "urls.json"
-SUGGESTIONS_FILE = BASE / "suggestions.json"
+
+# Cambiar rutas
+BASE_DIR = Path(__file__).parent
+STATIC_DIR = BASE_DIR / "static"
+URLS_FILE = BASE_DIR / "static" / "python" / "urls.json"
+SUGGESTIONS_FILE = BASE_DIR / "static" / "python" / "suggestions.json"
+
 EVENTS_FILE = BASE / "events.json"
 UTC = timezone.utc
 

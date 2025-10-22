@@ -1,7 +1,8 @@
 """
 Script para añadir los enlaces faltantes a los musicales ya creados
 """
-from app import app, db, Musical, MusicalLink
+from app import app, db
+from models import Musical, MusicalLink
 import json
 from pathlib import Path
 
