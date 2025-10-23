@@ -1,107 +1,89 @@
 """
-Script de migración: importa todos los musicales y enlaces de urls.json a la BD (musicals.db)
-Evita duplicados y reporta el progreso.
+Script to migrate URLs from urls.json to the database
+Run this once to populate the database with existing musicals
 """
-import sys
+import os
+import json
 from pathlib import Path
-
-ROOT_DIR = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(ROOT_DIR))
-
 from app import app, db
 from models import Musical, MusicalLink
-import json
+from datetime import datetime, timezone
 
-BASE = Path(__file__).parent
-URLS_FILE = BASE / "urls.json"
-
-def migrate_urls_to_db():
-    """Lee urls.json y crea registros en la BD si no existen."""
-    with app.app_context():
-        print("🔄 Iniciando migración de urls.json → musicals.db")
+def migrate_urls():
+    """Migrate URLs from JSON file to database"""
+    BASE = Path(__file__).parent
+    URLS_FILE = BASE / "static" / "python" / "urls.json"
+    
+    if not URLS_FILE.exists():
+        print(f"❌ File not found: {URLS_FILE}")
+        return
+    
+    print("=" * 60)
+    print("🔄 Starting migration from urls.json to database")
+    print("=" * 60)
+    
+    try:
+        with open(URLS_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
         
-        # Leer urls.json
-        try:
-            with URLS_FILE.open("r", encoding="utf-8") as f:
-                urls_data = json.load(f)
-        except Exception as e:
-            print(f"❌ Error leyendo urls.json: {e}")
-            return
+        print(f"📁 Loaded {len(data)} musicals from JSON")
         
-        if not isinstance(urls_data, list):
-            print("❌ urls.json debe ser una lista")
-            return
-        
-        created_musicals = 0
-        created_links = 0
-        skipped_musicals = 0
-        skipped_links = 0
-        
-        for item in urls_data:
-            name = (item.get("musical") or item.get("name") or "").strip()
-            if not name:
-                print(f"⚠️  Saltando item sin nombre: {item}")
-                continue
+        with app.app_context():
+            # Clear existing data (optional - remove if you want to keep existing data)
+            print("🗑️  Clearing existing data...")
+            MusicalLink.query.delete()
+            Musical.query.delete()
+            db.session.commit()
             
-            urls = item.get("urls") or []
-            if not urls:
-                print(f"⚠️  Musical '{name}' sin URLs, saltando")
-                continue
-            
-            # Buscar o crear musical
-            musical = Musical.query.filter_by(name=name).first()
-            if not musical:
+            # Migrate each musical
+            for musical_name, urls in data.items():
+                print(f"\n🎭 Processing: {musical_name}")
+                
+                # Create musical
                 musical = Musical(
-                    name=name,
-                    description=item.get("description", ""),
-                    image_url=item.get("image", "")
+                    name=musical_name,
+                    description=f"Musical: {musical_name}",
+                    is_available=True,
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc)
                 )
                 db.session.add(musical)
-                db.session.flush()  # obtener ID
-                created_musicals += 1
-                print(f"✅ Creado musical: {name} (ID: {musical.id})")
-            else:
-                skipped_musicals += 1
-                print(f"ℹ️  Musical ya existe: {name} (ID: {musical.id})")
+                db.session.flush()  # Get the ID
+                print(f"   ✅ Created musical: {musical_name} (ID: {musical.id})")
+                
+                # Add URLs
+                url_count = 0
+                for url in urls:
+                    if isinstance(url, str):
+                        link = MusicalLink(
+                            musical_id=musical.id,
+                            url=url,
+                            is_available=True,
+                            created_at=datetime.now(timezone.utc),
+                            last_checked=datetime.now(timezone.utc)
+                        )
+                        db.session.add(link)
+                        url_count += 1
+                
+                db.session.commit()
+                print(f"   ✅ Added {url_count} URLs")
             
-            # Añadir enlaces
-            for url in urls:
-                url = url.strip()
-                if not url:
-                    continue
-                
-                # Verificar si el enlace ya existe
-                existing = MusicalLink.query.filter_by(
-                    musical_id=musical.id,
-                    url=url
-                ).first()
-                
-                if not existing:
-                    link = MusicalLink(
-                        musical_id=musical.id,
-                        url=url,
-                        notes=f"Importado de urls.json"
-                    )
-                    db.session.add(link)
-                    created_links += 1
-                    print(f"   ➕ Añadido enlace: {url[:60]}...")
-                else:
-                    skipped_links += 1
-                    print(f"   ℹ️  Enlace ya existe: {url[:60]}...")
-        
-        # Guardar cambios
-        db.session.commit()
-        
-        print("\n" + "="*60)
-        print("📊 RESUMEN DE MIGRACIÓN")
-        print("="*60)
-        print(f"✅ Musicales creados:    {created_musicals}")
-        print(f"ℹ️  Musicales existentes: {skipped_musicals}")
-        print(f"✅ Enlaces añadidos:     {created_links}")
-        print(f"ℹ️  Enlaces existentes:  {skipped_links}")
-        print("="*60)
-        print(f"🎉 Total en BD: {Musical.query.count()} musicales, {MusicalLink.query.count()} enlaces")
-        print("="*60)
+            # Summary
+            total_musicals = Musical.query.count()
+            total_links = MusicalLink.query.count()
+            
+            print("\n" + "=" * 60)
+            print("✅ Migration completed successfully!")
+            print(f"📊 Total musicals: {total_musicals}")
+            print(f"🔗 Total links: {total_links}")
+            print("=" * 60)
+            
+    except json.JSONDecodeError as e:
+        print(f"❌ Error reading JSON file: {e}")
+    except Exception as e:
+        print(f"❌ Migration error: {e}")
+        import traceback
+        traceback.print_exc()
 
-if __name__ == "__main__":
-    migrate_urls_to_db()
+if __name__ == '__main__':
+    migrate_urls()
