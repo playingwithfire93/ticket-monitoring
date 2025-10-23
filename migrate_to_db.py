@@ -90,27 +90,54 @@ def get_musical_images(musical_name, fotos_dir):
         return images
     
     # Normalize musical name for folder matching
-    normalized_name = musical_name.lower().replace(' ', '_').replace('-', '_')
+    normalized_name = musical_name.lower()
+    normalized_name = normalized_name.replace(' ', '_').replace('-', '_').replace("'", '').replace('.', '')
+    
+    # Create variations to match
+    variations = [
+        normalized_name,
+        normalized_name.replace('_', ''),
+        musical_name.lower().replace(' ', '_'),
+        musical_name.lower().replace(' ', ''),
+        # Common abbreviations
+        ''.join(word[0] for word in musical_name.split()),  # initials
+    ]
+    
+    print(f"   🔍 Searching for folders matching: {variations}")
     
     # Look for folders that match the musical name
+    matched_folder = None
     for folder in fotos_dir.iterdir():
         if folder.is_dir():
             folder_name = folder.name.lower()
-            # Match if folder name contains musical name or vice versa
-            if normalized_name in folder_name or folder_name in normalized_name:
-                print(f"   📸 Found image folder: {folder.name}")
-                
-                # Get all images from this folder
-                for img_file in folder.iterdir():
-                    if img_file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
-                        # Use relative path from static folder
-                        img_path = f"/static/fotos/{folder.name}/{img_file.name}"
-                        images.append(img_path)
-                
+            folder_normalized = folder_name.replace('-', '_').replace("'", '').replace('.', '')
+            
+            # Check all variations
+            for variation in variations:
+                if variation in folder_normalized or folder_normalized in variation:
+                    matched_folder = folder
+                    print(f"   📸 Found image folder: {folder.name}")
+                    break
+            
+            if matched_folder:
                 break
     
+    if matched_folder:
+        # Get all images from this folder
+        for img_file in sorted(matched_folder.iterdir()):
+            if img_file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                # Use relative path from static folder
+                img_path = f"/static/fotos/{matched_folder.name}/{img_file.name}"
+                images.append(img_path)
+                print(f"      + {img_file.name}")
+    
     if not images:
-        print(f"   ⚠️  No images found for {musical_name}")
+        print(f"   ⚠️  No images found for '{musical_name}'")
+        print(f"   💡 Available folders in fotos/:")
+        for folder in fotos_dir.iterdir():
+            if folder.is_dir():
+                print(f"      - {folder.name}")
+        
         # Add placeholder image
         images = [f"https://via.placeholder.com/400x200/ff69b4/ffffff?text={musical_name.replace(' ', '+')}"]
     else:
