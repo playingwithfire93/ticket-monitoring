@@ -5,26 +5,21 @@ db = SQLAlchemy()
 
 class Musical(db.Model):
     __tablename__ = 'musicals'
+    
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), unique=True, nullable=False)
-    description = db.Column(db.Text, default='')
-    image_url = db.Column(db.String(500), default='')
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    images = db.Column(db.JSON)  # ← NUEVO: Lista de URLs de imágenes
+    is_available = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    links = db.relationship('MusicalLink', back_populates='musical', cascade='all, delete-orphan')
-    changes = db.relationship('MusicalChange', back_populates='musical', cascade='all, delete-orphan', order_by='MusicalChange.changed_at.desc()')
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'image_url': self.image_url,
-            'links': [link.to_dict() for link in self.links],
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'recent_changes': [change.to_dict() for change in self.changes[:5]]
-        }
+    
+    # Relationship
+    links = db.relationship('MusicalLink', backref='musical', lazy=True, cascade='all, delete-orphan')
+    changes = db.relationship('MusicalChange', backref='musical', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Musical {self.name}>'
 
 class MusicalLink(db.Model):
     __tablename__ = 'musical_links'
