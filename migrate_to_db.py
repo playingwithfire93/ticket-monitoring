@@ -26,47 +26,42 @@ def migrate_urls():
         with open(URLS_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        print(f"📁 Loaded {len(data)} musicals from JSON")
+        print(f"📁 Loaded data from JSON")
+        print(f"📊 Data type: {type(data)}")
         
         with app.app_context():
-            # Clear existing data (optional - remove if you want to keep existing data)
+            # Clear existing data
             print("🗑️  Clearing existing data...")
             MusicalLink.query.delete()
             Musical.query.delete()
             db.session.commit()
             
-            # Migrate each musical
-            for musical_name, urls in data.items():
-                print(f"\n🎭 Processing: {musical_name}")
-                
-                # Create musical
-                musical = Musical(
-                    name=musical_name,
-                    description=f"Musical: {musical_name}",
-                    is_available=True,
-                    created_at=datetime.now(timezone.utc),
-                    updated_at=datetime.now(timezone.utc)
-                )
-                db.session.add(musical)
-                db.session.flush()  # Get the ID
-                print(f"   ✅ Created musical: {musical_name} (ID: {musical.id})")
-                
-                # Add URLs
-                url_count = 0
-                for url in urls:
-                    if isinstance(url, str):
-                        link = MusicalLink(
-                            musical_id=musical.id,
-                            url=url,
-                            is_available=True,
-                            created_at=datetime.now(timezone.utc),
-                            last_checked=datetime.now(timezone.utc)
-                        )
-                        db.session.add(link)
-                        url_count += 1
-                
-                db.session.commit()
-                print(f"   ✅ Added {url_count} URLs")
+            # Handle different JSON formats
+            if isinstance(data, dict):
+                # Format: {"Musical Name": ["url1", "url2"]}
+                print("📋 Processing dictionary format...")
+                for musical_name, urls in data.items():
+                    process_musical(musical_name, urls)
+                    
+            elif isinstance(data, list):
+                # Format: [{"musical": "Name", "urls": ["url1"]}, ...]
+                print("📋 Processing list format...")
+                for item in data:
+                    if isinstance(item, dict):
+                        musical_name = item.get('musical') or item.get('name') or item.get('siteName')
+                        urls = item.get('urls') or item.get('url') or []
+                        
+                        # Handle single URL string
+                        if isinstance(urls, str):
+                            urls = [urls]
+                        
+                        if musical_name and urls:
+                            process_musical(musical_name, urls)
+                        else:
+                            print(f"⚠️  Skipping invalid item: {item}")
+            else:
+                print(f"❌ Unsupported JSON format: {type(data)}")
+                return
             
             # Summary
             total_musicals = Musical.query.count()
@@ -84,6 +79,34 @@ def migrate_urls():
         print(f"❌ Migration error: {e}")
         import traceback
         traceback.print_exc()
+
+def process_musical(musical_name, urls):
+    """Process a single musical and its URLs"""
+    print(f"\n🎭 Processing: {musical_name}")
+    
+    # Create musical - only use fields that exist in the model
+    musical = Musical(
+        name=musical_name,
+        description=f"Musical: {musical_name}"
+    )
+    db.session.add(musical)
+    db.session.flush()  # Get the ID
+    print(f"   ✅ Created musical: {musical_name} (ID: {musical.id})")
+    
+    # Add URLs
+    url_count = 0
+    if isinstance(urls, list):
+        for url in urls:
+            if isinstance(url, str) and url.strip():
+                link = MusicalLink(
+                    musical_id=musical.id,
+                    url=url.strip()
+                )
+                db.session.add(link)
+                url_count += 1
+    
+    db.session.commit()
+    print(f"   ✅ Added {url_count} URLs")
 
 if __name__ == '__main__':
     migrate_urls()
