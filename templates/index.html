@@ -14,8 +14,7 @@
     <div class="container topbar-inner">
       <div class="brand">
         <div class="logo-badge" aria-hidden="true">🎟️</div>
-        <h1>Ticket Monitor</h1>
-        <p class="subtitle">Cute & dynamic musical watcher</p>
+        <h1>Musical monitor</h1>
       </div>
  
       <div class="controls">
@@ -24,16 +23,10 @@
           <input id="search" placeholder="Buscar musical..." />
         </div>
         <label class="auto-refresh" aria-live="polite">
-          <span class="ar-label">Auto-refresh</span>
-          <label class="toggle-switch" title="Auto-refresh">
-            <input id="toggle-refresh" type="checkbox" checked />
-            <span class="switch" aria-hidden="true"></span>
-          </label>
-          <span id="ar-state" class="ar-state">ON</span>
         </label>
-        <div class="last-checked">⏱️ <small class="lc-label">Last Checked</small> <span id="last-checked">--</span></div>
+        <div class="last-checked">⏱️ <small class="lc-label">Última verificación</small> <span id="last-checked">--</span></div>
         <div class="last-checked">📝 <small class="lc-label">Últimos cambios</small> <span id="last-changes">--</span></div>
-        <a href="/shows" class="btn small" style="text-decoration:none">Ver cartelera</a>
+        <a href="/calendar" class="btn small" style="text-decoration:none">📅 Ver calendario</a>
       </div>
     </div>
   </header>
@@ -43,7 +36,7 @@
     <div class="catalog-hero">
       <div class="catalog-hero-inner">
         <h1>🎭 Ticket Monitor</h1>
-        <p class="lead">Monitorea disponibilidad de entradas para musicales en tiempo real</p>
+        <p class="lead">¡Únete a nuestro canal de telegram o Discord para estar atentx a las novedades!</p>
         
         <div class="header-actions">
           <a href="{{ telegram_url }}" target="_blank" class="btn btn-telegram">
@@ -59,7 +52,7 @@
     <!-- Dashboard Content con Cards Colapsables -->
     <section class="dashboard-section">
       <div class="section-header">
-        <h2>🎪 Musicales Monitoreados</h2>
+        <h2>🎪 Musicales 🎭</h2>
         <p class="section-subtitle">{{ musicals|length }} musicales en seguimiento</p>
       </div>
 
@@ -201,9 +194,9 @@
 
           <!-- Footer de la card (colapsable) -->
           <div class="musical-card-footer collapsed">
-            <a href="/shows#musical-{{ musical.id }}" class="btn btn-primary">
-              <span>Ver detalles completos</span>
-              <span class="btn-icon">→</span>
+            <a href="/calendar" class="btn btn-primary">
+              <span>Ver calendario</span>
+              <span class="btn-icon">📅</span>
             </a>
           </div>
         </article>
