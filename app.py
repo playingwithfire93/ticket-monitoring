@@ -282,6 +282,13 @@ def index():
     """Página principal con el dashboard"""
     with app.app_context():
         musicals = Musical.query.all()
+        
+        # Prepare data for each musical
+        for musical in musicals:
+            musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
+            musical.active_links = sum(1 for link in musical.links if link.is_available)
+            musical.sold_out_links = len(musical.links) - musical.active_links
+        
         return render_template(
             'index.html',
             musicals=musicals,
