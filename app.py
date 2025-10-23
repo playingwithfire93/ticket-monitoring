@@ -1,3 +1,4 @@
+import os  # ← AÑADIR ESTA LÍNEA
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request, Response
