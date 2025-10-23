@@ -26,7 +26,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_URL = os.getenv("TELEGRAM_CHANNEL_URL", "https://t.me/TheBookOfMormonTicketsbot")
 DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
-DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/YHCs5T79")
+DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/dGxUQ8mM")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # ==================== FLASK APP SETUP ====================
