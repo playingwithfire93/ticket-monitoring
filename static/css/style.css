@@ -338,19 +338,24 @@ input:checked + .switch:before {
 }
 
 .slideshow-placeholder {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: linear-gradient(135deg, var(--light-pink) 0%, #ffb6d9 100%);
 }
 
 .placeholder-icon {
   font-size: 4rem;
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+  margin-bottom: 10px;
 }
 
 .slideshow-placeholder p {
-  margin-top: 10px;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--primary-pink);
+  margin: 0;
 }
 
 .musical-card-header {
@@ -363,188 +368,102 @@ input:checked + .switch:before {
   user-select: none;
 }
 
-.musical-title {
-  font-size: 1.5rem;
-  color: var(--text-dark);
-  margin-bottom: 10px;
-}
-
-.badges {
+.musical-card-header {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.badge {
-  display: inline-flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 15px 20px;
+  cursor: pointer;
+  user-select: none;
+  background: white;
+  border-bottom: 1px solid var(--light-pink);
 }
 
-.badge-success {
-  background: #d4edda;
-  color: #155724;
+.musical-card-header:hover {
+  background: var(--light-pink);
 }
 
-.badge-danger {
-  background: #f8d7da;
-  color: #721c24;
+.musical-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--primary-pink);
 }
 
-.musical-card-body {
-  padding: 20px;
-  flex-grow: 1;
-  transition: all 0.3s ease;
+.card-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--light-pink);
+  transition: var(--transition);
 }
 
+.musical-card.expanded .card-toggle {
+  background: var(--primary-pink);
+  transform: rotate(180deg);
+}
+
+.toggle-icon {
+  font-size: 0.9rem;
+  color: var(--primary-pink);
+  transition: var(--transition);
+}
+
+.musical-card.expanded .toggle-icon {
+  color: white;
+}
+
+/* Collapsed state */
 .musical-card-body.collapsed,
 .musical-card-footer.collapsed {
   max-height: 0;
   overflow: hidden;
   padding: 0 20px;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
 }
 
+/* Expanded state */
 .musical-card-body:not(.collapsed) {
-  max-height: 2000px;
+  max-height: 3000px;
   padding: 20px;
   opacity: 1;
+  transition: max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
 }
 
 .musical-card-footer:not(.collapsed) {
-  padding: 20px;
+  padding: 15px 20px;
   opacity: 1;
-}
-
-/* Stats */
-.musical-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.stat-icon {
-  font-size: 1.5rem;
-}
-
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: var(--text-light);
-  text-transform: uppercase;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-/* Links */
-.musical-links {
-  margin-top: 20px;
-}
-
-.links-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.1rem;
-  margin-bottom: 15px;
-  color: var(--text-dark);
-}
-
-.links-list {
-  list-style: none;
-  padding: 0;
-}
-
-.links-list li {
-  margin-bottom: 10px;
-}
-
-.link-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
+  border-top: 1px solid var(--light-pink);
   background: var(--light-pink);
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--text-dark);
-  transition: var(--transition);
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+/* Slideshow clickable */
+.musical-slideshow {
+  cursor: pointer;
   position: relative;
 }
 
-.link-item:hover {
-  background: var(--secondary-pink);
-  transform: translateX(5px);
-}
-
-.link-icon {
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.link-text {
-  flex-grow: 1;
-  font-size: 0.9rem;
-  word-break: break-all;
-}
-
-.status-badge {
-  flex-shrink: 0;
-  font-size: 1rem;
-}
-
-.link-external {
-  flex-shrink: 0;
-  opacity: 0.5;
-}
-
-.more-links {
-  text-align: center;
-  margin-top: 10px;
-}
-
-.last-change {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid var(--border-color);
+.musical-slideshow:hover::after {
+  content: "▼ Click para expandir";
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
   font-size: 0.85rem;
-  color: var(--text-light);
+  pointer-events: none;
+  z-index: 5;
 }
 
-.musical-card-footer {
-  padding: 20px;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-main);
-}
-
-.musical-card-footer .btn-primary {
-  width: 100%;
-  justify-content: center;
+.musical-card.expanded .musical-slideshow:hover::after {
+  content: "▲ Click para colapsar";
 }
 
 /* ==================== EMPTY STATE ==================== */
@@ -759,6 +678,7 @@ input:checked + .switch:before {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: 200px;
 }
 
 .slide {
@@ -770,6 +690,11 @@ input:checked + .switch:before {
 .slide.active {
   display: block;
   animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .slide img {
@@ -827,43 +752,168 @@ input:checked + .switch:before {
 .dot:hover,
 .dot.active {
   background: white;
+  transform: scale(1.2);
 }
 
-/* ==================== COLLAPSIBLE CARDS ==================== */
-.musical-card {
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.musical-card-header {
+/* ==================== BADGES ==================== */
+.badges {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.card-toggle {
+.badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge-danger {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* ==================== STATS ==================== */
+.musical-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  gap: 10px;
+  padding: 12px;
   background: var(--light-pink);
-  transition: var(--transition);
+  border-radius: 8px;
 }
 
-.toggle-icon {
-  font-size: 0.8rem;
+.stat-icon {
+  font-size: 1.5rem;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--primary-pink);
+}
+
+/* ==================== LINKS ==================== */
+.musical-links {
+  margin-top: 20px;
+}
+
+.links-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: var(--primary-pink);
+}
+
+.links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.links-list li {
+  margin-bottom: 10px;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--light-pink);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
   transition: var(--transition);
 }
 
-.musical-card.expanded .card-toggle {
-  background: var(--primary-pink);
+.link-item:hover {
+  background: var(--light-pink);
+  border-color: var(--primary-pink);
+  transform: translateX(5px);
 }
 
-.musical-card.expanded .toggle-icon {
-  color: white;
+.link-icon {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+.link-text {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.link-external {
+  flex-shrink: 0;
+  color: var(--primary-pink);
+  font-size: 1.2rem;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.link-item:hover .link-external {
+  opacity: 1;
+}
+
+.links-list-extra {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+}
+
+.more-links {
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* ==================== LAST CHANGE ==================== */
+.last-change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 10px;
+  background: var(--light-pink);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.change-icon {
+  font-size: 1.2rem;
 }
