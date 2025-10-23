@@ -23,8 +23,10 @@ UTC = timezone.utc
 # Environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+TELEGRAM_CHANNEL_URL = os.getenv("TELEGRAM_CHANNEL_URL", "https://t.me/TheBookOfMormonTicketsbot")
 DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
+DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/YHCs5T79")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # ==================== FLASK APP SETUP ====================
@@ -46,7 +48,7 @@ print(f"📁 BASE: {BASE}")
 print(f"📁 Templates: {app.template_folder}")
 print(f"📁 Static: {app.static_folder}")
 print(f"✅ Templates exist: {os.path.exists(BASE / 'templates')}")
-print(f"✅ Static exists: {os.path.exists(BASE / 'static')}")
+print(f"✅ Static exist: {os.path.exists(BASE / 'static')}")
 print(f"✅ CSS exists: {os.path.exists(BASE / 'static' / 'css' / 'style.css')}")
 print(f"✅ JS exists: {os.path.exists(BASE / 'static' / 'js' / 'main.js')}")
 print("=" * 60)
@@ -123,6 +125,53 @@ with app.app_context():
         else:
             app.logger.info("Creating database tables for the first time...")
             db.create_all()
+        
+        # Auto-migrate from urls.json if database is empty
+        musical_count = Musical.query.count()
+        if musical_count == 0 and URLS_FILE.exists():
+            app.logger.info("Database is empty, attempting to load from urls.json...")
+            try:
+                with URLS_FILE.open('r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                app.logger.info(f"Found {len(data)} musicals in urls.json")
+                
+                # Handle list format
+                if isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict):
+                            musical_name = item.get('musical') or item.get('name') or item.get('siteName')
+                            urls = item.get('urls') or item.get('url') or []
+                            
+                            if isinstance(urls, str):
+                                urls = [urls]
+                            
+                            if musical_name and urls:
+                                musical = Musical(
+                                    name=musical_name,
+                                    description=f"Musical: {musical_name}",
+                                    created_at=datetime.now(timezone.utc),
+                                    updated_at=datetime.now(timezone.utc)
+                                )
+                                db.session.add(musical)
+                                db.session.flush()
+                                
+                                for url in urls:
+                                    if isinstance(url, str):
+                                        link = MusicalLink(
+                                            musical_id=musical.id,
+                                            url=url,
+                                            created_at=datetime.now(timezone.utc),
+                                            last_checked=datetime.now(timezone.utc)
+                                        )
+                                        db.session.add(link)
+                                
+                                db.session.commit()
+                
+                app.logger.info(f"✅ Successfully loaded musicals from urls.json")
+            except Exception as e:
+                app.logger.error(f"Error loading urls.json: {e}")
+                db.session.rollback()
             
     except Exception as e:
         app.logger.error(f"Database initialization error: {e}")
@@ -142,15 +191,14 @@ def index():
                 musical.active_links = sum(1 for link in musical.links if link.is_available)
                 musical.sold_out_links = len(musical.links) - musical.active_links
             else:
-                # Fallback if is_available doesn't exist
                 musical.active_links = len(musical.links)
                 musical.sold_out_links = 0
         
         return render_template(
             'index.html',
             musicals=musicals,
-            telegram_url=os.getenv("TELEGRAM_URL", "https://t.me/your_channel"),
-            discord_url=os.getenv("DISCORD_URL", "https://discord.gg/your_server")
+            telegram_url=TELEGRAM_CHANNEL_URL,
+            discord_url=DISCORD_SERVER_URL
         )
 
 @app.route("/shows")
