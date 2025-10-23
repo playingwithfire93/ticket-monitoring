@@ -67,12 +67,33 @@
       <div class="musicals-grid">
         {% for musical in musicals %}
         <article class="musical-card" data-musical-id="{{ musical.id }}">
-          <!-- Placeholder para imágenes -->
+          <!-- Musical Slideshow -->
           <div class="musical-slideshow">
+            {% if musical.images and musical.images|length > 0 %}
+            <div class="slideshow-container">
+              {% for image in musical.images %}
+              <div class="slide {% if loop.first %}active{% endif %}">
+                <img src="{{ image }}" alt="{{ musical.name }}" loading="lazy">
+              </div>
+              {% endfor %}
+              
+              {% if musical.images|length > 1 %}
+              <button class="slide-btn prev" onclick="changeSlide(this, -1)">❮</button>
+              <button class="slide-btn next" onclick="changeSlide(this, 1)">❯</button>
+              
+              <div class="slide-dots">
+                {% for image in musical.images %}
+                <span class="dot {% if loop.first %}active{% endif %}" onclick="currentSlide(this, {{ loop.index0 }})"></span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
             <div class="slideshow-placeholder">
               <div class="placeholder-icon">🎭</div>
               <p>{{ musical.name }}</p>
             </div>
+            {% endif %}
           </div>
 
           <!-- Header de la card -->
@@ -324,6 +345,43 @@
         status.style.color = '#dc3545';
       }
     });
+
+    // ==================== SLIDESHOW FUNCTIONALITY ====================
+    function changeSlide(button, direction) {
+      const container = button.closest('.slideshow-container');
+      const slides = container.querySelectorAll('.slide');
+      const dots = container.querySelectorAll('.dot');
+      
+      let currentIndex = Array.from(slides).findIndex(s => s.classList.contains('active'));
+      
+      slides[currentIndex].classList.remove('active');
+      dots[currentIndex].classList.remove('active');
+      
+      currentIndex = (currentIndex + direction + slides.length) % slides.length;
+      
+      slides[currentIndex].classList.add('active');
+      dots[currentIndex].classList.add('active');
+    }
+
+    function currentSlide(dot, index) {
+      const container = dot.closest('.slideshow-container');
+      const slides = container.querySelectorAll('.slide');
+      const dots = container.querySelectorAll('.dot');
+      
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active'));
+      
+      slides[index].classList.add('active');
+      dots[index].classList.add('active');
+    }
+
+    // Auto-advance slides every 5 seconds
+    setInterval(() => {
+      document.querySelectorAll('.slideshow-container').forEach(container => {
+        const nextBtn = container.querySelector('.next');
+        if (nextBtn) changeSlide(nextBtn, 1);
+      });
+    }, 5000);
   </script>
 </body>
 </html>

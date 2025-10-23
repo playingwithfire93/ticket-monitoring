@@ -84,13 +84,21 @@ def process_musical(musical_name, urls):
     """Process a single musical and its URLs"""
     print(f"\n🎭 Processing: {musical_name}")
     
-    # Create musical - only use fields that exist in the model
+    # Default images (puedes personalizarlas por musical)
+    default_images = [
+        f"https://via.placeholder.com/400x200/ff69b4/ffffff?text={musical_name.replace(' ', '+')}+1",
+        f"https://via.placeholder.com/400x200/ffb6d9/ffffff?text={musical_name.replace(' ', '+')}+2",
+        f"https://via.placeholder.com/400x200/d63384/ffffff?text={musical_name.replace(' ', '+')}+3"
+    ]
+    
+    # Create musical with images
     musical = Musical(
         name=musical_name,
-        description=f"Musical: {musical_name}"
+        description=f"Musical: {musical_name}",
+        images=default_images  # ← AÑADIR IMÁGENES
     )
     db.session.add(musical)
-    db.session.flush()  # Get the ID
+    db.session.flush()
     print(f"   ✅ Created musical: {musical_name} (ID: {musical.id})")
     
     # Add URLs
