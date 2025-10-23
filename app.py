@@ -8,7 +8,6 @@ from flask_socketio import SocketIO
 from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
 from models import db, Musical, MusicalLink, MusicalChange
-import config
 
 # ==================== CONFIGURATION ====================
 BASE = Path(__file__).parent
@@ -291,8 +290,7 @@ def index():
         
         return render_template(
             'index.html',
-            musicals=musicals,
-            config=config
+            musicals=musicals
         )
 
 @app.route("/calendar")

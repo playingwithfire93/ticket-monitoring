@@ -64,3 +64,28 @@ def log_configuration():
     print(f"⏱️  Poll Interval:        {POLL_INTERVAL_SECONDS}s")
     print(f"🗄️  Database:             {DATABASE_FILE}")
     print("=" * 70)
+
+# ==================== SETTINGS ====================
+"""
+Configuration file for the Ticket Monitor application
+"""
+
+# Application settings
+APP_NAME = "Ticket Monitor"
+APP_VERSION = "1.0.0"
+
+# Monitoring settings
+POLL_INTERVAL = 300  # seconds (5 minutes)
+REQUEST_TIMEOUT = 5  # seconds
+
+# UI Settings
+THEME = "pink"  # or "blue", "purple", etc.
+CARDS_PER_ROW = 3
+
+# Feature flags
+ENABLE_NOTIFICATIONS = True
+ENABLE_CALENDAR = True
+ENABLE_SUGGESTIONS = True
+
+# Default values
+DEFAULT_MUSICAL_IMAGE = "/static/img/default-musical.png"
