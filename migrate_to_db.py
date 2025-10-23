@@ -101,14 +101,18 @@ def get_musical_images(musical_name, fotos_dir):
         'The Book of Mormon': 'book_of_mormon',
         'Book of Mormon': 'book_of_mormon',
         'Wicked': 'wicked',
-        'Hamilton': 'hamilton',
+        'WICKED': 'wicked'
         # Añade más mappings aquí según tus carpetas
     }
     
     print(f"   🔍 Searching images for: '{musical_name}'")
     
-    # Check manual mapping first
-    folder_name = FOLDER_MAPPING.get(musical_name)
+    # Check manual mapping first (case-insensitive)
+    folder_name = None
+    for key, value in FOLDER_MAPPING.items():
+        if key.lower() == musical_name.lower():
+            folder_name = value
+            break
     
     if folder_name:
         matched_folder = fotos_dir / folder_name
