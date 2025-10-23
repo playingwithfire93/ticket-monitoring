@@ -320,6 +320,7 @@ input:checked + .switch:before {
   transition: var(--transition);
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .musical-card:hover {
@@ -333,6 +334,7 @@ input:checked + .switch:before {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .slideshow-placeholder {
@@ -354,6 +356,11 @@ input:checked + .switch:before {
 .musical-card-header {
   padding: 20px;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
 }
 
 .musical-title {
@@ -391,6 +398,27 @@ input:checked + .switch:before {
 .musical-card-body {
   padding: 20px;
   flex-grow: 1;
+  transition: all 0.3s ease;
+}
+
+.musical-card-body.collapsed,
+.musical-card-footer.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 20px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.musical-card-body:not(.collapsed) {
+  max-height: 2000px;
+  padding: 20px;
+  opacity: 1;
+}
+
+.musical-card-footer:not(.collapsed) {
+  padding: 20px;
+  opacity: 1;
 }
 
 /* Stats */
@@ -799,4 +827,43 @@ input:checked + .switch:before {
 .dot:hover,
 .dot.active {
   background: white;
+}
+
+/* ==================== COLLAPSIBLE CARDS ==================== */
+.musical-card {
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.musical-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--light-pink);
+  transition: var(--transition);
+}
+
+.toggle-icon {
+  font-size: 0.8rem;
+  color: var(--primary-pink);
+  transition: var(--transition);
+}
+
+.musical-card.expanded .card-toggle {
+  background: var(--primary-pink);
+}
+
+.musical-card.expanded .toggle-icon {
+  color: white;
 }

@@ -56,7 +56,7 @@
       </div>
     </div>
 
-    <!-- Dashboard Content con Cards -->
+    <!-- Dashboard Content con Cards Colapsables -->
     <section class="dashboard-section">
       <div class="section-header">
         <h2>🎪 Musicales Monitoreados</h2>
@@ -66,9 +66,9 @@
       {% if musicals %}
       <div class="musicals-grid">
         {% for musical in musicals %}
-        <article class="musical-card" data-musical-id="{{ musical.id }}">
-          <!-- Musical Slideshow -->
-          <div class="musical-slideshow">
+        <article class="musical-card collapsible" data-musical-id="{{ musical.id }}">
+          <!-- Slideshow (siempre visible) -->
+          <div class="musical-slideshow" onclick="toggleCard(this)">
             {% if musical.images and musical.images|length > 0 %}
             <div class="slideshow-container">
               {% for image in musical.images %}
@@ -78,12 +78,12 @@
               {% endfor %}
               
               {% if musical.images|length > 1 %}
-              <button class="slide-btn prev" onclick="changeSlide(this, -1)">❮</button>
-              <button class="slide-btn next" onclick="changeSlide(this, 1)">❯</button>
+              <button class="slide-btn prev" onclick="event.stopPropagation(); changeSlide(this, -1)">❮</button>
+              <button class="slide-btn next" onclick="event.stopPropagation(); changeSlide(this, 1)">❯</button>
               
               <div class="slide-dots">
                 {% for image in musical.images %}
-                <span class="dot {% if loop.first %}active{% endif %}" onclick="currentSlide(this, {{ loop.index0 }})"></span>
+                <span class="dot {% if loop.first %}active{% endif %}" onclick="event.stopPropagation(); currentSlide(this, {{ loop.index0 }})"></span>
                 {% endfor %}
               </div>
               {% endif %}
@@ -96,9 +96,16 @@
             {% endif %}
           </div>
 
-          <!-- Header de la card -->
-          <div class="musical-card-header">
+          <!-- Header de la card (siempre visible) -->
+          <div class="musical-card-header" onclick="toggleCard(this)">
             <h3 class="musical-title">{{ musical.name }}</h3>
+            <div class="card-toggle">
+              <span class="toggle-icon">▼</span>
+            </div>
+          </div>
+          
+          <!-- Body de la card (colapsable) -->
+          <div class="musical-card-body collapsed">
             <div class="badges">
               {% if musical.is_available %}
               <span class="badge badge-success">✅ Disponible</span>
@@ -106,10 +113,7 @@
               <span class="badge badge-danger">❌ Agotado</span>
               {% endif %}
             </div>
-          </div>
-          
-          <!-- Body de la card -->
-          <div class="musical-card-body">
+
             <div class="musical-stats">
               <div class="stat">
                 <span class="stat-icon">🔗</span>
@@ -195,8 +199,8 @@
             {% endif %}
           </div>
 
-          <!-- Footer de la card -->
-          <div class="musical-card-footer">
+          <!-- Footer de la card (colapsable) -->
+          <div class="musical-card-footer collapsed">
             <a href="/shows#musical-{{ musical.id }}" class="btn btn-primary">
               <span>Ver detalles completos</span>
               <span class="btn-icon">→</span>
@@ -284,8 +288,27 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
+    // ==================== TOGGLE CARD ====================
+    function toggleCard(element) {
+      const card = element.closest('.musical-card');
+      const body = card.querySelector('.musical-card-body');
+      const footer = card.querySelector('.musical-card-footer');
+      const toggleIcon = card.querySelector('.toggle-icon');
+      
+      body.classList.toggle('collapsed');
+      footer.classList.toggle('collapsed');
+      card.classList.toggle('expanded');
+      
+      // Rotar icono
+      if (body.classList.contains('collapsed')) {
+        toggleIcon.textContent = '▼';
+      } else {
+        toggleIcon.textContent = '▲';
+      }
+    }
+
     // ==================== TOGGLE EXTRA LINKS ====================
     function toggleAllLinks(button) {
       const card = button.closest('.musical-card');
