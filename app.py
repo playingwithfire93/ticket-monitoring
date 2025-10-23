@@ -137,8 +137,14 @@ def index():
         # Prepare data for each musical
         for musical in musicals:
             musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
-            musical.active_links = sum(1 for link in musical.links if link.is_available)
-            musical.sold_out_links = len(musical.links) - musical.active_links
+            # Check if is_available attribute exists
+            if musical.links and hasattr(musical.links[0], 'is_available'):
+                musical.active_links = sum(1 for link in musical.links if link.is_available)
+                musical.sold_out_links = len(musical.links) - musical.active_links
+            else:
+                # Fallback if is_available doesn't exist
+                musical.active_links = len(musical.links)
+                musical.sold_out_links = 0
         
         return render_template(
             'index.html',
@@ -181,14 +187,33 @@ def api_get_musicals():
         result = []
         for musical in musicals:
             links = MusicalLink.query.filter_by(musical_id=musical.id).all()
-            result.append({
+            
+            # Build links data
+            links_data = []
+            for link in links:
+                link_dict = {'url': link.url}
+                if hasattr(link, 'is_available'):
+                    link_dict['is_available'] = link.is_available
+                else:
+                    link_dict['is_available'] = True
+                links_data.append(link_dict)
+            
+            musical_dict = {
                 'id': musical.id,
                 'name': musical.name,
-                'description': musical.description,
-                'is_available': musical.is_available,
-                'links': [{'url': link.url, 'is_available': link.is_available} for link in links],
-                'updated_at': musical.updated_at.isoformat() if musical.updated_at else None
-            })
+                'links': links_data
+            }
+            
+            # Add optional fields if they exist
+            if hasattr(musical, 'description'):
+                musical_dict['description'] = musical.description
+            if hasattr(musical, 'is_available'):
+                musical_dict['is_available'] = musical.is_available
+            if hasattr(musical, 'updated_at') and musical.updated_at:
+                musical_dict['updated_at'] = musical.updated_at.isoformat()
+                
+            result.append(musical_dict)
+        
         return jsonify(result)
 
 @app.route("/api/suggest-site", methods=["POST"])
