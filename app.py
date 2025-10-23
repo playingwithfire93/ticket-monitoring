@@ -1,4 +1,4 @@
-import os  # ← AÑADIR ESTA LÍNEA
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request, Response
@@ -29,8 +29,8 @@ ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # ==================== FLASK APP SETUP ====================
 app = Flask(__name__,
-           template_folder='templates',  # ✅ templates está en la raíz
-           static_folder='static',       # ✅ static está en la raíz
+           template_folder='templates',
+           static_folder='static',
            static_url_path='/static')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
@@ -50,6 +50,58 @@ print(f"✅ Static exists: {os.path.exists(BASE / 'static')}")
 print(f"✅ CSS exists: {os.path.exists(BASE / 'static' / 'css' / 'style.css')}")
 print(f"✅ JS exists: {os.path.exists(BASE / 'static' / 'js' / 'main.js')}")
 print("=" * 60)
+
+# ==================== HELPER FUNCTIONS (BEFORE ROUTES) ====================
+def require_auth(f):
+    """Decorator for admin authentication"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or auth.password != ADMIN_PASSWORD:
+            return Response(
+                'Acceso denegado. Introduce la contraseña de administrador.\n',
+                401,
+                {'WWW-Authenticate': 'Basic realm="Admin Area"'}
+            )
+        return f(*args, **kwargs)
+    return decorated
+
+def load_events():
+    """Load events from JSON file"""
+    try:
+        with EVENTS_FILE.open('r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def send_telegram_notification(message_text):
+    """Send notification via Telegram"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return {"ok": False, "reason": "telegram-not-configured"}
+    
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message_text}
+        r = requests.post(url, json=payload, timeout=6)
+        return {"ok": r.ok}
+    except Exception as e:
+        app.logger.error(f"Telegram error: {e}")
+        return {"ok": False, "error": str(e)}
+
+def send_discord_webhook(message_text, webhook_type="alert"):
+    """Send notification via Discord webhook"""
+    webhook_url = DISCORD_WEBHOOK_SUGGESTIONS if webhook_type == "suggestion" else DISCORD_WEBHOOK_ALERTS
+    
+    if not webhook_url:
+        return {"ok": False, "reason": "discord-not-configured"}
+    
+    try:
+        payload = {"content": message_text}
+        r = requests.post(webhook_url, json=payload, timeout=6)
+        return {"ok": r.ok}
+    except Exception as e:
+        app.logger.error(f"Discord error: {e}")
+        return {"ok": False, "error": str(e)}
 
 # Create database tables
 with app.app_context():
@@ -91,8 +143,8 @@ def index():
         return render_template(
             'index.html',
             musicals=musicals,
-            telegram_url="https://t.me/your_channel",  # Actualiza con tu canal
-            discord_url="https://discord.gg/your_server"  # Actualiza con tu servidor
+            telegram_url=os.getenv("TELEGRAM_URL", "https://t.me/your_channel"),
+            discord_url=os.getenv("DISCORD_URL", "https://discord.gg/your_server")
         )
 
 @app.route("/shows")
@@ -167,6 +219,9 @@ def api_suggest_site():
         
         suggestions.append(suggestion)
         
+        # Ensure directory exists
+        SUGGESTIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        
         with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
@@ -198,54 +253,7 @@ def api_check_now():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# ==================== HELPER FUNCTIONS ====================
-def load_events():
-    try:
-        with EVENTS_FILE.open('r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-def require_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or auth.password != ADMIN_PASSWORD:
-            return Response(
-                'Acceso denegado. Introduce la contraseña de administrador.\n',
-                401,
-                {'WWW-Authenticate': 'Basic realm="Admin Area"'}
-            )
-        return f(*args, **kwargs)
-    return decorated
-
-def send_telegram_notification(message_text):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return {"ok": False, "reason": "telegram-not-configured"}
-    
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message_text}
-        r = requests.post(url, json=payload, timeout=6)
-        return {"ok": r.ok}
-    except Exception as e:
-        app.logger.error(f"Telegram error: {e}")
-        return {"ok": False, "error": str(e)}
-
-def send_discord_webhook(message_text, webhook_type="alert"):
-    webhook_url = DISCORD_WEBHOOK_SUGGESTIONS if webhook_type == "suggestion" else DISCORD_WEBHOOK_ALERTS
-    
-    if not webhook_url:
-        return {"ok": False, "reason": "discord-not-configured"}
-    
-    try:
-        payload = {"content": message_text}
-        r = requests.post(webhook_url, json=payload, timeout=6)
-        return {"ok": r.ok}
-    except Exception as e:
-        app.logger.error(f"Discord error: {e}")
-        return {"ok": False, "error": str(e)}
-
 # ==================== RUN ====================
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    port = int(os.getenv('PORT', 5000))
+    socketio.run(app, debug=False, host='0.0.0.0', port=port)
