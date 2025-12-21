@@ -8,252 +8,274 @@
   <link rel="stylesheet" href="/static/css/style.css">
   
   <style>
-    /* VIDEO HERO BANNER (sección amarilla) */
+  /* VIDEO HERO BANNER (sección amarilla) */
+  .catalog-hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 500px;
+    border-radius: 50px;
+    margin: 2rem 0;
+    border: 8px solid #FFD700; /* Borde amarillo */
+  }
+
+  .video-hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  .video-hero-background video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+  }
+
+  .video-hero-background video.active {
+    opacity: 1; /* ← Video 100% visible */
+    z-index: 1;
+  }
+
+  /* Overlay MUY ligero solo para mejorar legibilidad del texto */
+  .catalog-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* ⬇️ CAMBIO CLAVE: Gradiente suave solo arriba y abajo */
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 192, 203, 0.3) 0%,    /* Rosa muy ligero arriba */
+      rgba(255, 192, 203, 0.1) 30%,   /* Casi transparente en el medio */
+      rgba(255, 192, 203, 0.1) 70%,   /* Casi transparente en el medio */
+      rgba(255, 192, 203, 0.3) 100%   /* Rosa muy ligero abajo */
+    );
+    border-radius: 42px; /* Match el border-radius del contenedor */
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Contenido sobre los videos */
+  .catalog-hero-inner {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 80px 20px;
+  }
+
+  /* Texto con sombra fuerte para que se vea sobre el video */
+  .catalog-hero h1 {
+    color: white; /* ← Cambio a blanco para mejor contraste */
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    text-shadow: 
+      3px 3px 8px rgba(0, 0, 0, 0.8),
+      -1px -1px 4px rgba(0, 0, 0, 0.6),
+      0 0 20px rgba(255, 192, 203, 0.8); /* Glow rosa */
+    letter-spacing: 2px;
+  }
+
+  .catalog-hero .lead {
+    color: white; /* ← Cambio a blanco */
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    text-shadow: 
+      2px 2px 6px rgba(0, 0, 0, 0.9),
+      0 0 15px rgba(0, 0, 0, 0.7);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-telegram,
+  .btn-discord {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Sombra más fuerte */
+  }
+
+  .btn-telegram {
+    background: linear-gradient(135deg, #0088cc, #00a0dc);
+    color: white;
+  }
+
+  .btn-telegram:hover {
+    background: linear-gradient(135deg, #006ba0, #0088cc);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 136, 204, 0.6);
+  }
+
+  .btn-telegram .icon {
+    font-size: 1.3rem;
+  }
+
+  .btn-discord {
+    background: linear-gradient(135deg, #5865f2, #7289da);
+    color: white;
+  }
+
+  .btn-discord:hover {
+    background: linear-gradient(135deg, #4752c4, #5865f2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(88, 101, 242, 0.6);
+  }
+
+  .btn-discord .icon {
+    font-size: 1.3rem;
+  }
+
+  /* Indicadores de video con fondo para que se vean */
+  .video-hero-dots {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    display: flex;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.4); /* Fondo oscuro */
+    padding: 10px 20px;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+  }
+
+  .video-hero-dots .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid white;
+  }
+
+  .video-hero-dots .dot.active {
+    background: white;
+    transform: scale(1.4);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 1);
+  }
+
+  .video-hero-dots .dot:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(1.2);
+  }
+
+  /* Botones de navegación con mejor visibilidad */
+  .video-hero-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5); /* Fondo más oscuro */
+    backdrop-filter: blur(10px);
+    border: 3px solid white;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 4;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .video-hero-nav:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.15);
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.5);
+  }
+
+  .video-hero-nav.prev {
+    left: 30px;
+  }
+
+  .video-hero-nav.next {
+    right: 30px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
     .catalog-hero {
-      position: relative;
-      overflow: hidden;
-      min-height: 500px;
-      border-radius: 50px;
-      margin: 2rem 0;
+      min-height: 400px;
+      border-radius: 30px;
+      border-width: 5px;
     }
 
-    .video-hero-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-
-    .video-hero-background video {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      min-width: 100%;
-      min-height: 100%;
-      width: auto;
-      height: auto;
-      transform: translate(-50%, -50%);
-      object-fit: cover;
-      opacity: 0;
-      transition: opacity 1.5s ease-in-out;
-    }
-
-    .video-hero-background video.active {
-      opacity: 1;
-      z-index: 1;
-    }
-
-    /* Overlay con el borde amarillo y fondo rosa */
     .catalog-hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 192, 203, 0.85); /* Rosa semi-transparente */
-      border: 8px solid #FFD700; /* Borde amarillo */
-      border-radius: 50px;
-      z-index: 2;
+      border-radius: 22px;
     }
 
-    /* Contenido sobre los videos */
     .catalog-hero-inner {
-      position: relative;
-      z-index: 3;
-      text-align: center;
-      padding: 80px 20px;
+      padding: 60px 20px;
     }
 
     .catalog-hero h1 {
-      color: #FF69B4;
-      font-size: 3.5rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+      font-size: 2.5rem;
     }
 
     .catalog-hero .lead {
-      color: #666;
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      flex-wrap: wrap;
+      font-size: 1.1rem;
     }
 
     .btn-telegram,
     .btn-discord {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 15px 30px;
-      border-radius: 30px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      padding: 12px 24px;
+      font-size: 1rem;
     }
 
-    .btn-telegram {
-      background: linear-gradient(135deg, #0088cc, #00a0dc);
-      color: white;
-    }
-
-    .btn-telegram:hover {
-      background: linear-gradient(135deg, #006ba0, #0088cc);
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(0, 136, 204, 0.4);
-    }
-
-    .btn-telegram .icon {
-      font-size: 1.3rem;
-    }
-
-    .btn-discord {
-      background: linear-gradient(135deg, #5865f2, #7289da);
-      color: white;
-    }
-
-    .btn-discord:hover {
-      background: linear-gradient(135deg, #4752c4, #5865f2);
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(88, 101, 242, 0.4);
-    }
-
-    .btn-discord .icon {
-      font-size: 1.3rem;
-    }
-
-    /* Indicadores de video */
-    .video-hero-dots {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 4;
-      display: flex;
-      gap: 12px;
-    }
-
-    .video-hero-dots .dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.5);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 3px solid rgba(255, 255, 255, 0.8);
-    }
-
-    .video-hero-dots .dot.active {
-      background: white;
-      transform: scale(1.4);
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
-    }
-
-    .video-hero-dots .dot:hover {
-      background: rgba(255, 255, 255, 0.8);
-      transform: scale(1.2);
-    }
-
-    /* Botones de navegación */
     .video-hero-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(10px);
-      border: 3px solid rgba(255, 255, 255, 0.7);
-      color: #FF69B4;
-      font-size: 2.5rem;
-      font-weight: bold;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 4;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .video-hero-nav:hover {
-      background: rgba(255, 255, 255, 0.5);
-      transform: translateY(-50%) scale(1.15);
-      box-shadow: 0 4px 20px rgba(255, 105, 180, 0.5);
+      width: 45px;
+      height: 45px;
+      font-size: 1.8rem;
     }
 
     .video-hero-nav.prev {
-      left: 30px;
+      left: 15px;
     }
 
     .video-hero-nav.next {
-      right: 30px;
+      right: 15px;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .catalog-hero {
-        min-height: 400px;
-        border-radius: 30px;
-      }
-
-      .catalog-hero::before {
-        border-width: 5px;
-        border-radius: 30px;
-      }
-
-      .catalog-hero-inner {
-        padding: 60px 20px;
-      }
-
-      .catalog-hero h1 {
-        font-size: 2.5rem;
-      }
-
-      .catalog-hero .lead {
-        font-size: 1rem;
-      }
-
-      .btn-telegram,
-      .btn-discord {
-        padding: 12px 24px;
-        font-size: 1rem;
-      }
-
-      .video-hero-nav {
-        width: 45px;
-        height: 45px;
-        font-size: 1.8rem;
-      }
-
-      .video-hero-nav.prev {
-        left: 15px;
-      }
-
-      .video-hero-nav.next {
-        right: 15px;
-      }
-
-      .video-hero-dots {
-        bottom: 20px;
-      }
-
-      .video-hero-dots .dot {
-        width: 10px;
-        height: 10px;
-        border-width: 2px;
-      }
+    .video-hero-dots {
+      bottom: 20px;
+      padding: 8px 15px;
     }
+
+    .video-hero-dots .dot {
+      width: 10px;
+      height: 10px;
+      border-width: 2px;
+    }
+  }
   </style>
 </head>
 <body class="pink-theme">
