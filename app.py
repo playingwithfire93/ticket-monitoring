@@ -1,11 +1,7 @@
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, render_template, jsonify, request, Response, send_from_directory
-from flask_socketio import SocketIO
-from functools import wraps
-from apscheduler.schedulers.background import BackgroundScheduler
-import json
+from flask import Flask, render_template, jsonify, send_from_directory
 import requests
 from models import db, Musical, MusicalLink, MusicalChange
 
@@ -39,7 +35,6 @@ app = Flask(__name__,
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Log configuration
 print("=" * 60)
@@ -370,6 +365,11 @@ def api_calendar_events():
     events = load_events()
     exclusions = load_exclusions()
     
+    # Debug: verificar que los eventos tienen imagen y URL
+    print(f"📊 Cargando {len(events)} eventos base")
+    for evt in events[:3]:  # Mostrar primeros 3
+        print(f"  - {evt.get('title')}: image={evt.get('image')}, url={evt.get('url')}")
+    
     # Transform to FullCalendar format
     calendar_events = []
     
@@ -394,18 +394,16 @@ def api_calendar_events():
             class_name = 'event-les-miserables'
         elif 'rey león' in musical_name or 'rey leon' in musical_name:
             class_name = 'event-rey-leon'
-        elif 'we will rock you' in musical_name:
-            class_name = 'event-we-will-rock-you'
+        elif 'houdini' in musical_name:
+            class_name = 'event-houdini'
+        elif 'cabaret' in musical_name:
+            class_name = 'event-cabaret'
+        elif 'cenicienta' in musical_name:
+            class_name = 'event-cenicienta'
         elif 'rent' in musical_name:
             class_name = 'event-rent'
         elif 'six' in musical_name:
             class_name = 'event-six'
-        elif 'cabaret' in musical_name:
-            class_name = 'event-default'
-        elif 'cenicienta' in musical_name:
-            class_name = 'event-default'
-        elif 'hilo invisible' in musical_name:
-            class_name = 'event-default'
         else:
             class_name = 'event-default'
         
@@ -428,7 +426,8 @@ def api_calendar_events():
                     should_include = date_str not in exclude_dates
             
             if should_include:
-                calendar_events.append({
+                # IMPORTANTE: Incluir todos los campos del evento original
+                calendar_event = {
                     'id': f"{event.get('id')}-{current_date.strftime('%Y%m%d')}",
                     'title': event.get('title', event.get('musical', 'Sin título')),
                     'start': date_str,
@@ -437,14 +436,26 @@ def api_calendar_events():
                     'extendedProps': {
                         'musical': event.get('musical', ''),
                         'location': event.get('location', ''),
-                        'description': event.get('description', '')
+                        'description': event.get('description', ''),
+                        'image': event.get('image', ''),
+                        'url': event.get('url', ''),
+                        'type': event.get('type', '')
                     }
-                })
+                }
+                calendar_events.append(calendar_event)
             
             # Move to next day
             current_date += timedelta(days=1)
     
     print(f"✅ Generated {len(calendar_events)} calendar events")
+    
+    # Debug: verificar primer evento generado
+    if calendar_events:
+        sample = calendar_events[0]
+        print(f"🔍 Primer evento: {sample['title']}")
+        print(f"   - image: {sample['extendedProps'].get('image')}")
+        print(f"   - url: {sample['extendedProps'].get('url')}")
+    
     return jsonify(calendar_events)
 
 # ==================== RUN ====================

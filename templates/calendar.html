@@ -96,6 +96,17 @@
       gap: 8px;
     }
 
+    .tooltip-location-link {
+      color: #3498db;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .tooltip-location-link:hover {
+      color: #2980b9;
+      text-decoration: underline;
+    }
+
     .tooltip-description {
       font-size: 0.9rem;
       color: #555;
@@ -103,22 +114,41 @@
       margin-bottom: 15px;
     }
 
+    .tooltip-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .tooltip-button {
       display: inline-block;
       width: 100%;
       padding: 12px;
-      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
-      color: white;
       text-align: center;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 600;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .tooltip-button:hover {
+    .tooltip-button-primary {
+      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+      color: white;
+    }
+
+    .tooltip-button-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+    }
+
+    .tooltip-button-secondary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+    }
+
+    .tooltip-button-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
     }
 
     /* Colores por tipo de musical */
@@ -330,56 +360,65 @@
 
       function showTooltip(event, mouseEvent) {
         const props = event.extendedProps;
-        const image = props.image || '/static/fotos/posters/default.jpg';
+        
+        // Validar que la imagen existe
+        const image = props.image && props.image !== '' 
+          ? props.image 
+          : `https://via.placeholder.com/320x180/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}`;
+        
         const description = props.description || 'Disfruta de este increíble musical en Madrid';
         const location = props.location || 'Madrid';
         const url = props.url || '#';
         
-        // Construir HTML del tooltip
-        const imageHtml = image ? `
+        // Crear enlace de Google Maps
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Madrid')}`;
+        
+        // Debug
+        console.log('🎭 Musical:', event.title);
+        console.log('📸 Imagen:', image);
+        console.log('🔗 URL:', url);
+        console.log('📍 Maps:', mapsUrl);
+        
+        tooltipEl.innerHTML = `
           <img 
             src="${image}" 
             alt="${event.title}" 
             class="tooltip-image" 
-            onerror="console.error('Error cargando imagen:', this.src); this.onerror=null; this.src='https://via.placeholder.com/320x180/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}';"
-          >` : '';
-        
-        tooltipEl.innerHTML = `
-          ${imageHtml}
+            onerror="console.error('❌ Error cargando:', this.src); this.src='https://via.placeholder.com/320x180/ff69b4/ffffff?text=Musical';"
+          >
           <div class="tooltip-content">
             <h3 class="tooltip-title">${event.title}</h3>
             <div class="tooltip-meta">
               <div class="tooltip-meta-item">
                 <span>📍</span>
-                <span>${location}</span>
+                <a href="${mapsUrl}" target="_blank" class="tooltip-location-link" onclick="event.stopPropagation()">
+                  ${location}
+                </a>
               </div>
             </div>
             <p class="tooltip-description">${description}</p>
-            ${url !== '#' ? `<a href="${url}" target="_blank" class="tooltip-button" onclick="event.stopPropagation()">🎟️ Comprar Entradas</a>` : ''}
+            <div class="tooltip-buttons">
+              ${url !== '#' ? `<a href="${url}" target="_blank" class="tooltip-button tooltip-button-primary" onclick="event.stopPropagation()">🎟️ Comprar Entradas</a>` : ''}
+              <a href="${mapsUrl}" target="_blank" class="tooltip-button tooltip-button-secondary" onclick="event.stopPropagation()">🗺️ Ver en Google Maps</a>
+            </div>
           </div>
         `;
         
-        // Debug: mostrar en consola qué imagen se está intentando cargar
-        console.log('Cargando imagen:', image, 'para', event.title);
-        
-        // Posicionar tooltip cerca del cursor
+        // Posicionar tooltip
         const tooltipWidth = 320;
-        const tooltipHeight = 450;
+        const tooltipHeight = 550; // Aumentado por el botón extra
         
         let left = mouseEvent.pageX + 15;
         let top = mouseEvent.pageY - 50;
         
-        // Ajustar si se sale de la pantalla por la derecha
         if (left + tooltipWidth > window.innerWidth) {
           left = mouseEvent.pageX - tooltipWidth - 15;
         }
         
-        // Ajustar si se sale de la pantalla por abajo
         if (top + tooltipHeight > window.innerHeight + window.scrollY) {
           top = window.innerHeight + window.scrollY - tooltipHeight - 20;
         }
         
-        // Ajustar si se sale por arriba
         if (top < window.scrollY) {
           top = window.scrollY + 20;
         }
