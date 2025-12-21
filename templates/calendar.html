@@ -733,6 +733,26 @@
           },
           events: allEvents,
           
+          // ✅ AÑADE ESTO: Asigna las clases CSS según el musical
+          eventClassNames: function(info) {
+            const musical = (info.event.extendedProps.musical || '').toLowerCase();
+            
+            const classMap = {
+              'wicked': 'event-wicked',
+              'the book of mormon': 'event-book-mormon',
+              'les misérables': 'event-les-miserables',
+              'el rey león': 'event-rey-leon',
+              'cabaret': 'event-cabaret',
+              'houdini': 'event-houdini',
+              'cenicienta': 'event-cenicienta',
+              'oliver twist': 'event-oliver-twist',
+              'raffaella': 'event-raffaella',
+              'los pilares de la tierra': 'event-pilares'
+            };
+            
+            return classMap[musical] || 'fc-event-default';
+          },
+          
           // Hover para mostrar tooltip
           eventMouseEnter: function(info) {
             clearTimeout(hideTimeout);
