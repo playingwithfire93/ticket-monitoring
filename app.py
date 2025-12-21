@@ -327,6 +327,48 @@ def api_check_now():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+@app.route("/api/calendar-events", methods=["GET"])
+def api_calendar_events():
+    """Get events formatted for FullCalendar"""
+    events = load_events()
+    
+    # Transform to FullCalendar format
+    calendar_events = []
+    for event in events:
+        # Determine color class based on musical name
+        musical_lower = event.get('musical', '').lower()
+        if 'wicked' in musical_lower:
+            class_name = 'event-wicked'
+        elif 'book of mormon' in musical_lower:
+            class_name = 'event-book-mormon'
+        elif 'misérables' in musical_lower or 'miserables' in musical_lower:
+            class_name = 'event-les-miserables'
+        elif 'rey león' in musical_lower or 'rey leon' in musical_lower:
+            class_name = 'event-rey-leon'
+        elif 'we will rock you' in musical_lower:
+            class_name = 'event-we-will-rock-you'
+        elif 'rent' in musical_lower:
+            class_name = 'event-rent'
+        elif 'six' in musical_lower:
+            class_name = 'event-six'
+        else:
+            class_name = 'event-default'
+        
+        calendar_events.append({
+            'id': event.get('id'),
+            'title': event.get('title', event.get('musical', 'Sin título')),
+            'start': event.get('start'),
+            'end': event.get('end'),
+            'className': class_name,
+            'extendedProps': {
+                'musical': event.get('musical', ''),
+                'location': event.get('location', ''),
+                'description': event.get('description', '')
+            }
+        })
+    
+    return jsonify(calendar_events)
+
 # ==================== RUN ====================
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

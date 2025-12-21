@@ -3,9 +3,110 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📅 Calendario de Eventos - Ticket Monitor</title>
+  <title>📅 Calendario de Musicales - Ticket Monitor</title>
   
   <link rel="stylesheet" href="/static/css/style.css">
+  
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+  
+  <style>
+    .calendar-container {
+      max-width: 1400px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    #calendar {
+      margin-top: 20px;
+    }
+
+    /* Estilo personalizado para eventos */
+    .fc-event {
+      border-radius: 4px;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none !important;
+    }
+
+    .fc-event:hover {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+
+    /* Colores por tipo de musical */
+    .event-wicked { background-color: #9b59b6 !important; }
+    .event-book-mormon { background-color: #e74c3c !important; }
+    .event-les-miserables { background-color: #3498db !important; }
+    .event-rey-leon { background-color: #f39c12 !important; }
+    .event-we-will-rock-you { background-color: #e67e22 !important; }
+    .event-rent { background-color: #1abc9c !important; }
+    .event-six { background-color: #e91e63 !important; }
+    .event-default { background-color: #95a5a6 !important; }
+
+    /* Filtros */
+    .calendar-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: var(--light-pink);
+      border-radius: 8px;
+    }
+
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .filter-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .filter-chip.active {
+      border-color: white;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    }
+
+    .filter-all {
+      background: #34495e;
+    }
+
+    .calendar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body class="pink-theme">
 
@@ -14,7 +115,7 @@
     <div class="container topbar-inner">
       <div class="brand">
         <div class="logo-badge" aria-hidden="true">📅</div>
-        <h1>Calendario de Eventos</h1>
+        <h1>Calendario de Musicales</h1>
       </div>
       
       <div class="controls">
@@ -27,274 +128,159 @@
     <!-- Hero -->
     <div class="catalog-hero">
       <div class="catalog-hero-inner">
-        <h1>📅 Calendario de Musicales</h1>
-        <p class="lead">Próximos estrenos y fechas importantes</p>
+        <h1>📅 Calendario de Musicales 2025-2026</h1>
+        <p class="lead">Consulta las fechas de todos los musicales en cartelera en Madrid</p>
       </div>
     </div>
 
-    <!-- Events Section -->
-    <section class="events-section">
-      {% if events and events|length > 0 %}
-      <div class="events-grid">
-        {% for event in events %}
-        <article class="event-card">
-          <div class="event-date">
-            <span class="event-day">{{ event.date.split('-')[2] if '-' in event.date else '??' }}</span>
-            <span class="event-month">
-              {% set months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'] %}
-              {% if '-' in event.date %}
-                {{ months[event.date.split('-')[1]|int - 1] }}
-              {% else %}
-                ???
-              {% endif %}
-            </span>
-          </div>
-          
-          <div class="event-content">
-            <h3 class="event-title">{{ event.title or event.name }}</h3>
-            
-            {% if event.description %}
-            <p class="event-description">{{ event.description }}</p>
-            {% endif %}
-            
-            <div class="event-meta">
-              {% if event.location %}
-              <span class="event-location">📍 {{ event.location }}</span>
-              {% endif %}
-              
-              {% if event.type %}
-              <span class="event-type badge">{{ event.type }}</span>
-              {% endif %}
-            </div>
-            
-            {% if event.url %}
-            <a href="{{ event.url }}" target="_blank" class="btn btn-primary btn-small">
-              Ver más información →
-            </a>
-            {% endif %}
-          </div>
-        </article>
-        {% endfor %}
+    <div class="calendar-container">
+      <!-- Filtros -->
+      <div class="calendar-filters">
+        <button class="filter-chip filter-all active" data-musical="all">
+          📋 Todos los musicales
+        </button>
+        <button class="filter-chip event-wicked" data-musical="wicked">
+          Wicked
+        </button>
+        <button class="filter-chip event-book-mormon" data-musical="the book of mormon">
+          The Book of Mormon
+        </button>
+        <button class="filter-chip event-les-miserables" data-musical="les misérables">
+          Les Misérables
+        </button>
+        <button class="filter-chip event-rey-leon" data-musical="el rey león">
+          El Rey León
+        </button>
+        <button class="filter-chip event-we-will-rock-you" data-musical="we will rock you">
+          We Will Rock You
+        </button>
+        <button class="filter-chip event-rent" data-musical="rent">
+          RENT
+        </button>
+        <button class="filter-chip event-six" data-musical="six">
+          SIX
+        </button>
       </div>
-      {% else %}
-      <div class="empty-state">
-        <div class="empty-icon">📅</div>
-        <h3>No hay eventos programados</h3>
-        <p>Próximamente añadiremos fechas de estrenos y eventos especiales</p>
-        <a href="/" class="btn btn-primary">
-          <span class="icon">←</span>
-          Volver al Dashboard
-        </a>
-      </div>
-      {% endif %}
-    </section>
 
-    <!-- Quick Add Event (Admin only - optional) -->
-    {% if is_admin %}
-    <section class="add-event-section">
-      <h3>➕ Añadir Evento</h3>
-      <form id="add-event-form" class="suggestion-form">
-        <div class="row">
-          <label>Título del evento *
-            <input type="text" name="title" required placeholder="Ej. Estreno de Hamilton">
-          </label>
-          <label>Fecha *
-            <input type="date" name="date" required>
-          </label>
+      <!-- Calendario -->
+      <div id="calendar"></div>
+
+      <!-- Leyenda -->
+      <div class="calendar-legend">
+        <div class="legend-item">
+          <div class="legend-color event-wicked"></div>
+          <span>Wicked</span>
         </div>
-        
-        <label>Descripción
-          <textarea name="description" rows="3" placeholder="Detalles del evento..."></textarea>
-        </label>
-        
-        <div class="row">
-          <label>Ubicación
-            <input type="text" name="location" placeholder="Ej. Teatro Coliseum">
-          </label>
-          <label>Tipo
-            <select name="type">
-              <option value="estreno">Estreno</option>
-              <option value="ultima-funcion">Última función</option>
-              <option value="especial">Evento especial</option>
-            </select>
-          </label>
+        <div class="legend-item">
+          <div class="legend-color event-book-mormon"></div>
+          <span>The Book of Mormon</span>
         </div>
-        
-        <label>URL (opcional)
-          <input type="url" name="url" placeholder="https://...">
-        </label>
-        
-        <div class="suggest-controls">
-          <button type="submit" class="btn primary">➕ Añadir Evento</button>
-          <button type="reset" class="btn ghost">Limpiar</button>
+        <div class="legend-item">
+          <div class="legend-color event-les-miserables"></div>
+          <span>Les Misérables</span>
         </div>
-      </form>
-    </section>
-    {% endif %}
+        <div class="legend-item">
+          <div class="legend-color event-rey-leon"></div>
+          <span>El Rey León</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color event-we-will-rock-you"></div>
+          <span>We Will Rock You</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color event-rent"></div>
+          <span>RENT</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color event-six"></div>
+          <span>SIX</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color event-default"></div>
+          <span>Otros musicales</span>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer class="footer">
-    <small>Made with 💖 — dynamic cute monitor</small>
+    <small>Made with 💖 — Musical Calendar Monitor</small>
   </footer>
 
-  <style>
-    /* Calendar specific styles */
-    .events-section {
-      margin: 40px 0;
-    }
-
-    .events-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 24px;
-    }
-
-    .event-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-    }
-
-    .event-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3);
-    }
-
-    .event-date {
-      flex-shrink: 0;
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-    }
-
-    .event-day {
-      font-size: 2rem;
-      line-height: 1;
-    }
-
-    .event-month {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .event-content {
-      flex: 1;
-    }
-
-    .event-title {
-      margin: 0 0 10px 0;
-      color: var(--primary-pink);
-      font-size: 1.3rem;
-    }
-
-    .event-description {
-      color: #666;
-      font-size: 0.95rem;
-      margin-bottom: 15px;
-      line-height: 1.5;
-    }
-
-    .event-meta {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin-bottom: 15px;
-      font-size: 0.9rem;
-      color: #666;
-    }
-
-    .event-location {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .event-type {
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      background: var(--light-pink);
-      color: var(--primary-pink);
-    }
-
-    .btn-small {
-      padding: 8px 16px;
-      font-size: 0.9rem;
-    }
-
-    .add-event-section {
-      margin: 60px auto;
-      max-width: 700px;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .add-event-section h3 {
-      margin-bottom: 20px;
-      color: var(--primary-pink);
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .row {
-        grid-template-columns: 1fr;
-      }
-
-      .event-card {
-        flex-direction: column;
-      }
-
-      .event-date {
-        width: 100%;
-        flex-direction: row;
-        gap: 10px;
-      }
-    }
-  </style>
-
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  
   <script>
-    // Add event form handler (if admin)
-    document.getElementById('add-event-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      let currentFilter = 'all';
       
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData);
-      
-      try {
-        const res = await fetch('/api/add-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+      // Cargar eventos desde el servidor
+      fetch('/api/calendar-events')
+        .then(response => response.json())
+        .then(events => {
+          initCalendar(events);
+        })
+        .catch(error => {
+          console.error('Error loading events:', error);
+          calendarEl.innerHTML = '<p style="text-align:center; color:#e74c3c; padding:40px;">❌ Error al cargar el calendario. Verifica que events.json existe.</p>';
         });
-        
-        if (res.ok) {
-          alert('✅ Evento añadido correctamente');
-          location.reload();
-        } else {
-          alert('❌ Error al añadir el evento');
-        }
-      } catch (err) {
-        alert('❌ Error de conexión');
+
+      function initCalendar(allEvents) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          locale: 'es',
+          firstDay: 1, // Lunes
+          height: 'auto',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listMonth'
+          },
+          buttonText: {
+            today: 'Hoy',
+            month: 'Mes',
+            week: 'Semana',
+            list: 'Lista'
+          },
+          events: allEvents,
+          
+          // Click en evento
+          eventClick: function(info) {
+            alert(`${info.event.title}\n\n📍 ${info.event.extendedProps.location}\n📅 ${info.event.start.toLocaleDateString('es-ES')} - ${info.event.end ? info.event.end.toLocaleDateString('es-ES') : 'Indefinido'}`);
+          },
+          
+          // Tooltip al pasar el ratón
+          eventDidMount: function(info) {
+            info.el.title = `${info.event.title}\n${info.event.extendedProps.location}`;
+          }
+        });
+
+        calendar.render();
+
+        // Filtros
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+          chip.addEventListener('click', function() {
+            // Remover active de todos
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            const musical = this.dataset.musical.toLowerCase();
+            currentFilter = musical;
+            
+            // Filtrar eventos
+            if (musical === 'all') {
+              calendar.removeAllEvents();
+              calendar.addEventSource(allEvents);
+            } else {
+              const filtered = allEvents.filter(e => 
+                e.extendedProps.musical.toLowerCase() === musical
+              );
+              calendar.removeAllEvents();
+              calendar.addEventSource(filtered);
+            }
+          });
+        });
       }
     });
   </script>
