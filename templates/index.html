@@ -61,8 +61,32 @@
   }
 
   .video-hero-background video.active {
-    opacity: 1; /* ← Video 100% visible */
+    opacity: 1;
     z-index: 1;
+  }
+
+  .video-hero-background iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: 100vw;
+    height: 56.25vw; /* Ratio 16:9 */
+    min-height: 100vh;
+    min-width: 177.77vh; /* Ratio 16:9 */
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .video-hero-background iframe.active {
+    opacity: 1;
+    z-index: 1;
+    pointer-events: auto;
   }
 
   /* Overlay MUY ligero solo para mejorar legibilidad del texto */
