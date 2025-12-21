@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ticket-monitor
+    env: python
+    region: oregon  # o tu región preferida
+    plan: free  # o el plan que uses
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:$PORT app:app
+    
+    # Caché de build
+    buildFilter:
+      paths:
+        - requirements.txt  # Solo rebuild si cambia requirements
+    
+    # Variables de entorno
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: PORT
+        value: 5000
