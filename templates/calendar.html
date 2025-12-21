@@ -330,13 +330,22 @@
 
       function showTooltip(event, mouseEvent) {
         const props = event.extendedProps;
-        const image = props.image || 'https://via.placeholder.com/320x180/ff69b4/ffffff?text=' + encodeURIComponent(event.title);
+        const image = props.image || '/static/fotos/posters/default.jpg';
         const description = props.description || 'Disfruta de este increíble musical en Madrid';
         const location = props.location || 'Madrid';
         const url = props.url || '#';
         
+        // Construir HTML del tooltip
+        const imageHtml = image ? `
+          <img 
+            src="${image}" 
+            alt="${event.title}" 
+            class="tooltip-image" 
+            onerror="console.error('Error cargando imagen:', this.src); this.onerror=null; this.src='https://via.placeholder.com/320x180/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}';"
+          >` : '';
+        
         tooltipEl.innerHTML = `
-          <img src="${image}" alt="${event.title}" class="tooltip-image" onerror="this.src='https://via.placeholder.com/320x180/ff69b4/ffffff?text=Musical'">
+          ${imageHtml}
           <div class="tooltip-content">
             <h3 class="tooltip-title">${event.title}</h3>
             <div class="tooltip-meta">
@@ -349,6 +358,9 @@
             ${url !== '#' ? `<a href="${url}" target="_blank" class="tooltip-button" onclick="event.stopPropagation()">🎟️ Comprar Entradas</a>` : ''}
           </div>
         `;
+        
+        // Debug: mostrar en consola qué imagen se está intentando cargar
+        console.log('Cargando imagen:', image, 'para', event.title);
         
         // Posicionar tooltip cerca del cursor
         const tooltipWidth = 320;

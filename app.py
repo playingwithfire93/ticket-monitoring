@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, render_template, jsonify, request, Response
+from flask import Flask, render_template, jsonify, request, Response, send_from_directory
 from flask_socketio import SocketIO
 from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -250,6 +250,17 @@ def admin():
         for musical in musicals:
             musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
         return render_template('admin.html', musicals=musicals)
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    """Serve static files"""
+    return send_from_directory('static', filename)
+
+@app.route('/static/fotos/posters/<filename>')
+def serve_poster(filename):
+    """Serve poster images"""
+    posters_dir = os.path.join(app.root_path, 'static', 'fotos', 'posters')
+    return send_from_directory(posters_dir, filename)
 
 # ==================== API ENDPOINTS ====================
 @app.route("/api/musicals", methods=["GET"])
