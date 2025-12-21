@@ -1,64 +1,171 @@
 [
   {
-    "id": "e3b0c442-0001-4f3a-9a1a-111111111111",
-    "title": "Houdini — Temporada",
-    "musical": "Houdini",
-    "start": "2025-10-09",
-    "end": "2025-12-01",
-    "allDay": true,
-    "location": "Madrid"
+    "id": "el-rey-leon-2025",
+    "title": "El Rey León",
+    "musical": "El Rey León",
+    "start": "2025-08-12",
+    "end": "2026-03-29",
+    "location": "Teatro Lope de Vega",
+    "type": "musical",
+    "description": "El musical más exitoso de la historia"
   },
   {
-    "id": "b7f3a1c2-0002-4d5b-8c2b-222222222222",
-    "title": "Wicked — Temporada",
+    "id": "wah-madrid-2025",
+    "title": "WAH Madrid",
+    "musical": "WAH Madrid",
+    "start": "2025-09-04",
+    "end": "2026-04-05",
+    "location": "IFEMA",
+    "type": "musical",
+    "description": "Espectáculo de circo y música"
+  },
+  {
+    "id": "cabaret-2025",
+    "title": "CABARET (Kit Kat Club)",
+    "musical": "CABARET",
+    "start": "2025-09-19",
+    "end": "2026-02-01",
+    "location": "Teatro Albéniz Umusic Hotel",
+    "type": "musical"
+  },
+  {
+    "id": "wicked-2025",
+    "title": "Wicked, el musical",
     "musical": "Wicked",
     "start": "2025-10-03",
-    "end": "2026-02-01",
-    "allDay": true
+    "end": "2026-04-12",
+    "location": "Teatro Nuevo Alcalá",
+    "type": "musical",
+    "description": "La historia jamás contada de las brujas de Oz"
   },
   {
-    "id": "c4d2e6f8-0003-4a7c-9d3c-333333333333",
-    "title": "Buscando a Audrey — Temporada (Madrid)",
-    "musical": "Buscando a Audrey",
-    "start": "2025-11-27",
-    "end": "2026-01-11",
-    "allDay": true,
-    "location": "Madrid"
+    "id": "cenicienta-2025",
+    "title": "Cenicienta, el musical",
+    "musical": "Cenicienta",
+    "start": "2025-10-03",
+    "end": "2026-03-31",
+    "location": "Teatro OCASO Coliseum",
+    "type": "musical"
   },
   {
-    "id": "d9a7b5e1-0004-4f2d-8e4d-444444444444",
-    "title": "The Book of Mormon — Temporada",
+    "id": "raffaella-2025",
+    "title": "Raffaella, el musical",
+    "musical": "Raffaella",
+    "start": "2025-10-03",
+    "end": "2025-12-28",
+    "location": "Teatro Capitol Gran Vía",
+    "type": "musical"
+  },
+  {
+    "id": "we-will-rock-you-2025",
+    "title": "We Will Rock You",
+    "musical": "We Will Rock You",
+    "start": "2025-10-11",
+    "end": "2026-04-25",
+    "location": "Gran Teatro CaixaBank Príncipe Pío",
+    "type": "musical",
+    "description": "El musical de Queen"
+  },
+  {
+    "id": "book-of-mormon-2025",
+    "title": "The Book of Mormon",
     "musical": "The Book of Mormon",
-    "start": "2025-10-25",
-    "end": "2025-12-21",
-    "allDay": true,
-    "location": "Madrid"
+    "start": "2025-10-24",
+    "end": "2026-03-01",
+    "location": "Teatro Rialto",
+    "type": "musical",
+    "description": "El musical irreverente de los creadores de South Park"
   },
   {
-    "id": "a1c9f0b7-0005-4b6e-9f5e-555555555555",
-    "title": "Les Misérables — Temporada",
+    "id": "mago-oz-2025",
+    "title": "El Mago de Oz, el musical",
+    "musical": "El Mago de Oz",
+    "start": "2025-10-26",
+    "end": "2026-03-29",
+    "location": "Teatro Maravillas",
+    "type": "musical"
+  },
+  {
+    "id": "hilo-invisible-2025",
+    "title": "El hilo invisible, el musical",
+    "musical": "El hilo invisible",
+    "start": "2025-11-01",
+    "end": "2026-02-01",
+    "location": "Teatro Alcázar",
+    "type": "musical"
+  },
+  {
+    "id": "oliver-twist-2025",
+    "title": "Oliver Twist, el musical",
+    "musical": "Oliver Twist",
+    "start": "2025-11-12",
+    "end": "2026-03-15",
+    "location": "Teatro La Latina",
+    "type": "musical"
+  },
+  {
+    "id": "pilares-tierra-2025",
+    "title": "Los Pilares de la Tierra. El Musical",
+    "musical": "Los Pilares de la Tierra",
+    "start": "2025-11-20",
+    "end": "2026-02-01",
+    "location": "Teatro Gran Vía",
+    "type": "musical"
+  },
+  {
+    "id": "les-miserables-2025",
+    "title": "Los Miserables, el musical",
     "musical": "Les Misérables",
     "start": "2025-11-29",
-    "end": "2026-03-08",
-    "allDay": true,
-    "location": "Madrid"
+    "end": "2026-06-07",
+    "location": "Teatro Apolo Madrid",
+    "type": "musical",
+    "description": "El clásico musical de Victor Hugo"
   },
   {
-    "id": "f6e2b3c4-0006-498f-8a6f-666666666666",
-    "title": "Cabaret — Temporada",
-    "musical": "Cabaret",
-    "start": "2025-10-04",
-    "end": "2025-11-30",
-    "allDay": true,
-    "location": "Madrid"
-  },
-  {
-    "id": "9b4d7a2e-0007-4521-8b7a-777777777777",
-    "title": "Rent — Temporada",
-    "musical": "Rent",
+    "id": "rent-2025",
+    "title": "RENT, el musical",
+    "musical": "RENT",
     "start": "2025-12-23",
     "end": "2026-01-25",
-    "allDay": true,
-    "location": "Madrid"
+    "location": "Fernán Gómez – Centro Cultural de la Villa",
+    "type": "musical"
+  },
+  {
+    "id": "godspell-2026",
+    "title": "GODSPELL",
+    "musical": "GODSPELL",
+    "start": "2026-01-21",
+    "end": "2026-03-01",
+    "location": "Gran Teatro Pavón",
+    "type": "musical"
+  },
+  {
+    "id": "antoine-2026",
+    "title": "Antoine, el musical (El Principito)",
+    "musical": "Antoine",
+    "start": "2026-02-13",
+    "end": "2026-04-26",
+    "location": "Teatro Calderón",
+    "type": "musical"
+  },
+  {
+    "id": "101-dalmatas-2025",
+    "title": "101 Dálmatas: The Show",
+    "musical": "101 Dálmatas",
+    "start": "2025-10-10",
+    "end": "2026-04-24",
+    "location": "Gran Teatro CaixaBank Príncipe Pío",
+    "type": "musical"
+  },
+  {
+    "id": "six-2026",
+    "title": "SIX el Musical",
+    "musical": "SIX",
+    "start": "2026-09-12",
+    "end": "2026-11-08",
+    "location": "Teatro Gran Vía",
+    "type": "musical",
+    "description": "El musical de las seis esposas de Enrique VIII"
   }
 ]
