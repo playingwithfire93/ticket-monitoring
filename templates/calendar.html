@@ -511,6 +511,19 @@
         font-size: 1.2rem;
       }
     }
+
+    /* Añade este CSS en el <style> del calendario */
+
+.event-card {
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.event-card:hover {
+  box-shadow: 0 15px 50px rgba(241, 124, 216, 0.6) !important;
+  transform: scale(1.05);
+}
   </style>
 
   <!-- Añade esto en el <head> -->
@@ -912,5 +925,54 @@
       }
     });
   </script>
+
+  <!-- Añade este script al final, antes de </body> -->
+  <script>
+// ==================== TOOLTIP CARD POSITIONING ====================
+let tooltipCard = null;
+
+document.querySelectorAll('.event-card').forEach(card => {
+  card.addEventListener('mouseenter', function(e) {
+    tooltipCard = this;
+    updateTooltipPosition(e);
+  });
+
+  card.addEventListener('mousemove', function(e) {
+    if (tooltipCard === this) {
+      updateTooltipPosition(e);
+    }
+  });
+
+  card.addEventListener('mouseleave', function() {
+    if (tooltipCard === this) {
+      tooltipCard.style.position = '';
+      tooltipCard.style.left = '';
+      tooltipCard.style.top = '';
+      tooltipCard.style.zIndex = '';
+    }
+    tooltipCard = null;
+  });
+});
+
+function updateTooltipPosition(e) {
+  if (!tooltipCard) return;
+
+  const offset = 15;
+  const x = e.clientX + offset;
+  const y = e.clientY + offset;
+
+  const cardWidth = tooltipCard.offsetWidth;
+  const cardHeight = tooltipCard.offsetHeight;
+
+  const maxX = window.innerWidth - cardWidth - 20;
+  const maxY = window.innerHeight - cardHeight - 20;
+
+  tooltipCard.style.position = 'fixed';
+  tooltipCard.style.left = Math.min(x, maxX) + 'px';
+  tooltipCard.style.top = Math.min(y, maxY) + 'px';
+  tooltipCard.style.zIndex = '9999';
+  tooltipCard.style.width = cardWidth + 'px';
+}
+</script>
 </body>
 </html>
