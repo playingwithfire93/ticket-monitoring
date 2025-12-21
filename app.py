@@ -106,6 +106,30 @@ def send_discord_webhook(message_text, webhook_type="alert"):
         app.logger.error(f"Discord error: {e}")
         return {"ok": False, "error": str(e)}
 
+def load_exclusions():
+    """Load exclusions from JSON file"""
+    try:
+        if not EXCLUSIONS_FILE.exists():
+            print(f"⚠️  Exclusions file not found: {EXCLUSIONS_FILE}")
+            return {}
+        
+        with EXCLUSIONS_FILE.open('r', encoding='utf-8') as f:
+            content = f.read().strip()
+            if not content:
+                print("⚠️  Exclusions file is empty")
+                return {}
+            
+            exclusions = json.loads(content)
+            print(f"✅ Loaded exclusions for {len(exclusions)} musicals")
+            return exclusions
+            
+    except json.JSONDecodeError as e:
+        print(f"❌ Error parsing exclusions.json: {e}")
+        return {}
+    except Exception as e:
+        print(f"❌ Error loading exclusions: {e}")
+        return {}
+
 # Create database tables
 with app.app_context():
     try:
@@ -329,44 +353,87 @@ def api_check_now():
 
 @app.route("/api/calendar-events", methods=["GET"])
 def api_calendar_events():
-    """Get events formatted for FullCalendar"""
+    """Get events formatted for FullCalendar, with custom exclusions"""
+    from datetime import datetime, timedelta
+    
     events = load_events()
+    exclusions = load_exclusions()
     
     # Transform to FullCalendar format
     calendar_events = []
+    
     for event in events:
-        # Determine color class based on musical name
-        musical_lower = event.get('musical', '').lower()
-        if 'wicked' in musical_lower:
+        start_date = datetime.strptime(event.get('start'), '%Y-%m-%d')
+        end_date = datetime.strptime(event.get('end'), '%Y-%m-%d')
+        
+        musical_name = event.get('musical', '').lower()
+        musical_exclusions = exclusions.get(musical_name, {})
+        
+        # Get exclusion rules
+        exclude_dates = set(musical_exclusions.get('exclude_dates', []))
+        include_mondays = set(musical_exclusions.get('include_mondays', []))
+        only_dates = musical_exclusions.get('only_dates', None)
+        
+        # Determine color class
+        if 'wicked' in musical_name:
             class_name = 'event-wicked'
-        elif 'book of mormon' in musical_lower:
+        elif 'book of mormon' in musical_name:
             class_name = 'event-book-mormon'
-        elif 'misérables' in musical_lower or 'miserables' in musical_lower:
+        elif 'misérables' in musical_name or 'miserables' in musical_name:
             class_name = 'event-les-miserables'
-        elif 'rey león' in musical_lower or 'rey leon' in musical_lower:
+        elif 'rey león' in musical_name or 'rey leon' in musical_name:
             class_name = 'event-rey-leon'
-        elif 'we will rock you' in musical_lower:
+        elif 'we will rock you' in musical_name:
             class_name = 'event-we-will-rock-you'
-        elif 'rent' in musical_lower:
+        elif 'rent' in musical_name:
             class_name = 'event-rent'
-        elif 'six' in musical_lower:
+        elif 'six' in musical_name:
             class_name = 'event-six'
+        elif 'cabaret' in musical_name:
+            class_name = 'event-default'
+        elif 'cenicienta' in musical_name:
+            class_name = 'event-default'
+        elif 'hilo invisible' in musical_name:
+            class_name = 'event-default'
         else:
             class_name = 'event-default'
         
-        calendar_events.append({
-            'id': event.get('id'),
-            'title': event.get('title', event.get('musical', 'Sin título')),
-            'start': event.get('start'),
-            'end': event.get('end'),
-            'className': class_name,
-            'extendedProps': {
-                'musical': event.get('musical', ''),
-                'location': event.get('location', ''),
-                'description': event.get('description', '')
-            }
-        })
+        # Generate daily events
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.strftime('%Y-%m-%d')
+            is_monday = current_date.weekday() == 0
+            
+            should_include = False
+            
+            # Check if musical has "only_dates" rule
+            if only_dates is not None:
+                should_include = date_str in only_dates
+            else:
+                # Normal logic: exclude Mondays unless specified
+                if is_monday:
+                    should_include = date_str in include_mondays
+                else:
+                    should_include = date_str not in exclude_dates
+            
+            if should_include:
+                calendar_events.append({
+                    'id': f"{event.get('id')}-{current_date.strftime('%Y%m%d')}",
+                    'title': event.get('title', event.get('musical', 'Sin título')),
+                    'start': date_str,
+                    'allDay': True,
+                    'className': class_name,
+                    'extendedProps': {
+                        'musical': event.get('musical', ''),
+                        'location': event.get('location', ''),
+                        'description': event.get('description', '')
+                    }
+                })
+            
+            # Move to next day
+            current_date += timedelta(days=1)
     
+    print(f"✅ Generated {len(calendar_events)} calendar events")
     return jsonify(calendar_events)
 
 # ==================== RUN ====================
