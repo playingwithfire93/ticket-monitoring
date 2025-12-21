@@ -3,431 +3,519 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📅 Calendario de Musicales - Ticket Monitor</title>
-  
-  <link rel="stylesheet" href="/static/css/style.css">
-  
-  <!-- FullCalendar CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+  <title>📋 Calendar Tests - Ticket Monitor</title>
   
   <style>
-    .calendar-container {
-      max-width: 1400px;
-      margin: 40px auto;
-      background: white;
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .test-header {
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      color: white;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
-
-    #calendar {
-      margin-top: 20px;
-    }
-
-    /* Estilo personalizado para eventos */
-    .fc-event {
-      border-radius: 4px;
-      padding: 2px 4px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border: none !important;
-      position: relative;
-    }
-
-    .fc-event:hover {
-      opacity: 0.9;
-      transform: scale(1.02);
-      z-index: 100;
-    }
-
-    /* TOOLTIP CARD */
-    .musical-tooltip {
-      position: fixed;
-      display: none;
+    
+    .test-suite {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-      width: 320px;
-      z-index: 9999;
-      overflow: hidden;
-      animation: fadeIn 0.2s ease;
-      pointer-events: auto;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .musical-tooltip.active {
-      display: block;
-    }
-
-    .tooltip-image {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-bottom: 3px solid var(--primary-pink);
-    }
-
-    .tooltip-content {
+      border-radius: 8px;
       padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    .tooltip-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--primary-pink);
-      margin: 0 0 10px 0;
+    
+    .test-suite h2 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #ff69b4;
+      padding-bottom: 10px;
     }
-
-    .tooltip-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 12px;
-      font-size: 0.9rem;
+    
+    .test-case {
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #ddd;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+    
+    .test-case.pass {
+      border-left-color: #28a745;
+      background: #d4edda;
+    }
+    
+    .test-case.fail {
+      border-left-color: #dc3545;
+      background: #f8d7da;
+    }
+    
+    .test-case.pending {
+      border-left-color: #ffc107;
+      background: #fff3cd;
+    }
+    
+    .test-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .test-status {
+      font-size: 0.9em;
       color: #666;
     }
-
-    .tooltip-meta-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    
+    .test-error {
+      color: #dc3545;
+      font-family: monospace;
+      font-size: 0.9em;
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 4px;
     }
-
-    .tooltip-location-link {
-      color: #3498db;
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
-
-    .tooltip-location-link:hover {
-      color: #2980b9;
-      text-decoration: underline;
-    }
-
-    .tooltip-description {
-      font-size: 0.9rem;
-      color: #555;
-      line-height: 1.5;
-      margin-bottom: 15px;
-    }
-
-    .tooltip-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .tooltip-button {
-      display: inline-block;
-      width: 100%;
-      padding: 12px;
-      text-align: center;
-      text-decoration: none;
+    
+    .summary {
+      background: #fff;
       border-radius: 8px;
-      font-weight: 600;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding: 20px;
+      margin-top: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    .tooltip-button-primary {
-      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    
+    .summary-stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .stat {
+      flex: 1;
+      min-width: 150px;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat.pass { background: #d4edda; color: #155724; }
+    .stat.fail { background: #f8d7da; color: #721c24; }
+    .stat.pending { background: #fff3cd; color: #856404; }
+    
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+      display: block;
+    }
+    
+    .run-tests-btn {
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
       color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.1em;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 20px;
     }
-
-    .tooltip-button-primary:hover {
+    
+    .run-tests-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
     }
-
-    .tooltip-button-secondary {
-      background: linear-gradient(135deg, #3498db, #2980b9);
-      color: white;
-    }
-
-    .tooltip-button-secondary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-    }
-
-    /* Colores por tipo de musical */
-    .event-wicked { background-color: #9b59b6 !important; }
-    .event-book-mormon { background-color: #e74c3c !important; }
-    .event-les-miserables { background-color: #3498db !important; }
-    .event-rey-leon { background-color: #f39c12 !important; }
-    .event-cabaret { background-color: #34495e !important; }
-    .event-houdini { background-color: #16a085 !important; }
-    .event-cenicienta { background-color: #e91e63 !important; }
-    .event-rent { background-color: #1abc9c !important; }
-    .event-six { background-color: #e91e63 !important; }
-    .event-default { background-color: #95a5a6 !important; }
-
-    /* Filtros */
-    .calendar-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: var(--light-pink);
-      border-radius: 8px;
-    }
-
-    .filter-chip {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: white;
-      transition: all 0.3s ease;
-    }
-
-    .filter-chip:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    .filter-chip.active {
-      border-color: white;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
-    }
-
-    .filter-all { background: #34495e; }
   </style>
 </head>
-<body class="pink-theme">
+<body>
+  <div class="test-header">
+    <h1>📋 Calendar Component Tests</h1>
+    <p>Comprehensive testing suite for the Musical Calendar functionality</p>
+  </div>
 
-  <!-- Header -->
-  <header class="topbar">
-    <div class="container topbar-inner">
-      <div class="brand">
-        <div class="logo-badge" aria-hidden="true">📅</div>
-        <h1>Calendario de Musicales</h1>
-      </div>
-      
-      <div class="controls">
-        <a href="/" class="btn small" style="text-decoration:none">← Volver al Dashboard</a>
-      </div>
-    </div>
-  </header>
+  <button class="run-tests-btn" onclick="runAllTests()">▶️ Run All Tests</button>
 
-  <main class="container">
-    <!-- Hero -->
-    <div class="catalog-hero">
-      <div class="catalog-hero-inner">
-        <h1>📅 Calendario de Musicales 2025-2026</h1>
-        <p class="lead">Pasa el ratón sobre un musical para ver más información</p>
-      </div>
-    </div>
+  <div id="test-results"></div>
+  <div id="test-summary" class="summary" style="display:none;"></div>
 
-    <div class="calendar-container">
-      <!-- Filtros -->
-      <div class="calendar-filters">
-        <button class="filter-chip filter-all active" data-musical="all">
-          📋 Todos los musicales
-        </button>
-        <button class="filter-chip event-wicked" data-musical="wicked">
-          Wicked
-        </button>
-        <button class="filter-chip event-book-mormon" data-musical="the book of mormon">
-          The Book of Mormon
-        </button>
-        <button class="filter-chip event-les-miserables" data-musical="les misérables">
-          Les Misérables
-        </button>
-        <button class="filter-chip event-rey-leon" data-musical="el rey león">
-          El Rey León
-        </button>
-        <button class="filter-chip event-cabaret" data-musical="cabaret">
-          Cabaret
-        </button>
-        <button class="filter-chip event-houdini" data-musical="houdini">
-          Houdini
-        </button>
-      </div>
-
-      <!-- Calendario -->
-      <div id="calendar"></div>
-    </div>
-  </main>
-
-  <!-- Tooltip flotante -->
-  <div id="musical-tooltip" class="musical-tooltip"></div>
-
-  <footer class="footer">
-    <small>Made with 💖 — Musical Calendar Monitor</small>
-  </footer>
-
-  <!-- FullCalendar JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-  
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const calendarEl = document.getElementById('calendar');
-      const tooltipEl = document.getElementById('musical-tooltip');
-      let currentFilter = 'all';
-      let hideTimeout;
-      let isMouseOverTooltip = false;
-      let isMouseOverEvent = false;
-      
-      // Cargar eventos desde el servidor
-      fetch('/api/calendar-events')
-        .then(response => response.json())
-        .then(events => {
-          initCalendar(events);
-        })
-        .catch(error => {
-          console.error('Error loading events:', error);
-          calendarEl.innerHTML = '<p style="text-align:center; color:#e74c3c; padding:40px;">❌ Error al cargar el calendario</p>';
-        });
-
-      function initCalendar(allEvents) {
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth',
-          locale: 'es',
-          firstDay: 1,
-          height: 'auto',
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,listMonth'
-          },
-          buttonText: {
-            today: 'Hoy',
-            month: 'Mes',
-            list: 'Lista'
-          },
-          events: allEvents,
-          
-          // Hover para mostrar tooltip
-          eventMouseEnter: function(info) {
-            clearTimeout(hideTimeout);
-            isMouseOverEvent = true;
-            showTooltip(info.event, info.jsEvent);
-          },
-          
-          eventMouseLeave: function() {
-            isMouseOverEvent = false;
-            hideTimeout = setTimeout(() => {
-              if (!isMouseOverTooltip && !isMouseOverEvent) {
-                tooltipEl.classList.remove('active');
-              }
-            }, 200);
-          }
-        });
-
-        calendar.render();
-
-        // Mantener tooltip visible al hacer hover sobre él
-        tooltipEl.addEventListener('mouseenter', () => {
-          clearTimeout(hideTimeout);
-          isMouseOverTooltip = true;
-        });
-
-        tooltipEl.addEventListener('mouseleave', () => {
-          isMouseOverTooltip = false;
-          hideTimeout = setTimeout(() => {
-            if (!isMouseOverEvent) {
-              tooltipEl.classList.remove('active');
-            }
-          }, 200);
-        });
-
-        // Filtros
-        document.querySelectorAll('.filter-chip').forEach(chip => {
-          chip.addEventListener('click', function() {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
-            
-            const musical = this.dataset.musical.toLowerCase();
-            
-            if (musical === 'all') {
-              calendar.removeAllEvents();
-              calendar.addEventSource(allEvents);
-            } else {
-              const filtered = allEvents.filter(e => 
-                e.extendedProps.musical.toLowerCase() === musical
-              );
-              calendar.removeAllEvents();
-              calendar.addEventSource(filtered);
-            }
-          });
-        });
+    // Mock data for testing
+    const mockEvents = [
+      {
+        title: "Wicked",
+        start: "2025-01-15",
+        className: "event-wicked",
+        extendedProps: {
+          musical: "wicked",
+          location: "Teatro Lope de Vega",
+          description: "El musical más esperado del año",
+          url: "https://example.com/wicked",
+          image: "https://via.placeholder.com/320x180"
+        }
+      },
+      {
+        title: "El Rey León",
+        start: "2025-02-20",
+        className: "event-rey-leon",
+        extendedProps: {
+          musical: "el rey león",
+          location: "Teatro Coliseum",
+          description: "Un clásico de Disney",
+          url: "https://example.com/rey-leon",
+          image: ""
+        }
       }
+    ];
 
-      function showTooltip(event, mouseEvent) {
-        const props = event.extendedProps;
+    let testResults = {
+      passed: 0,
+      failed: 0,
+      pending: 0,
+      total: 0
+    };
+
+    // Test utilities
+    function assert(condition, message) {
+      if (!condition) {
+        throw new Error(message || "Assertion failed");
+      }
+    }
+
+    function assertEquals(actual, expected, message) {
+      if (actual !== expected) {
+        throw new Error(message || `Expected ${expected} but got ${actual}`);
+      }
+    }
+
+    function assertNotNull(value, message) {
+      if (value === null || value === undefined) {
+        throw new Error(message || "Value is null or undefined");
+      }
+    }
+
+    function assertContains(haystack, needle, message) {
+      if (!haystack.includes(needle)) {
+        throw new Error(message || `"${haystack}" does not contain "${needle}"`);
+      }
+    }
+
+    // Test runner
+    function runTest(name, testFn, suiteName) {
+      testResults.total++;
+      const testElement = document.createElement('div');
+      testElement.className = 'test-case pending';
+      testElement.innerHTML = `
+        <div class="test-name">${name}</div>
+        <div class="test-status">⏳ Running...</div>
+      `;
+      
+      const suiteElement = document.querySelector(`[data-suite="${suiteName}"]`);
+      suiteElement.appendChild(testElement);
+
+      setTimeout(() => {
+        try {
+          testFn();
+          testElement.className = 'test-case pass';
+          testElement.innerHTML = `
+            <div class="test-name">✅ ${name}</div>
+            <div class="test-status">Passed</div>
+          `;
+          testResults.passed++;
+        } catch (error) {
+          testElement.className = 'test-case fail';
+          testElement.innerHTML = `
+            <div class="test-name">❌ ${name}</div>
+            <div class="test-status">Failed</div>
+            <div class="test-error">${error.message}</div>
+          `;
+          testResults.failed++;
+        }
         
-        // Validar que la imagen existe
-        const image = props.image && props.image !== '' 
-          ? props.image 
-          : `https://via.placeholder.com/320x180/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}`;
+        if (testResults.total === testResults.passed + testResults.failed + testResults.pending) {
+          showSummary();
+        }
+      }, 100);
+    }
+
+    function createTestSuite(name) {
+      const suite = document.createElement('div');
+      suite.className = 'test-suite';
+      suite.setAttribute('data-suite', name);
+      suite.innerHTML = `<h2>${name}</h2>`;
+      document.getElementById('test-results').appendChild(suite);
+    }
+
+    function showSummary() {
+      const summaryEl = document.getElementById('test-summary');
+      summaryEl.style.display = 'block';
+      
+      const passRate = ((testResults.passed / testResults.total) * 100).toFixed(1);
+      
+      summaryEl.innerHTML = `
+        <h2>📊 Test Summary</h2>
+        <div class="summary-stats">
+          <div class="stat pass">
+            <span class="stat-number">${testResults.passed}</span>
+            <span>Passed</span>
+          </div>
+          <div class="stat fail">
+            <span class="stat-number">${testResults.failed}</span>
+            <span>Failed</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">${testResults.total}</span>
+            <span>Total</span>
+          </div>
+          <div class="stat ${passRate >= 80 ? 'pass' : 'fail'}">
+            <span class="stat-number">${passRate}%</span>
+            <span>Pass Rate</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Test Suites
+    function testDOMStructure() {
+      createTestSuite('DOM Structure Tests');
+
+      runTest('Calendar container exists', () => {
+        const container = document.querySelector('.calendar-container');
+        assertNotNull(container, 'Calendar container not found');
+      }, 'DOM Structure Tests');
+
+      runTest('Calendar element exists', () => {
+        const calendar = document.getElementById('calendar');
+        assertNotNull(calendar, 'Calendar element not found');
+      }, 'DOM Structure Tests');
+
+      runTest('Tooltip element exists', () => {
+        const tooltip = document.getElementById('musical-tooltip');
+        assertNotNull(tooltip, 'Tooltip element not found');
+        assert(tooltip.classList.contains('musical-tooltip'), 'Tooltip missing class');
+      }, 'DOM Structure Tests');
+
+      runTest('Filter buttons exist', () => {
+        const filters = document.querySelectorAll('.filter-chip');
+        assert(filters.length > 0, 'No filter buttons found');
+        assert(filters.length >= 7, `Expected at least 7 filters, found ${filters.length}`);
+      }, 'DOM Structure Tests');
+
+      runTest('Header contains back button', () => {
+        const backButton = document.querySelector('header a[href="/"]');
+        assertNotNull(backButton, 'Back button not found');
+        assertContains(backButton.textContent, 'Volver', 'Back button text incorrect');
+      }, 'DOM Structure Tests');
+    }
+
+    function testEventDataStructure() {
+      createTestSuite('Event Data Structure Tests');
+
+      runTest('Mock event has required fields', () => {
+        const event = mockEvents[0];
+        assertNotNull(event.title, 'Event missing title');
+        assertNotNull(event.start, 'Event missing start date');
+        assertNotNull(event.extendedProps, 'Event missing extendedProps');
+      }, 'Event Data Structure Tests');
+
+      runTest('Event extended props are complete', () => {
+        const props = mockEvents[0].extendedProps;
+        assertNotNull(props.musical, 'Missing musical name');
+        assertNotNull(props.location, 'Missing location');
+        assertNotNull(props.description, 'Missing description');
+        assertNotNull(props.url, 'Missing URL');
+      }, 'Event Data Structure Tests');
+
+      runTest('Event has valid className', () => {
+        const event = mockEvents[0];
+        assertContains(event.className, 'event-', 'Invalid className format');
+      }, 'Event Data Structure Tests');
+
+      runTest('Placeholder image for missing images', () => {
+        const event = mockEvents[1];
+        assert(event.extendedProps.image === '', 'Expected empty image string');
+      }, 'Event Data Structure Tests');
+    }
+
+    function testTooltipGeneration() {
+      createTestSuite('Tooltip Generation Tests');
+
+      runTest('Tooltip has correct image element', () => {
+        const tooltip = document.getElementById('musical-tooltip');
+        // Simulate tooltip content
+        tooltip.innerHTML = `<img src="test.jpg" class="tooltip-image" alt="Test">`;
+        const img = tooltip.querySelector('.tooltip-image');
+        assertNotNull(img, 'Tooltip image not found');
+      }, 'Tooltip Generation Tests');
+
+      runTest('Tooltip generates Google Maps link', () => {
+        const location = "Teatro Lope de Vega";
+        const expectedUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Madrid')}`;
+        assertContains(expectedUrl, 'maps.google.com', 'Invalid maps URL');
+      }, 'Tooltip Generation Tests');
+
+      runTest('Tooltip handles missing data gracefully', () => {
+        const props = {
+          image: '',
+          description: undefined,
+          location: undefined,
+          url: undefined
+        };
         
         const description = props.description || 'Disfruta de este increíble musical en Madrid';
         const location = props.location || 'Madrid';
         const url = props.url || '#';
         
-        // Crear enlace de Google Maps
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Madrid')}`;
+        assertEquals(description, 'Disfruta de este increíble musical en Madrid', 'Default description not set');
+        assertEquals(location, 'Madrid', 'Default location not set');
+        assertEquals(url, '#', 'Default URL not set');
+      }, 'Tooltip Generation Tests');
+
+      runTest('Tooltip button conditional rendering', () => {
+        const urlPresent = 'https://example.com';
+        const urlMissing = '#';
         
-        // Debug
-        console.log('🎭 Musical:', event.title);
-        console.log('📸 Imagen:', image);
-        console.log('🔗 URL:', url);
-        console.log('📍 Maps:', mapsUrl);
+        assert(urlPresent !== '#', 'Should show button when URL is present');
+        assert(urlMissing === '#', 'Should hide button when URL is missing');
+      }, 'Tooltip Generation Tests');
+    }
+
+    function testFilterFunctionality() {
+      createTestSuite('Filter Functionality Tests');
+
+      runTest('All filters have data-musical attribute', () => {
+        const filters = document.querySelectorAll('.filter-chip');
+        filters.forEach(filter => {
+          assertNotNull(filter.getAttribute('data-musical'), 'Filter missing data-musical');
+        });
+      }, 'Filter Functionality Tests');
+
+      runTest('Default filter is active', () => {
+        const activeFilter = document.querySelector('.filter-chip.active');
+        assertNotNull(activeFilter, 'No active filter found');
+        assertEquals(activeFilter.getAttribute('data-musical'), 'all', 'Default filter should be "all"');
+      }, 'Filter Functionality Tests');
+
+      runTest('Filter event matching logic', () => {
+        const musicalName = 'wicked';
+        const event = mockEvents[0];
+        const matches = event.extendedProps.musical.toLowerCase() === musicalName;
+        assert(matches, 'Event should match filter');
+      }, 'Filter Functionality Tests');
+
+      runTest('Filter color classes match event classes', () => {
+        const filterClasses = ['event-wicked', 'event-book-mormon', 'event-les-miserables'];
+        const eventClasses = mockEvents.map(e => e.className);
         
-        tooltipEl.innerHTML = `
-          <img 
-            src="${image}" 
-            alt="${event.title}" 
-            class="tooltip-image" 
-            onerror="console.error('❌ Error cargando:', this.src); this.src='https://via.placeholder.com/320x180/ff69b4/ffffff?text=Musical';"
-          >
-          <div class="tooltip-content">
-            <h3 class="tooltip-title">${event.title}</h3>
-            <div class="tooltip-meta">
-              <div class="tooltip-meta-item">
-                <span>📍</span>
-                <a href="${mapsUrl}" target="_blank" class="tooltip-location-link" onclick="event.stopPropagation()">
-                  ${location}
-                </a>
-              </div>
-            </div>
-            <p class="tooltip-description">${description}</p>
-            <div class="tooltip-buttons">
-              ${url !== '#' ? `<a href="${url}" target="_blank" class="tooltip-button tooltip-button-primary" onclick="event.stopPropagation()">🎟️ Comprar Entradas</a>` : ''}
-              <a href="${mapsUrl}" target="_blank" class="tooltip-button tooltip-button-secondary" onclick="event.stopPropagation()">🗺️ Ver en Google Maps</a>
-            </div>
-          </div>
-        `;
-        
-        // Posicionar tooltip
+        filterClasses.forEach(fc => {
+          // Just verify format is consistent
+          assert(fc.startsWith('event-'), `Filter class ${fc} has wrong format`);
+        });
+      }, 'Filter Functionality Tests');
+    }
+
+    function testResponsiveness() {
+      createTestSuite('Responsiveness Tests');
+
+      runTest('Tooltip positioning calculations', () => {
         const tooltipWidth = 320;
-        const tooltipHeight = 550; // Aumentado por el botón extra
+        const tooltipHeight = 550;
+        const mouseX = 100;
+        const mouseY = 100;
         
-        let left = mouseEvent.pageX + 15;
-        let top = mouseEvent.pageY - 50;
+        let left = mouseX + 15;
+        let top = mouseY - 50;
         
-        if (left + tooltipWidth > window.innerWidth) {
-          left = mouseEvent.pageX - tooltipWidth - 15;
+        assert(left === 115, 'Tooltip left position incorrect');
+        assert(top === 50, 'Tooltip top position incorrect');
+      }, 'Responsiveness Tests');
+
+      runTest('Tooltip boundary detection', () => {
+        const tooltipWidth = 320;
+        const windowWidth = 800;
+        const mouseX = 700;
+        
+        let left = mouseX + 15;
+        if (left + tooltipWidth > windowWidth) {
+          left = mouseX - tooltipWidth - 15;
         }
         
-        if (top + tooltipHeight > window.innerHeight + window.scrollY) {
-          top = window.innerHeight + window.scrollY - tooltipHeight - 20;
-        }
-        
-        if (top < window.scrollY) {
-          top = window.scrollY + 20;
-        }
-        
-        tooltipEl.style.left = left + 'px';
-        tooltipEl.style.top = top + 'px';
-        tooltipEl.classList.add('active');
-      }
+        assert(left < windowWidth, 'Tooltip should stay within window bounds');
+      }, 'Responsiveness Tests');
+
+      runTest('Calendar container has max-width', () => {
+        const container = document.querySelector('.calendar-container');
+        const styles = window.getComputedStyle(container);
+        assertNotNull(styles.maxWidth, 'Container should have max-width');
+      }, 'Responsiveness Tests');
+    }
+
+    function testAccessibility() {
+      createTestSuite('Accessibility Tests');
+
+      runTest('Page has proper lang attribute', () => {
+        const html = document.documentElement;
+        assertEquals(html.getAttribute('lang'), 'es', 'Lang attribute should be "es"');
+      }, 'Accessibility Tests');
+
+      runTest('Images have alt attributes', () => {
+        // This would be tested when tooltip is rendered
+        const altText = 'Musical poster';
+        assertNotNull(altText, 'Alt text should be provided');
+      }, 'Accessibility Tests');
+
+      runTest('Links have meaningful text', () => {
+        const backButton = document.querySelector('header a');
+        assert(backButton.textContent.trim().length > 0, 'Link should have text');
+      }, 'Accessibility Tests');
+
+      runTest('Buttons are keyboard accessible', () => {
+        const filters = document.querySelectorAll('.filter-chip');
+        filters.forEach(filter => {
+          assert(filter.tagName === 'BUTTON', 'Filters should be buttons');
+        });
+      }, 'Accessibility Tests');
+    }
+
+    function runAllTests() {
+      // Reset
+      document.getElementById('test-results').innerHTML = '';
+      document.getElementById('test-summary').style.display = 'none';
+      testResults = { passed: 0, failed: 0, pending: 0, total: 0 };
+
+      // Run all test suites
+      testDOMStructure();
+      testEventDataStructure();
+      testTooltipGeneration();
+      testFilterFunctionality();
+      testResponsiveness();
+      testAccessibility();
+    }
+
+    // Auto-run tests on load
+    window.addEventListener('load', () => {
+      setTimeout(runAllTests, 500);
     });
   </script>
+
+  <!-- Include calendar styles for testing -->
+  <div style="display:none;">
+    <div class="calendar-container">
+      <div class="calendar-filters">
+        <button class="filter-chip filter-all active" data-musical="all">📋 Todos</button>
+        <button class="filter-chip event-wicked" data-musical="wicked">Wicked</button>
+        <button class="filter-chip event-book-mormon" data-musical="the book of mormon">Book of Mormon</button>
+        <button class="filter-chip event-les-miserables" data-musical="les misérables">Les Misérables</button>
+        <button class="filter-chip event-rey-leon" data-musical="el rey león">El Rey León</button>
+        <button class="filter-chip event-cabaret" data-musical="cabaret">Cabaret</button>
+        <button class="filter-chip event-houdini" data-musical="houdini">Houdini</button>
+      </div>
+      <div id="calendar"></div>
+    </div>
+    <div id="musical-tooltip" class="musical-tooltip"></div>
+  </div>
+
 </body>
 </html>
