@@ -31,11 +31,94 @@
       font-size: 0.85rem;
       cursor: pointer;
       border: none !important;
+      position: relative;
     }
 
     .fc-event:hover {
-      opacity: 0.8;
+      opacity: 0.9;
       transform: scale(1.02);
+      z-index: 100;
+    }
+
+    /* TOOLTIP CARD */
+    .musical-tooltip {
+      position: fixed;
+      display: none;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      width: 320px;
+      z-index: 9999;
+      overflow: hidden;
+      animation: fadeIn 0.2s ease;
+      pointer-events: auto;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .musical-tooltip.active {
+      display: block;
+    }
+
+    .tooltip-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-bottom: 3px solid var(--primary-pink);
+    }
+
+    .tooltip-content {
+      padding: 20px;
+    }
+
+    .tooltip-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary-pink);
+      margin: 0 0 10px 0;
+    }
+
+    .tooltip-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .tooltip-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tooltip-description {
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+
+    .tooltip-button {
+      display: inline-block;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: transform 0.2s ease;
+    }
+
+    .tooltip-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
     }
 
     /* Colores por tipo de musical */
@@ -43,7 +126,9 @@
     .event-book-mormon { background-color: #e74c3c !important; }
     .event-les-miserables { background-color: #3498db !important; }
     .event-rey-leon { background-color: #f39c12 !important; }
-    .event-we-will-rock-you { background-color: #e67e22 !important; }
+    .event-cabaret { background-color: #34495e !important; }
+    .event-houdini { background-color: #16a085 !important; }
+    .event-cenicienta { background-color: #e91e63 !important; }
     .event-rent { background-color: #1abc9c !important; }
     .event-six { background-color: #e91e63 !important; }
     .event-default { background-color: #95a5a6 !important; }
@@ -80,32 +165,7 @@
       box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
     }
 
-    .filter-all {
-      background: #34495e;
-    }
-
-    .calendar-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-top: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-    }
-
-    .legend-color {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-    }
+    .filter-all { background: #34495e; }
   </style>
 </head>
 <body class="pink-theme">
@@ -129,7 +189,7 @@
     <div class="catalog-hero">
       <div class="catalog-hero-inner">
         <h1>📅 Calendario de Musicales 2025-2026</h1>
-        <p class="lead">Consulta las fechas de todos los musicales en cartelera en Madrid</p>
+        <p class="lead">Pasa el ratón sobre un musical para ver más información</p>
       </div>
     </div>
 
@@ -151,57 +211,21 @@
         <button class="filter-chip event-rey-leon" data-musical="el rey león">
           El Rey León
         </button>
-        <button class="filter-chip event-we-will-rock-you" data-musical="we will rock you">
-          We Will Rock You
+        <button class="filter-chip event-cabaret" data-musical="cabaret">
+          Cabaret
         </button>
-        <button class="filter-chip event-rent" data-musical="rent">
-          RENT
-        </button>
-        <button class="filter-chip event-six" data-musical="six">
-          SIX
+        <button class="filter-chip event-houdini" data-musical="houdini">
+          Houdini
         </button>
       </div>
 
       <!-- Calendario -->
       <div id="calendar"></div>
-
-      <!-- Leyenda -->
-      <div class="calendar-legend">
-        <div class="legend-item">
-          <div class="legend-color event-wicked"></div>
-          <span>Wicked</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-book-mormon"></div>
-          <span>The Book of Mormon</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-les-miserables"></div>
-          <span>Les Misérables</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-rey-leon"></div>
-          <span>El Rey León</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-we-will-rock-you"></div>
-          <span>We Will Rock You</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-rent"></div>
-          <span>RENT</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-six"></div>
-          <span>SIX</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color event-default"></div>
-          <span>Otros musicales</span>
-        </div>
-      </div>
     </div>
   </main>
+
+  <!-- Tooltip flotante -->
+  <div id="musical-tooltip" class="musical-tooltip"></div>
 
   <footer class="footer">
     <small>Made with 💖 — Musical Calendar Monitor</small>
@@ -213,7 +237,11 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
+      const tooltipEl = document.getElementById('musical-tooltip');
       let currentFilter = 'all';
+      let hideTimeout;
+      let isMouseOverTooltip = false;
+      let isMouseOverEvent = false;
       
       // Cargar eventos desde el servidor
       fetch('/api/calendar-events')
@@ -223,52 +251,69 @@
         })
         .catch(error => {
           console.error('Error loading events:', error);
-          calendarEl.innerHTML = '<p style="text-align:center; color:#e74c3c; padding:40px;">❌ Error al cargar el calendario. Verifica que events.json existe.</p>';
+          calendarEl.innerHTML = '<p style="text-align:center; color:#e74c3c; padding:40px;">❌ Error al cargar el calendario</p>';
         });
 
       function initCalendar(allEvents) {
         const calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: 'dayGridMonth',
           locale: 'es',
-          firstDay: 1, // Lunes
+          firstDay: 1,
           height: 'auto',
           headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listMonth'
+            right: 'dayGridMonth,listMonth'
           },
           buttonText: {
             today: 'Hoy',
             month: 'Mes',
-            week: 'Semana',
             list: 'Lista'
           },
           events: allEvents,
           
-          // Click en evento
-          eventClick: function(info) {
-            alert(`${info.event.title}\n\n📍 ${info.event.extendedProps.location}\n📅 ${info.event.start.toLocaleDateString('es-ES')} - ${info.event.end ? info.event.end.toLocaleDateString('es-ES') : 'Indefinido'}`);
+          // Hover para mostrar tooltip
+          eventMouseEnter: function(info) {
+            clearTimeout(hideTimeout);
+            isMouseOverEvent = true;
+            showTooltip(info.event, info.jsEvent);
           },
           
-          // Tooltip al pasar el ratón
-          eventDidMount: function(info) {
-            info.el.title = `${info.event.title}\n${info.event.extendedProps.location}`;
+          eventMouseLeave: function() {
+            isMouseOverEvent = false;
+            hideTimeout = setTimeout(() => {
+              if (!isMouseOverTooltip && !isMouseOverEvent) {
+                tooltipEl.classList.remove('active');
+              }
+            }, 200);
           }
         });
 
         calendar.render();
 
+        // Mantener tooltip visible al hacer hover sobre él
+        tooltipEl.addEventListener('mouseenter', () => {
+          clearTimeout(hideTimeout);
+          isMouseOverTooltip = true;
+        });
+
+        tooltipEl.addEventListener('mouseleave', () => {
+          isMouseOverTooltip = false;
+          hideTimeout = setTimeout(() => {
+            if (!isMouseOverEvent) {
+              tooltipEl.classList.remove('active');
+            }
+          }, 200);
+        });
+
         // Filtros
         document.querySelectorAll('.filter-chip').forEach(chip => {
           chip.addEventListener('click', function() {
-            // Remover active de todos
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             this.classList.add('active');
             
             const musical = this.dataset.musical.toLowerCase();
-            currentFilter = musical;
             
-            // Filtrar eventos
             if (musical === 'all') {
               calendar.removeAllEvents();
               calendar.addEventSource(allEvents);
@@ -281,6 +326,55 @@
             }
           });
         });
+      }
+
+      function showTooltip(event, mouseEvent) {
+        const props = event.extendedProps;
+        const image = props.image || 'https://via.placeholder.com/320x180/ff69b4/ffffff?text=' + encodeURIComponent(event.title);
+        const description = props.description || 'Disfruta de este increíble musical en Madrid';
+        const location = props.location || 'Madrid';
+        const url = props.url || '#';
+        
+        tooltipEl.innerHTML = `
+          <img src="${image}" alt="${event.title}" class="tooltip-image" onerror="this.src='https://via.placeholder.com/320x180/ff69b4/ffffff?text=Musical'">
+          <div class="tooltip-content">
+            <h3 class="tooltip-title">${event.title}</h3>
+            <div class="tooltip-meta">
+              <div class="tooltip-meta-item">
+                <span>📍</span>
+                <span>${location}</span>
+              </div>
+            </div>
+            <p class="tooltip-description">${description}</p>
+            ${url !== '#' ? `<a href="${url}" target="_blank" class="tooltip-button" onclick="event.stopPropagation()">🎟️ Comprar Entradas</a>` : ''}
+          </div>
+        `;
+        
+        // Posicionar tooltip cerca del cursor
+        const tooltipWidth = 320;
+        const tooltipHeight = 450;
+        
+        let left = mouseEvent.pageX + 15;
+        let top = mouseEvent.pageY - 50;
+        
+        // Ajustar si se sale de la pantalla por la derecha
+        if (left + tooltipWidth > window.innerWidth) {
+          left = mouseEvent.pageX - tooltipWidth - 15;
+        }
+        
+        // Ajustar si se sale de la pantalla por abajo
+        if (top + tooltipHeight > window.innerHeight + window.scrollY) {
+          top = window.innerHeight + window.scrollY - tooltipHeight - 20;
+        }
+        
+        // Ajustar si se sale por arriba
+        if (top < window.scrollY) {
+          top = window.scrollY + 20;
+        }
+        
+        tooltipEl.style.left = left + 'px';
+        tooltipEl.style.top = top + 'px';
+        tooltipEl.classList.add('active');
       }
     });
   </script>
