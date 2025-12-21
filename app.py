@@ -1,7 +1,10 @@
 import os
+import json
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, render_template, jsonify, send_from_directory
+from functools import wraps
+from flask import Flask, render_template, jsonify, send_from_directory, request, Response
+from flask_socketio import SocketIO
 import requests
 from models import db, Musical, MusicalLink, MusicalChange
 
@@ -34,7 +37,10 @@ app = Flask(__name__,
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+
 db.init_app(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Log configuration
 print("=" * 60)
