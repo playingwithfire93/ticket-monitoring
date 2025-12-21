@@ -26,18 +26,27 @@
 
     /* Estilo personalizado para eventos */
     .fc-event {
-      border-radius: 4px;
-      padding: 2px 4px;
+      border-radius: 6px;
+      padding: 4px 8px;
       font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
       border: none !important;
       position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color: white !important; /* ← Texto blanco para mejor contraste */
     }
 
     .fc-event:hover {
-      opacity: 0.9;
-      transform: scale(1.02);
-      z-index: 100;
+      transform: scale(1.15) translateZ(0);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+      z-index: 1000 !important;
+    }
+
+    /* Asegurar que el título sea visible */
+    .fc-event-title {
+      color: white !important;
+      font-weight: 600;
     }
 
     /* Tooltip/Card hover mejorado */
@@ -750,7 +759,8 @@
               'los pilares de la tierra': 'event-pilares'
             };
             
-            return classMap[musical] || 'fc-event-default';
+            // ✅ IMPORTANTE: Retornar como array
+            return [classMap[musical] || 'fc-event-default'];
           },
           
           // Hover para mostrar tooltip
@@ -977,21 +987,10 @@ document.querySelectorAll('.event-card').forEach(card => {
 function updateTooltipPosition(e) {
   if (!tooltipCard) return;
 
-  const offset = 15;
-  const x = e.clientX + offset;
-  const y = e.clientY + offset;
-
-  const cardWidth = tooltipCard.offsetWidth;
-  const cardHeight = tooltipCard.offsetHeight;
-
-  const maxX = window.innerWidth - cardWidth - 20;
-  const maxY = window.innerHeight - cardHeight - 20;
-
-  tooltipCard.style.position = 'fixed';
-  tooltipCard.style.left = Math.min(x, maxX) + 'px';
-  tooltipCard.style.top = Math.min(y, maxY) + 'px';
-  tooltipCard.style.zIndex = '9999';
-  tooltipCard.style.width = cardWidth + 'px';
+  tooltipCard.style.transform = 'scale(1.15) translateZ(0)';
+  tooltipCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+  tooltipCard.style.zIndex = '1000';
+  tooltipCard.style.position = 'relative';
 }
 </script>
 </body>
