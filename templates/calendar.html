@@ -40,128 +40,116 @@
       z-index: 100;
     }
 
-    /* TOOLTIP CARD */
-    .musical-tooltip {
-      position: fixed;
+    /* Tooltip/Card hover mejorado */
+    .event-item {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .event-tooltip {
+      position: fixed; /* ← Cambio clave: fixed en vez de absolute */
       display: none;
       background: white;
       border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-      width: 320px;
+      padding: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
       z-index: 9999;
-      overflow: hidden;
-      animation: fadeIn 0.2s ease;
-      pointer-events: auto;
+      min-width: 300px;
+      max-width: 400px;
+      pointer-events: none; /* No interfiere con el hover */
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .musical-tooltip.active {
+    .event-item:hover .event-tooltip {
       display: block;
+      opacity: 1;
     }
 
-    .tooltip-image {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-bottom: 3px solid var(--primary-pink);
+    /* Flecha del tooltip (arriba o abajo según posición) */
+    .event-tooltip::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
     }
 
-    .tooltip-content {
-      padding: 20px;
+    /* Flecha apuntando abajo (tooltip arriba del elemento) */
+    .event-tooltip.tooltip-top::before {
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top-color: white;
+      border-bottom: none;
+    }
+
+    /* Flecha apuntando arriba (tooltip abajo del elemento) */
+    .event-tooltip.tooltip-bottom::before {
+      top: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: white;
+      border-top: none;
+    }
+
+    /* Contenido del tooltip */
+    .tooltip-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .tooltip-icon {
+      font-size: 2rem;
     }
 
     .tooltip-title {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      color: var(--primary-pink);
-      margin: 0 0 10px 0;
+      color: #333;
+      margin: 0;
     }
 
-    .tooltip-meta {
+    .tooltip-body {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-bottom: 12px;
+    }
+
+    .tooltip-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 0.9rem;
       color: #666;
     }
 
-    .tooltip-meta-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .tooltip-row strong {
+      color: #333;
+      min-width: 80px;
     }
 
-    .tooltip-location-link {
-      color: #3498db;
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
-
-    .tooltip-location-link:hover {
-      color: #2980b9;
-      text-decoration: underline;
-    }
-
-    .tooltip-description {
-      font-size: 0.9rem;
-      color: #555;
-      line-height: 1.5;
-      margin-bottom: 15px;
-    }
-
-    .tooltip-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .tooltip-button {
+    .tooltip-badge {
       display: inline-block;
-      width: 100%;
-      padding: 12px;
-      text-align: center;
-      text-decoration: none;
-      border-radius: 8px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
       font-weight: 600;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .tooltip-button-primary {
-      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
-      color: white;
+    .tooltip-badge.available {
+      background: #d4edda;
+      color: #155724;
     }
 
-    .tooltip-button-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+    .tooltip-badge.sold-out {
+      background: #f8d7da;
+      color: #721c24;
     }
-
-    .tooltip-button-secondary {
-      background: linear-gradient(135deg, #3498db, #2980b9);
-      color: white;
-    }
-
-    .tooltip-button-secondary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-    }
-
-    /* Colores por tipo de musical */
-    .event-wicked { background-color: #9b59b6 !important; }
-    .event-book-mormon { background-color: #e74c3c !important; }
-    .event-les-miserables { background-color: #3498db !important; }
-    .event-rey-leon { background-color: #f39c12 !important; }
-    .event-cabaret { background-color: #34495e !important; }
-    .event-houdini { background-color: #16a085 !important; }
-    .event-cenicienta { background-color: #e91e63 !important; }
-    .event-rent { background-color: #1abc9c !important; }
-    .event-six { background-color: #e91e63 !important; }
-    .event-default { background-color: #95a5a6 !important; }
 
     /* Filtros */
     .calendar-filters {
@@ -196,6 +184,61 @@
     }
 
     .filter-all { background: #34495e; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .event-tooltip {
+        min-width: 250px;
+        max-width: 90vw;
+      }
+    }
+  </style>
+
+  <!-- Añade esto en el <head> -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css"/>
+
+  <script>
+    // Inicializar tooltips con Tippy.js
+    document.addEventListener('DOMContentLoaded', () => {
+      tippy('.event-item', {
+        content(reference) {
+          const template = reference.querySelector('.event-tooltip');
+          return template ? template.innerHTML : 'Sin información';
+        },
+        allowHTML: true,
+        placement: 'auto', // ← Se posiciona automáticamente
+        interactive: true,
+        animation: 'scale',
+        theme: 'light-border',
+        maxWidth: 400,
+        offset: [0, 10],
+      });
+    });
+  </script>
+
+  <style>
+    /* Tema custom para Tippy.js */
+    .tippy-box[data-theme~='light-border'] {
+      background-color: white;
+      color: #333;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+    }
+
+    .tippy-box[data-theme~='light-border'][data-placement^='top'] > .tippy-arrow::before {
+      border-top-color: white;
+    }
+
+    .tippy-box[data-theme~='light-border'][data-placement^='bottom'] > .tippy-arrow::before {
+      border-bottom-color: white;
+    }
+
+    /* Ocultar el tooltip inline (Tippy lo clonará) */
+    .event-tooltip {
+      display: none;
+    }
   </style>
 </head>
 <body class="pink-theme">
@@ -430,6 +473,68 @@
         tooltipEl.style.left = left + 'px';
         tooltipEl.style.top = top + 'px';
         tooltipEl.classList.add('active');
+      }
+    });
+  </script>
+
+  <script>
+    // ==================== POSICIONAMIENTO INTELIGENTE DEL TOOLTIP ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      const eventItems = document.querySelectorAll('.event-item');
+
+      eventItems.forEach(item => {
+        const tooltip = item.querySelector('.event-tooltip');
+        if (!tooltip) return;
+
+        item.addEventListener('mouseenter', (e) => {
+          positionTooltip(item, tooltip);
+        });
+
+        // Reposicionar al mover el mouse (opcional, para mejor experiencia)
+        item.addEventListener('mousemove', () => {
+          positionTooltip(item, tooltip);
+        });
+      });
+
+      function positionTooltip(item, tooltip) {
+        const itemRect = item.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Calcular espacio disponible arriba y abajo
+        const spaceAbove = itemRect.top;
+        const spaceBelow = viewportHeight - itemRect.bottom;
+
+        // Decidir si mostrar arriba o abajo
+        const showAbove = spaceBelow < tooltipRect.height + 20 && spaceAbove > spaceBelow;
+
+        if (showAbove) {
+          // Mostrar arriba
+          tooltip.style.top = `${itemRect.top - tooltipRect.height - 10}px`;
+          tooltip.classList.add('tooltip-top');
+          tooltip.classList.remove('tooltip-bottom');
+        } else {
+          // Mostrar abajo
+          tooltip.style.top = `${itemRect.bottom + 10}px`;
+          tooltip.classList.add('tooltip-bottom');
+          tooltip.classList.remove('tooltip-top');
+        }
+
+        // Centrar horizontalmente, pero ajustar si se sale de la pantalla
+        let left = itemRect.left + (itemRect.width / 2) - (tooltipRect.width / 2);
+
+        // Ajustar si se sale por la izquierda
+        if (left < 10) {
+          left = 10;
+        }
+
+        // Ajustar si se sale por la derecha
+        if (left + tooltipRect.width > viewportWidth - 10) {
+          left = viewportWidth - tooltipRect.width - 10;
+        }
+
+        tooltip.style.left = `${left}px`;
       }
     });
   </script>
