@@ -7,17 +7,9 @@
     "end": "2026-03-29",
     "location": "Teatro Lope de Vega",
     "type": "musical",
-    "description": "El musical más exitoso de la historia"
-  },
-  {
-    "id": "wah-madrid-2025",
-    "title": "WAH Madrid",
-    "musical": "WAH Madrid",
-    "start": "2025-09-04",
-    "end": "2026-04-05",
-    "location": "IFEMA",
-    "type": "musical",
-    "description": "Espectáculo de circo y música"
+    "description": "El musical más exitoso de la historia",
+    "image": "/static/fotos/posters/el-rey-leon.png",
+    "url": "https://www.stage.es/musicales/el-rey-leon/entradas"
   },
   {
     "id": "cabaret-2025",
@@ -26,7 +18,22 @@
     "start": "2025-09-19",
     "end": "2026-02-01",
     "location": "Teatro Albéniz Umusic Hotel",
-    "type": "musical"
+    "type": "musical",
+    "description": "Bienvenidos al Kit Kat Club",
+    "image": "/static/fotos/posters/cabaret.jpg",
+    "url": "https://www.entradas.com/artist/cabaret/?affiliate=CB2"
+  },
+  {
+    "id": "houdini-2025",
+    "title": "HOUDINI, un musical mágico",
+    "musical": "HOUDINI",
+    "start": "2025-10-09",
+    "end": "2026-03-29",
+    "location": "Teatro Calderón",
+    "type": "musical",
+    "description": "El musical mágico sobre el gran escapista Harry Houdini",
+    "image": "/static/fotos/posters/houdini.jpg",
+    "url": "https://www.teatrocalderon.es/espectaculo/houdini"
   },
   {
     "id": "wicked-2025",
@@ -36,7 +43,9 @@
     "end": "2026-04-12",
     "location": "Teatro Nuevo Alcalá",
     "type": "musical",
-    "description": "La historia jamás contada de las brujas de Oz"
+    "description": "La historia jamás contada de las brujas de Oz",
+    "image": "/static/fotos/posters/wicked.jpg",
+    "url": "https://wickedelmusical.com/entradas/"
   },
   {
     "id": "cenicienta-2025",
@@ -45,7 +54,10 @@
     "start": "2025-10-03",
     "end": "2026-03-31",
     "location": "Teatro OCASO Coliseum",
-    "type": "musical"
+    "type": "musical",
+    "description": "El cuento de hadas más querido",
+    "image": "/static/fotos/posters/cenicienta.png",
+    "url": "https://www.stage.es/musicales/cenicienta/entradas"
   },
   {
     "id": "raffaella-2025",
@@ -54,17 +66,10 @@
     "start": "2025-10-03",
     "end": "2025-12-28",
     "location": "Teatro Capitol Gran Vía",
-    "type": "musical"
-  },
-  {
-    "id": "we-will-rock-you-2025",
-    "title": "We Will Rock You",
-    "musical": "We Will Rock You",
-    "start": "2025-10-11",
-    "end": "2026-04-25",
-    "location": "Gran Teatro CaixaBank Príncipe Pío",
     "type": "musical",
-    "description": "El musical de Queen"
+    "description": "Homenaje a Raffaella Carrà",
+    "image": "/static/fotos/posters/raffaella.jpg",
+    "url": "https://entradas.capitolgranvia.com/raffaellaelmusical?idioma=ES"
   },
   {
     "id": "book-of-mormon-2025",
@@ -74,25 +79,9 @@
     "end": "2026-03-01",
     "location": "Teatro Rialto",
     "type": "musical",
-    "description": "El musical irreverente de los creadores de South Park"
-  },
-  {
-    "id": "mago-oz-2025",
-    "title": "El Mago de Oz, el musical",
-    "musical": "El Mago de Oz",
-    "start": "2025-10-26",
-    "end": "2026-03-29",
-    "location": "Teatro Maravillas",
-    "type": "musical"
-  },
-  {
-    "id": "hilo-invisible-2025",
-    "title": "El hilo invisible, el musical",
-    "musical": "El hilo invisible",
-    "start": "2025-11-01",
-    "end": "2026-02-01",
-    "location": "Teatro Alcázar",
-    "type": "musical"
+    "description": "El musical irreverente de los creadores de South Park",
+    "image": "/static/fotos/posters/book-of-mormon.jpg",
+    "url": "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"
   },
   {
     "id": "oliver-twist-2025",
@@ -101,7 +90,10 @@
     "start": "2025-11-12",
     "end": "2026-03-15",
     "location": "Teatro La Latina",
-    "type": "musical"
+    "type": "musical",
+    "description": "El clásico de Dickens en el escenario",
+    "image": "/static/fotos/posters/oliver-twist.jpg",
+    "url": "https://entradas.teatrolalatina.es/teatrolalatina/events/41866?sessionView=LIST"
   },
   {
     "id": "pilares-tierra-2025",
@@ -110,7 +102,10 @@
     "start": "2025-11-20",
     "end": "2026-02-01",
     "location": "Teatro Gran Vía",
-    "type": "musical"
+    "type": "musical",
+    "description": "Basado en la novela bestseller de Ken Follett",
+    "image": "/static/fotos/posters/pilares-tierra.webp",
+    "url": "https://smedia.entradas.plus/entradas/es/entradas-teatro-los-pilares-de-la-tierra-el-musical-tgv"
   },
   {
     "id": "les-miserables-2025",
@@ -120,7 +115,9 @@
     "end": "2026-06-07",
     "location": "Teatro Apolo Madrid",
     "type": "musical",
-    "description": "El clásico musical de Victor Hugo"
+    "description": "El clásico musical de Victor Hugo",
+    "image": "/static/fotos/posters/les-miserables.jpg",
+    "url": "https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01"
   },
   {
     "id": "rent-2025",
@@ -129,7 +126,22 @@
     "start": "2025-12-23",
     "end": "2026-01-25",
     "location": "Fernán Gómez – Centro Cultural de la Villa",
-    "type": "musical"
+    "type": "musical",
+    "description": "525,600 minutos de amor, pérdida y esperanza",
+    "image": "/static/fotos/posters/rent.webp",
+    "url": "https://tienda.madrid-destino.com/es/teatro-fernan-gomez-centro-cultural-de-la-villa/rent-30o-aniversario/"
+  },
+  {
+    "id": "atrapadas-en-la-ofi-2026",
+    "title": "Atrapadas en la Ofi",
+    "musical": "Atrapadas en la Ofi",
+    "start": "2026-01-09",
+    "end": "2026-03-01",
+    "location": "Teatro por confirmar",
+    "type": "musical",
+    "description": "Comedia musical sobre la vida en la oficina",
+    "image": "/static/fotos/posters/atrapadas-en-la-ofi.jpg",
+    "url": "https://www.atrapadas.com/entradas"
   },
   {
     "id": "godspell-2026",
@@ -138,25 +150,10 @@
     "start": "2026-01-21",
     "end": "2026-03-01",
     "location": "Gran Teatro Pavón",
-    "type": "musical"
-  },
-  {
-    "id": "antoine-2026",
-    "title": "Antoine, el musical (El Principito)",
-    "musical": "Antoine",
-    "start": "2026-02-13",
-    "end": "2026-04-26",
-    "location": "Teatro Calderón",
-    "type": "musical"
-  },
-  {
-    "id": "101-dalmatas-2025",
-    "title": "101 Dálmatas: The Show",
-    "musical": "101 Dálmatas",
-    "start": "2025-10-10",
-    "end": "2026-04-24",
-    "location": "Gran Teatro CaixaBank Príncipe Pío",
-    "type": "musical"
+    "type": "musical",
+    "description": "El musical que celebra la vida y la comunidad",
+    "image": "/static/fotos/posters/godspell.jpg",
+    "url": "https://www.elcorteingles.es/entradas/teatro/entradas-godspell-el-musical-madrid/"
   },
   {
     "id": "six-2026",
@@ -166,6 +163,8 @@
     "end": "2026-11-08",
     "location": "Teatro Gran Vía",
     "type": "musical",
-    "description": "El musical de las seis esposas de Enrique VIII"
+    "description": "El musical de las seis esposas de Enrique VIII",
+    "image": "/static/fotos/posters/six.jpg",
+    "url": "https://sixelmusical.entradas.plus/entradas/es/entradas_SIX"
   }
 ]
