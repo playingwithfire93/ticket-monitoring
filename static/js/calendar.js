@@ -255,4 +255,140 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.calendarRefresh = function(){ allEventsCache=null; selectedSet.clear(); updateInputPlaceholder(); calendar.refetchEvents(); };
+
+  // ==================== TOOLTIP FUNCTIONALITY ====================
+  (function() {
+    const tooltipEl = document.getElementById('musical-tooltip');
+    if (!tooltipEl) return;
+
+    let hideTimeout;
+    let isMouseOverTooltip = false;
+    let isMouseOverEvent = false;
+
+    // Mantener tooltip visible al hacer hover sobre él
+    tooltipEl.addEventListener('mouseenter', () => {
+      clearTimeout(hideTimeout);
+      isMouseOverTooltip = true;
+    });
+
+    tooltipEl.addEventListener('mouseleave', () => {
+      isMouseOverTooltip = false;
+      hideTimeout = setTimeout(() => {
+        if (!isMouseOverEvent) {
+          tooltipEl.classList.remove('active');
+        }
+      }, 200);
+    });
+
+    // Añadir handlers al calendario existente
+    const originalEventDidMount = calendar.eventDidMount;
+    calendar.eventDidMount = function(info) {
+      if (originalEventDidMount) originalEventDidMount(info);
+
+      // Añadir hover handlers
+      info.el.addEventListener('mouseenter', function(e) {
+        clearTimeout(hideTimeout);
+        isMouseOverEvent = true;
+        showTooltip(info.event, e);
+      });
+
+      info.el.addEventListener('mouseleave', function() {
+        isMouseOverEvent = false;
+        hideTimeout = setTimeout(() => {
+          if (!isMouseOverTooltip && !isMouseOverEvent) {
+            tooltipEl.classList.remove('active');
+          }
+        }, 300);
+      });
+    };
+
+    function showTooltip(event, mouseEvent) {
+      const props = event.extendedProps || {};
+      
+      // Imagen con fallback
+      let image = props.image || '';
+      if (!image || image.includes('default.jpg')) {
+        image = `https://via.placeholder.com/380x200/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}`;
+      }
+      
+      const description = props.description || 'Disfruta de este increíble musical en Madrid';
+      const location = props.location || 'Madrid';
+      const url = props.url || '#';
+      const isAvailable = props.isAvailable !== false;
+      
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Madrid')}`;
+      
+      // Generar HTML del tooltip
+      tooltipEl.innerHTML = `
+        <img 
+          src="${image}" 
+          alt="${event.title}" 
+          class="tooltip-image" 
+          onerror="this.src='https://via.placeholder.com/380x200/ff69b4/ffffff?text=Musical';"
+        >
+        <div class="tooltip-content">
+          <h3 class="tooltip-title">${event.title}</h3>
+          
+          <div class="tooltip-meta">
+            <div class="tooltip-meta-item">
+              <span>📍</span>
+              <a href="${mapsUrl}" target="_blank" class="tooltip-location-link" onclick="event.stopPropagation()">
+                ${location}
+              </a>
+            </div>
+            
+            <div class="tooltip-meta-item">
+              <span>🎫</span>
+              <span class="tooltip-badge ${isAvailable ? 'available' : 'sold-out'}">
+                ${isAvailable ? '✅ Entradas disponibles' : '❌ Agotado'}
+              </span>
+            </div>
+          </div>
+          
+          <p class="tooltip-description">${description}</p>
+          
+          <div class="tooltip-buttons">
+            ${url !== '#' ? `
+              <a href="${url}" target="_blank" class="tooltip-button tooltip-button-primary" onclick="event.stopPropagation()">
+                🎟️ Comprar Entradas
+              </a>
+            ` : ''}
+            <a href="${mapsUrl}" target="_blank" class="tooltip-button tooltip-button-secondary" onclick="event.stopPropagation()">
+              🗺️ Ver en Google Maps
+            </a>
+          </div>
+        </div>
+      `;
+      
+      // Posicionamiento inteligente
+      const tooltipWidth = 380;
+      const tooltipHeight = tooltipEl.offsetHeight || 550;
+      
+      let left = mouseEvent.pageX + 20;
+      let top = mouseEvent.pageY - 100;
+      
+      if (left + tooltipWidth > window.innerWidth + window.scrollX) {
+        left = mouseEvent.pageX - tooltipWidth - 20;
+      }
+      
+      if (left < window.scrollX + 10) {
+        left = window.scrollX + 10;
+      }
+      
+      if (top + tooltipHeight > window.innerHeight + window.scrollY) {
+        top = window.innerHeight + window.scrollY - tooltipHeight - 10;
+      }
+      
+      if (top < window.scrollY + 10) {
+        top = window.scrollY + 10;
+      }
+      
+      tooltipEl.style.left = left + 'px';
+      tooltipEl.style.top = top + 'px';
+      
+      setTimeout(() => {
+        tooltipEl.classList.add('active');
+      }, 10);
+    }
+  })();
 });

@@ -185,11 +185,330 @@
 
     .filter-all { background: #34495e; }
 
+    /* COLORES PARA CADA MUSICAL */
+    .event-wicked { 
+      background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+      border-left: 4px solid #229954 !important;
+    }
+
+    .event-book-mormon { 
+      background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+      border-left: 4px solid #a93226 !important;
+    }
+
+    .event-les-miserables { 
+      background: linear-gradient(135deg, #3498db, #2980b9) !important;
+      border-left: 4px solid #1f618d !important;
+    }
+
+    .event-rey-leon { 
+      background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+      border-left: 4px solid #d68910 !important;
+    }
+
+    .event-cabaret { 
+      background: linear-gradient(135deg, #34495e, #2c3e50) !important;
+      border-left: 4px solid #1c2833 !important;
+    }
+
+    .event-houdini { 
+      background: linear-gradient(135deg, #e67e22, #d35400) !important;
+      border-left: 4px solid #ba4a00 !important;
+    }
+
+    .event-cenicienta { 
+      background: linear-gradient(135deg, #ec407a, #d81b60) !important;
+      border-left: 4px solid #ad1457 !important;
+    }
+
+    .event-oliver-twist { 
+      background: linear-gradient(135deg, #78909c, #607d8b) !important;
+      border-left: 4px solid #455a64 !important;
+    }
+
+    .event-raffaella { 
+      background: linear-gradient(135deg, #ab47bc, #8e24aa) !important;
+      border-left: 4px solid #6a1b9a !important;
+    }
+
+    .event-pilares { 
+      background: linear-gradient(135deg, #26a69a, #00897b) !important;
+      border-left: 4px solid #00695c !important;
+    }
+
+    /* Default para musicales no especificados */
+    .fc-event {
+      background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
+      border-left: 4px solid #626567 !important;
+    }
+
+    /* Mejorar hover */
+    .fc-event:hover {
+      opacity: 0.85 !important;
+      transform: scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Filtros con colores matching */
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .filter-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .filter-chip.active {
+      border-color: white;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+      transform: scale(1.05);
+    }
+
+    .filter-all { 
+      background: linear-gradient(135deg, #34495e, #2c3e50); 
+    }
+
+    .filter-chip.event-wicked { 
+      background: linear-gradient(135deg, #2ecc71, #27ae60); 
+    }
+
+    .filter-chip.event-book-mormon { 
+      background: linear-gradient(135deg, #e74c3c, #c0392b); 
+    }
+
+    .filter-chip.event-les-miserables { 
+      background: linear-gradient(135deg, #3498db, #2980b9); 
+    }
+
+    .filter-chip.event-rey-leon { 
+      background: linear-gradient(135deg, #f39c12, #e67e22); 
+    }
+
+    .filter-chip.event-cabaret { 
+      background: linear-gradient(135deg, #34495e, #2c3e50); 
+    }
+
+    .filter-chip.event-houdini { 
+      background: linear-gradient(135deg, #e67e22, #d35400); 
+    }
+
+    .filter-chip.event-cenicienta { 
+      background: linear-gradient(135deg, #ec407a, #d81b60); 
+    }
+
+    .filter-chip.event-oliver-twist { 
+      background: linear-gradient(135deg, #78909c, #607d8b); 
+    }
+
+    .filter-chip.event-raffaella { 
+      background: linear-gradient(135deg, #ab47bc, #8e24aa); 
+    }
+
+    .filter-chip.event-pilares { 
+      background: linear-gradient(135deg, #26a69a, #00897b); 
+    }
+
+    /* Leyenda de colores (opcional) */
+    .calendar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .event-tooltip {
         min-width: 250px;
         max-width: 90vw;
+      }
+    }
+
+    /* TOOLTIP MEJORADO - Aparece donde está el cursor */
+    .musical-tooltip {
+      position: fixed;
+      display: none;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      width: 380px;
+      max-width: 90vw;
+      overflow: hidden;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none; /* ← CLAVE: No bloquea el hover */
+    }
+
+    .musical-tooltip.active {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto; /* ← Permitir clicks en los botones */
+    }
+
+    /* Imagen del tooltip */
+    .tooltip-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 16px 16px 0 0;
+    }
+
+    /* Contenido del tooltip */
+    .tooltip-content {
+      padding: 20px;
+    }
+
+    .tooltip-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ff69b4;
+      margin: 0 0 12px 0;
+    }
+
+    .tooltip-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tooltip-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .tooltip-meta-item span {
+      font-size: 1.2rem;
+    }
+
+    .tooltip-location-link {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .tooltip-location-link:hover {
+      color: #2980b9;
+      text-decoration: underline;
+    }
+
+    .tooltip-description {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.5;
+      margin: 0 0 16px 0;
+    }
+
+    /* Botones del tooltip */
+    .tooltip-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tooltip-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .tooltip-button-primary {
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      color: white;
+    }
+
+    .tooltip-button-primary:hover {
+      background: linear-gradient(135deg, #ff1493, #c71585);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4);
+    }
+
+    .tooltip-button-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .tooltip-button-secondary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    /* Badge de disponibilidad */
+    .tooltip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .tooltip-badge.available {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .tooltip-badge.sold-out {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .musical-tooltip {
+        width: 320px;
+      }
+
+      .tooltip-image {
+        height: 160px;
+      }
+
+      .tooltip-content {
+        padding: 16px;
+      }
+
+      .tooltip-title {
+        font-size: 1.2rem;
       }
     }
   </style>
@@ -294,6 +613,61 @@
 
       <!-- Calendario -->
       <div id="calendar"></div>
+      
+      <!-- Leyenda de colores -->
+      <div class="calendar-legend">
+        <h4 style="width: 100%; margin: 0 0 10px 0; color: #333;">🎨 Leyenda de Musicales:</h4>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #2ecc71, #27ae60);"></div>
+          <span>Wicked</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+          <span>The Book of Mormon</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #3498db, #2980b9);"></div>
+          <span>Les Misérables</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #f39c12, #e67e22);"></div>
+          <span>El Rey León</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #34495e, #2c3e50);"></div>
+          <span>Cabaret</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #e67e22, #d35400);"></div>
+          <span>Houdini</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #ec407a, #d81b60);"></div>
+          <span>Cenicienta</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #78909c, #607d8b);"></div>
+          <span>Oliver Twist</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #ab47bc, #8e24aa);"></div>
+          <span>Raffaella</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #26a69a, #00897b);"></div>
+          <span>Los Pilares de la Tierra</span>
+        </div>
+      </div>
     </div>
   </main>
 

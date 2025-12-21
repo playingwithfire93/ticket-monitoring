@@ -465,6 +465,60 @@ def api_calendar_events():
     
     return jsonify(calendar_events)
 
+# Definir colores para cada musical
+MUSICAL_COLORS = {
+    'wicked': '#2ecc71',                    # Verde
+    'the book of mormon': '#e74c3c',        # Rojo
+    'les misérables': '#3498db',            # Azul
+    'el rey león': '#f39c12',               # Naranja/Amarillo
+    'cabaret': '#34495e',                   # Gris oscuro
+    'houdini': '#e67e22',                   # Naranja oscuro
+    'cenicienta': '#ec407a',                # Rosa
+    'oliver twist': '#78909c',              # Gris azulado
+    'raffaella': '#ab47bc',                 # Morado
+    'los pilares de la tierra': '#26a69a',  # Verde azulado
+}
+
+@app.route('/api/calendar-events')
+def get_calendar_events():
+    """Obtener eventos del calendario con colores específicos"""
+    try:
+        musicals = Musical.query.all()
+        events = []
+        
+        for musical in musicals:
+            musical_name = musical.name.lower()
+            
+            # Obtener color específico del musical
+            color = MUSICAL_COLORS.get(musical_name, '#95a5a6')  # Gris por defecto
+            
+            # Obtener clase CSS para el musical
+            css_class = 'event-' + musical_name.replace(' ', '-').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
+            
+            for link in musical.links:
+                event = {
+                    'title': musical.name,
+                    'start': link.date.isoformat() if link.date else datetime.now().isoformat(),
+                    'backgroundColor': color,
+                    'borderColor': color,
+                    'textColor': '#ffffff',
+                    'classNames': [css_class],  # ← Clase CSS para aplicar estilos
+                    'extendedProps': {
+                        'musical': musical.name,
+                        'url': link.url,
+                        'isAvailable': link.is_available,
+                        'image': musical.images[0] if musical.images else None,
+                        'description': f"{'✅ Disponible' if link.is_available else '❌ Agotado'}",
+                        'location': 'Madrid'
+                    }
+                }
+                events.append(event)
+        
+        return jsonify(events)
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return jsonify([]), 500
+
 # ==================== RUN ====================
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
