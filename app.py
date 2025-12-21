@@ -16,7 +16,8 @@ BASE = Path(__file__).parent
 STATIC_DIR = BASE / "static"
 URLS_FILE = STATIC_DIR / "python" / "urls.json"
 SUGGESTIONS_FILE = STATIC_DIR / "python" / "suggestions.json"
-EVENTS_FILE = BASE / "events.json"
+EVENTS_FILE = STATIC_DIR / "data" / "events.json"
+EXCLUSIONS_FILE = STATIC_DIR / "data" / "exclusions.json"
 
 UTC = timezone.utc
 
