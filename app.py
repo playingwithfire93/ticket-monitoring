@@ -7,6 +7,8 @@ from flask import Flask, render_template, jsonify, send_from_directory, request,
 from flask_socketio import SocketIO
 import requests
 from models import db, Musical, MusicalLink, MusicalChange
+from telegram import Bot
+from telegram.ext import Application
 
 # ==================== CONFIGURATION ====================
 BASE = Path(__file__).parent
@@ -78,16 +80,15 @@ def load_events():
     except Exception:
         return []
 
-def send_telegram_notification(message_text):
-    """Send notification via Telegram"""
+async def send_telegram_notification_async(message_text):
+    """Send notification via Telegram (async version for v20+)"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         return {"ok": False, "reason": "telegram-not-configured"}
     
     try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message_text}
-        r = requests.post(url, json=payload, timeout=6)
-        return {"ok": r.ok}
+        bot = Bot(token=TELEGRAM_BOT_TOKEN)
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message_text)
+        return {"ok": True}
     except Exception as e:
         app.logger.error(f"Telegram error: {e}")
         return {"ok": False, "error": str(e)}
