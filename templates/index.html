@@ -6,11 +6,101 @@
   <title>🎟️ Ticket Monitor Dashboard</title>
   
   <link rel="stylesheet" href="/static/css/style.css">
+  
+  <style>
+    /* Estilos para el video banner en el header */
+    .topbar {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .video-background video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      object-fit: cover;
+    }
+
+    .video-background video.active {
+      opacity: 0.3; /* Semi-transparente para que se vea el contenido */
+      z-index: 1;
+    }
+
+    .topbar-inner {
+      position: relative;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Indicadores de video en el header */
+    .video-header-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex;
+      gap: 8px;
+    }
+
+    .video-header-dots .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .video-header-dots .dot.active {
+      background: white;
+      transform: scale(1.3);
+    }
+  </style>
 </head>
 <body class="pink-theme">
 
-  <!-- Header único -->
+  <!-- Header único CON VIDEO BACKGROUND -->
   <header class="topbar">
+    <!-- Video Background -->
+    <div class="video-background">
+      <video class="header-video active" muted loop playsinline preload="auto">
+        <source src="/static/videos/video1.mp4" type="video/mp4">
+      </video>
+      <video class="header-video" muted loop playsinline preload="auto">
+        <source src="/static/videos/video2.mp4" type="video/mp4">
+      </video>
+      <video class="header-video" muted loop playsinline preload="auto">
+        <source src="/static/videos/video3.mp4" type="video/mp4">
+      </video>
+      
+      <!-- Indicadores -->
+      <div class="video-header-dots">
+        <div class="dot active" onclick="goToHeaderVideo(0)"></div>
+        <div class="dot" onclick="goToHeaderVideo(1)"></div>
+        <div class="dot" onclick="goToHeaderVideo(2)"></div>
+      </div>
+    </div>
+
+    <!-- Contenido del header (sobre los videos) -->
     <div class="container topbar-inner">
       <div class="brand">
         <div class="logo-badge" aria-hidden="true">🎟️</div>
@@ -283,6 +373,49 @@
   <!-- Scripts -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
+    // ==================== VIDEO HEADER CAROUSEL ====================
+    let currentHeaderVideoIndex = 0;
+    let headerVideos = document.querySelectorAll('.header-video');
+    let headerDots = document.querySelectorAll('.video-header-dots .dot');
+    let headerVideoInterval;
+
+    function goToHeaderVideo(index) {
+      // Detener y ocultar video actual
+      headerVideos[currentHeaderVideoIndex].pause();
+      headerVideos[currentHeaderVideoIndex].classList.remove('active');
+      headerDots[currentHeaderVideoIndex].classList.remove('active');
+
+      // Activar nuevo video
+      currentHeaderVideoIndex = index;
+      headerVideos[currentHeaderVideoIndex].classList.add('active');
+      headerDots[currentHeaderVideoIndex].classList.add('active');
+      headerVideos[currentHeaderVideoIndex].play();
+
+      // Reiniciar intervalo
+      resetHeaderVideoInterval();
+    }
+
+    function nextHeaderVideo() {
+      goToHeaderVideo((currentHeaderVideoIndex + 1) % headerVideos.length);
+    }
+
+    function startHeaderVideoAutoPlay() {
+      headerVideoInterval = setInterval(nextHeaderVideo, 8000); // Cambia cada 8 segundos
+    }
+
+    function resetHeaderVideoInterval() {
+      clearInterval(headerVideoInterval);
+      startHeaderVideoAutoPlay();
+    }
+
+    // Iniciar primer video cuando carga la página
+    document.addEventListener('DOMContentLoaded', () => {
+      if (headerVideos.length > 0) {
+        headerVideos[0].play();
+        startHeaderVideoAutoPlay();
+      }
+    });
+
     // ==================== TOGGLE CARD ====================
     function toggleCard(element) {
       const card = element.closest('.musical-card');
