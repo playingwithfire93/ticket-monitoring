@@ -445,7 +445,7 @@
               
               <div class="slide-dots">
                 {% for image in musical.images %}
-                <span class="dot {% if loop.first %}active{% endif %}" onclick="event.stopPropagation(); currentSlide(this, {{ loop.index0 }})"></span>
+                <span class="dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}"></span>
                 {% endfor %}
               </div>
               {% endif %}
@@ -631,6 +631,10 @@
           <textarea name="reason" rows="3" placeholder="Opcional: cuéntanos qué parte de la web te interesa monitorear..."></textarea>
         </label>
 
+        <label>Tu contacto (email o Instagram) — requerido<br>
+          <input name="contact" type="text" placeholder="ej: tu@correo.com o @tu_insta" required>
+        </label>
+
         <div class="suggest-controls">
           <button type="submit" class="btn primary">✨ Enviar Sugerencia</button>
           <button type="reset" class="btn ghost">Limpiar</button>
@@ -763,6 +767,15 @@
       slides[index].classList.add('active');
       dots[index].classList.add('active');
     }
+
+    // Delegated handler for slide dots using data-index (avoids inline onclick with Jinja)
+    document.addEventListener('click', (e) => {
+      const dot = e.target.closest('.slide-dots .dot');
+      if (!dot) return;
+      e.stopPropagation();
+      const idx = parseInt(dot.getAttribute('data-index') || '0', 10);
+      try { currentSlide(dot, idx); } catch (err) { console.error('currentSlide error', err); }
+    });
 
     setInterval(() => {
       document.querySelectorAll('.slideshow-container').forEach(container => {

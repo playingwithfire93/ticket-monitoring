@@ -9,6 +9,11 @@ import requests
 from models import db, Musical, MusicalLink, MusicalChange
 from telegram import Bot
 from telegram.ext import Application
+import smtplib
+import ssl
+import random
+import string
+import re
 
 # ==================== CONFIGURATION ====================
 BASE = Path(__file__).parent
@@ -30,6 +35,11 @@ DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/dGxUQ8mM")
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+SMTP_SERVER = os.getenv('SMTP_SERVER')
+SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
+SMTP_USERNAME = os.getenv('SMTP_USERNAME')
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
+SENDER_EMAIL = os.getenv('SENDER_EMAIL')
 
 # ==================== FLASK APP SETUP ====================
 app = Flask(__name__,
@@ -107,6 +117,42 @@ def send_discord_webhook(message_text, webhook_type="alert"):
     except Exception as e:
         app.logger.error(f"Discord error: {e}")
         return {"ok": False, "error": str(e)}
+
+
+def _generate_discount_code(prefix='TM', length=6):
+    chars = string.ascii_uppercase + string.digits
+    suffix = ''.join(random.choice(chars) for _ in range(length))
+    return f"{prefix}-{suffix}"
+
+
+def _is_email(val):
+    if not val: return False
+    return bool(re.match(r"[^@\s]+@[^@\s]+\.[^@\s]+$", val))
+
+
+def send_confirmation_email(recipient_email, discount_code):
+    """Send a simple confirmation email with discount code using SMTP.
+
+    Requires environment variables: SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SENDER_EMAIL
+    """
+    if not (SMTP_SERVER and SMTP_USERNAME and SMTP_PASSWORD and SENDER_EMAIL):
+        app.logger.warning('SMTP not configured; skipping confirmation email')
+        return {'ok': False, 'reason': 'smtp-not-configured'}
+
+    subject = 'Gracias por tu sugerencia — aquí tienes tu código de descuento'
+    body = f"Hola!\n\nGracias por enviar una sugerencia. Aquí tienes tu código de descuento:\n\n{discount_code}\n\n¡Gracias!"
+    message = f"From: {SENDER_EMAIL}\r\nTo: {recipient_email}\r\nSubject: {subject}\r\n\r\n{body}"
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+            server.starttls(context=context)
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SENDER_EMAIL, [recipient_email], message.encode('utf-8'))
+        return {'ok': True}
+    except Exception as e:
+        app.logger.error(f"Error sending confirmation email: {e}")
+        return {'ok': False, 'error': str(e)}
 
 def load_exclusions():
     """Load exclusions from JSON file"""
@@ -310,14 +356,16 @@ def api_suggest_site():
     site_name = data.get("siteName", "").strip()
     site_url = data.get("siteUrl", "").strip()
     reason = data.get("reason", "No especificada").strip()
+    contact = data.get("contact", "").strip()
     
-    if not site_name or not site_url:
-        return jsonify({"ok": False, "error": "siteName and siteUrl are required"}), 400
+    if not site_name or not site_url or not contact:
+        return jsonify({"ok": False, "error": "siteName, siteUrl and contact are required"}), 400
     
     suggestion = {
         "siteName": site_name,
         "siteUrl": site_url,
         "reason": reason,
+        "contact": contact,
         "timestamp": datetime.now(UTC).isoformat()
     }
     
@@ -336,18 +384,25 @@ def api_suggest_site():
         with SUGGESTIONS_FILE.open("w", encoding="utf-8") as f:
             json.dump(suggestions, f, indent=2, ensure_ascii=False)
         
-        # Send notifications
+        # Generate discount code for sender and attempt confirmation email
+        discount_code = _generate_discount_code()
+        suggestion['discount_code'] = discount_code
+
+        # Send notifications to admins
         message = f"""🌟 Nueva sugerencia de musical
 
-**{suggestion['siteName']}**
-{suggestion['siteUrl']}
+    **{suggestion['siteName']}**
+    {suggestion['siteUrl']}
 
-Razón: {suggestion['reason']}
-"""
-        
-        send_telegram_notification(message)
+    Razón: {suggestion['reason']}
+    Contacto: {suggestion.get('contact','-')}
+    """
         send_discord_webhook(message, webhook_type="suggestion")
-        
+
+        # If contact looks like an email, send confirmation with discount code
+        if contact and _is_email(contact):
+            send_confirmation_email(contact, discount_code)
+
         return jsonify({"ok": True, "message": "Suggestion saved"})
     
     except Exception as e:

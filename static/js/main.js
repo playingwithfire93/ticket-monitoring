@@ -1303,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
   }
 
-  // Wire inline suggestion form (if present)
+  // Wire inline suggestion form (if present) — posts to /api/suggest-site
   const form = document.getElementById('inline-suggest-form');
   if (form && !form.dataset.inited) {
     form.dataset.inited = '1';
@@ -1313,27 +1313,25 @@ document.addEventListener('DOMContentLoaded', () => {
       status.textContent = 'Enviando…';
       const fd = new FormData(form);
       const payload = {
-        name: (fd.get('name') || '').trim(),
-        email: (fd.get('email') || '').trim(),
-        musical: (fd.get('musical') || '').trim(),
-        url: (fd.get('url') || '').trim(),
-        comment: (fd.get('comment') || '').trim()
+        siteName: (fd.get('siteName') || '').trim(),
+        siteUrl: (fd.get('siteUrl') || '').trim(),
+        reason: (fd.get('reason') || '').trim(),
+        contact: (fd.get('contact') || '').trim()
       };
-      if (!payload.comment && !payload.musical && !payload.url) {
-        status.textContent = 'Escribe un comentario o indica el musical/link.';
+      if (!payload.siteName || !payload.siteUrl || !payload.contact) {
+        status.textContent = 'Por favor indica nombre, URL y un contacto.';
         return;
       }
-      payload.message = [ payload.musical ? `Musical: ${payload.musical}`:null, payload.url ? `Link: ${payload.url}`:null, payload.comment ? `Comentario:\n${payload.comment}`:null ].filter(Boolean).join('\n\n');
       const btn = form.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
       try {
-        const res = await fetch('/suggest', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch('/api/suggest-site', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const j = await res.json().catch(()=>({ok:false}));
-        if (res.ok && j.ok) { status.textContent = '¡Gracias! Enviado.'; form.reset(); }
+        if (res.ok && j.ok) { status.textContent = '¡Gracias! Sugerencia enviada.'; form.reset(); }
         else { status.textContent = 'Error: ' + (j.error || j.body || res.statusText || 'no enviado'); }
       } catch(e) {
         status.textContent = 'Error de red';
-      } finally { if (btn) btn.disabled = false; setTimeout(()=>status.textContent='',2500); }
+      } finally { if (btn) btn.disabled = false; setTimeout(()=>status.textContent='',3000); }
     });
   }
 });
