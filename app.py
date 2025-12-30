@@ -574,6 +574,53 @@ def get_calendar_events():
         print(f"❌ Error: {e}")
         return jsonify([]), 500
 
+
+# Admin test endpoint for notifications (Telegram + Discord)
+@app.route('/admin/test-telegram', methods=['GET', 'POST'])
+@require_auth
+def admin_test_telegram():
+    """Endpoint to trigger a test notification to Telegram and Discord.
+
+    Accepts optional JSON body {"message": "..."} for custom message.
+    Returns a JSON object with the results for each provider.
+    """
+    try:
+        payload = request.get_json(silent=True) or {}
+        message = payload.get('message') if isinstance(payload, dict) else None
+        if not message:
+            message = f"Test notification from BOM Monitor — {datetime.now(UTC).isoformat()}"
+
+        results = {}
+
+        # Telegram (async helper)
+        if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+            try:
+                import asyncio
+                tg_res = asyncio.run(send_telegram_notification_async(message))
+                results['telegram'] = tg_res
+            except Exception as e:
+                results['telegram'] = {'ok': False, 'error': str(e)}
+        else:
+            results['telegram'] = {'ok': False, 'reason': 'telegram-not-configured'}
+
+        # Discord (sync)
+        try:
+            dc_res = send_discord_webhook(message, webhook_type='alert')
+            results['discord'] = dc_res
+        except Exception as e:
+            results['discord'] = {'ok': False, 'error': str(e)}
+
+        # Emit via Socket.IO for UI feedback if needed
+        try:
+            socketio.emit('telegram_test', results)
+        except Exception:
+            pass
+
+        return jsonify({'ok': True, 'results': results})
+    except Exception as e:
+        app.logger.error(f"Error in admin_test_telegram: {e}")
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ==================== RUN ====================
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
