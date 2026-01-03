@@ -400,10 +400,6 @@
         badge.style.color = '#6b6b6b';
         urlTd.style.textDecoration = 'line-through';
         urlTd.style.opacity = '0.7';
-      } else {
-        badge.textContent = 'sin cambios';
-        badge.style.background = 'rgba(240,240,245,0.9)';
-        badge.style.color = '#6b6b6b';
       }
       stateTd.appendChild(badge);
 
@@ -667,7 +663,8 @@
     if (!cardsGrid) return;
     // merge monitored list with extra items (events/suggestions) not already present
     const have = new Set((list||[]).map(it => keyForItem(it)));
-    const extras = (extraCardItems||[]).filter(it => !have.has(keyForItem(it)));
+    // Do not render extras marked as hidden (integrated but unlisted)
+    const extras = (extraCardItems||[]).filter(it => !have.has(keyForItem(it)) && !it.hidden);
     const merged = [...(list||[]), ...extras];
     cardsGrid.innerHTML = '';
     if (!merged.length) return;
@@ -694,7 +691,7 @@
       const name = ev.musical || ev.title || '';
       if (!name) return;
       const range = (ev.start && ev.end) ? `${ev.start} — ${ev.end}` : '';
-      outs.push({ name, musical: name, location: ev.location || '', range, urls: [], images: [] });
+      outs.push({ name, musical: name, location: ev.location || '', range, urls: [], images: [], hidden: !!ev.hidden });
     });
 
     // suggestions.json (try multiple locations)
@@ -703,7 +700,7 @@
       const name = s.siteName || '';
       if (!name) return;
       const url = s.siteUrl || '';
-      outs.push({ name, musical: name, location: '', range: '', urls: url ? [url] : [], images: [] });
+      outs.push({ name, musical: name, location: '', range: '', urls: url ? [url] : [], images: [], hidden: !!s.hidden });
     });
     // de-dupe by key
     const seen = new Set();
