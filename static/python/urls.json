@@ -28,13 +28,6 @@
       "https://thebookofmormonelmusical.es/elenco/",
       "https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01"
     ]
-  },
-  {
-  "musical": "httpbin (prueba)",
-    "urls": [
-      "https://httpbin.org/get"
-    ],
-    "hidden": true
   }
 ]
 
