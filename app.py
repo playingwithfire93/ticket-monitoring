@@ -99,14 +99,43 @@ async def send_telegram_notification_async(message_text):
     """Send notification via Telegram (async version for v20+)"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         return {"ok": False, "reason": "telegram-not-configured"}
-    
     try:
         bot = Bot(token=TELEGRAM_BOT_TOKEN)
+        app.logger.debug('Sending Telegram message via python-telegram-bot')
         await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message_text)
+        app.logger.info('Telegram message sent (async)')
         return {"ok": True}
     except Exception as e:
-        app.logger.error(f"Telegram error: {e}")
-        return {"ok": False, "error": str(e)}
+        app.logger.warning(f"Async Telegram send failed: {e}; falling back to HTTP API")
+        # Fallback to simple HTTP API call (synchronous) to avoid asyncio issues in some runtimes
+        try:
+            return _send_telegram_http(message_text)
+        except Exception as ex:
+            app.logger.error(f"Telegram fallback also failed: {ex}")
+            return {"ok": False, "error": f"async_err:{e}; fallback_err:{ex}"}
+
+
+def _send_telegram_http(message_text):
+    """Synchronous HTTP fallback to Telegram sendMessage API."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return {"ok": False, "reason": "telegram-not-configured"}
+    api = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message_text}
+    try:
+        r = requests.post(api, json=payload, timeout=8)
+        try:
+            data = r.json()
+        except Exception:
+            data = {"ok": False, "status_code": r.status_code, "text": r.text}
+        if r.ok and data.get('ok'):
+            app.logger.info('Telegram message sent (http fallback)')
+            return {"ok": True, "result": data.get('result')}
+        else:
+            app.logger.error(f"Telegram API error: {data}")
+            return {"ok": False, "error": data}
+    except Exception as e:
+        app.logger.error(f"HTTP Telegram request failed: {e}")
+        raise
 
 def send_discord_webhook(message_text, webhook_type="alert"):
     """Send notification via Discord webhook"""
