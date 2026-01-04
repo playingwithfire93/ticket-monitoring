@@ -367,6 +367,10 @@ def api_get_musicals():
                     link_dict['is_available'] = link.is_available
                 else:
                     link_dict['is_available'] = True
+                if hasattr(link, 'last_checked') and link.last_checked:
+                    link_dict['last_checked'] = link.last_checked.isoformat()
+                if hasattr(link, 'created_at') and link.created_at:
+                    link_dict['created_at'] = link.created_at.isoformat()
                 links_data.append(link_dict)
             
             musical_dict = {
@@ -599,7 +603,8 @@ def run_check_and_alert():
                                 musical_id=link.musical_id,
                                 change_type='page_diff',
                                 old_value=old_val,
-                                new_value=new_val
+                                new_value=new_val,
+                                created_at=datetime.now(UTC)
                             )
                             db.session.add(change)
                             # update last_checked on link
@@ -607,23 +612,33 @@ def run_check_and_alert():
                                 link.last_checked = datetime.now(UTC)
                             except Exception:
                                 pass
+                            # Update musical's updated_at timestamp
+                            try:
+                                musical_obj = Musical.query.get(link.musical_id)
+                                if musical_obj:
+                                    musical_obj.updated_at = datetime.now(UTC)
+                            except Exception:
+                                pass
                             db.session.commit()
                             app.logger.info(f"Saved change to DB for musical_id={link.musical_id} url={url}")
                         else:
                             # Try to match by musical name
-                            musical = Musical.query.filter_by(name=musical).first()
-                            if musical:
+                            musical_obj = Musical.query.filter_by(name=musical).first()
+                            if musical_obj:
                                 old_val = (prev_body or '')[:20000]
                                 new_val = (body or '')[:20000]
                                 change = MusicalChange(
-                                    musical_id=musical.id,
+                                    musical_id=musical_obj.id,
                                     change_type='page_diff',
                                     old_value=old_val,
-                                    new_value=new_val
+                                    new_value=new_val,
+                                    created_at=datetime.now(UTC)
                                 )
                                 db.session.add(change)
+                                # Update musical's updated_at timestamp
+                                musical_obj.updated_at = datetime.now(UTC)
                                 db.session.commit()
-                                app.logger.info(f"Saved change to DB for musical (by name) id={musical.id} url={url}")
+                                app.logger.info(f"Saved change to DB for musical (by name) id={musical_obj.id} url={url}")
                 except Exception as e:
                     app.logger.warning(f"Could not persist change to DB for {url}: {e}")
 

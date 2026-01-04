@@ -460,7 +460,15 @@
 
           <!-- Header de la card -->
           <div class="musical-card-header" onclick="toggleCard(this)">
-            <h3 class="musical-title">{{ musical.name }}</h3>
+            <div class="header-content">
+              <h3 class="musical-title">{{ musical.name }}</h3>
+              {% if musical.updated_at %}
+              <div class="last-update-badge">
+                <span class="update-icon">🕒</span>
+                <span class="update-time">{{ musical.updated_at.strftime('%d/%m/%Y %H:%M') }}</span>
+              </div>
+              {% endif %}
+            </div>
             <div class="card-toggle">
               <span class="toggle-icon">▼</span>
             </div>
@@ -520,6 +528,12 @@
                     {% endif %}
                     <span class="link-external">↗</span>
                   </a>
+                  {% if link.last_checked %}
+                  <div class="link-timestamp">
+                    <span class="timestamp-icon">⏱️</span>
+                    <span class="timestamp-text">Verificado: {{ link.last_checked.strftime('%d/%m/%Y %H:%M:%S') }}</span>
+                  </div>
+                  {% endif %}
                 </li>
                 {% endfor %}
                 
@@ -546,18 +560,17 @@
                     {% endif %}
                     <span class="link-external">↗</span>
                   </a>
+                  {% if link.last_checked %}
+                  <div class="link-timestamp">
+                    <span class="timestamp-icon">⏱️</span>
+                    <span class="timestamp-text">Verificado: {{ link.last_checked.strftime('%d/%m/%Y %H:%M:%S') }}</span>
+                  </div>
+                  {% endif %}
                 </li>
                 {% endfor %}
               </ul>
               {% endif %}
             </div>
-
-            {% if musical.updated_at %}
-            <div class="last-change">
-              <span class="change-icon">📝</span>
-              <span class="change-text">Actualizado: {{ musical.updated_at.strftime('%d/%m/%Y %H:%M') }}</span>
-            </div>
-            {% endif %}
           </div>
 
           <!-- Footer de la card -->

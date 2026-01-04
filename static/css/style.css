@@ -415,6 +415,59 @@ input:checked + .switch:before {
   color: white;
 }
 
+/* Header content wrapper */
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Last update badge in header */
+.last-update-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #fff0f6, #ffe4f0);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dark-pink);
+  align-self: flex-start;
+  box-shadow: 0 2px 4px rgba(255, 105, 180, 0.1);
+}
+
+.update-icon {
+  font-size: 0.85rem;
+}
+
+.update-time {
+  white-space: nowrap;
+}
+
+/* Link timestamp (shown below each link) */
+.link-timestamp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: var(--light-pink);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: var(--text-light);
+}
+
+.timestamp-icon {
+  font-size: 0.75rem;
+}
+
+.timestamp-text {
+  font-weight: 500;
+}
+
 /* Collapsed state */
 .musical-card-body.collapsed,
 .musical-card-footer.collapsed {
