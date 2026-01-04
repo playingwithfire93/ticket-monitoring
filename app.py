@@ -54,6 +54,8 @@ app = Flask(__name__,
            static_url_path='/static')
 
 db_url = os.getenv('DATABASE_URL', '').strip()
+# Remove surrounding quotes if present (common issue with env vars)
+db_url = db_url.strip('"').strip("'")
 
 # Debug logging
 print("=" * 60)
