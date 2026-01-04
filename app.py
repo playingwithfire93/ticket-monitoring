@@ -53,7 +53,11 @@ app = Flask(__name__,
            static_folder='static',
            static_url_path='/static')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
@@ -734,6 +738,39 @@ def api_calendar_events():
         print(f"   - url: {sample['extendedProps'].get('url')}")
     
     return jsonify(calendar_events)
+
+
+@app.route("/api/changes", methods=["GET"])
+def api_get_changes():
+    """Return recent MusicalChange rows for inspection.
+
+    Query params:
+      - limit (int): number of rows to return (default 20)
+    """
+    try:
+        limit = int(request.args.get('limit', 20))
+    except Exception:
+        limit = 20
+
+    with app.app_context():
+        rows = MusicalChange.query.order_by(MusicalChange.created_at.desc()).limit(limit).all()
+        out = []
+        for r in rows:
+            musical = None
+            try:
+                musical = Musical.query.get(r.musical_id)
+            except Exception:
+                musical = None
+            out.append({
+                'id': r.id,
+                'musical_id': r.musical_id,
+                'musical': musical.name if musical else None,
+                'change_type': r.change_type,
+                'old_value': (r.old_value or '')[:2000],
+                'new_value': (r.new_value or '')[:2000],
+                'created_at': r.created_at.isoformat() if r.created_at else None
+            })
+        return jsonify(out)
 
 # Definir colores para cada musical
 MUSICAL_COLORS = {

@@ -16,7 +16,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # ==================== DATABASE CONFIG ====================
-SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_FILE}'
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+else:
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_FILE}'
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # ==================== EXTERNAL SERVICES ====================
@@ -62,7 +67,16 @@ def log_configuration():
     print(f"✅ Discord Alerts:       {is_discord_alerts_configured()}")
     print(f"✅ Discord Suggestions:  {is_discord_suggestions_configured()}")
     print(f"⏱️  Poll Interval:        {POLL_INTERVAL_SECONDS}s")
-    print(f"🗄️  Database:             {DATABASE_FILE}")
+    db_display = DATABASE_URL if DATABASE_URL else DATABASE_FILE
+    # Mask credentials when printing full connection string
+    if isinstance(db_display, str) and db_display.startswith('postgres'):
+        try:
+            # crude mask: remove password between : and @
+            import re
+            db_display = re.sub(r':([^:@]+)@', ':*****@', db_display)
+        except Exception:
+            pass
+    print(f"🗄️  Database:             {db_display}")
     print("=" * 70)
 
 # ==================== SETTINGS ====================
