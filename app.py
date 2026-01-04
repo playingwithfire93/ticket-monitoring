@@ -53,14 +53,39 @@ app = Flask(__name__,
            static_folder='static',
            static_url_path='/static')
 
-db_url = os.getenv('DATABASE_URL')
+db_url = os.getenv('DATABASE_URL', '').strip()
+
+# Debug logging
+print("=" * 60)
+print("🔍 DATABASE CONFIGURATION")
+print("=" * 60)
+print(f"DATABASE_URL exists: {bool(db_url)}")
+if db_url:
+    # Mask password for logging
+    safe_url = db_url
+    if '@' in safe_url:
+        parts = safe_url.split('@')
+        if ':' in parts[0]:
+            user_pass = parts[0].split(':')
+            safe_url = f"{user_pass[0]}:****@{parts[1]}"
+    print(f"DATABASE_URL (masked): {safe_url}")
+    print(f"DB starts with 'postgres://': {db_url.startswith('postgres://')}")
+    print(f"DB starts with 'postgresql://': {db_url.startswith('postgresql://')}")
+
 if db_url:
     # Fix for Render/Heroku: postgres:// -> postgresql://
     if db_url.startswith('postgres://'):
         db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        print("✅ Converted postgres:// to postgresql://")
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    print("✅ Using PostgreSQL database")
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
+    print("⚠️  DATABASE_URL not found, using SQLite fallback")
+
+print("=" * 60)
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
