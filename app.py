@@ -520,6 +520,24 @@ def run_check_and_alert():
         except Exception:
             pass
 
+    # Log which URLs we will check (useful for Render logs)
+    if not urls_to_check:
+        app.logger.info("No monitored URLs found to check.")
+    else:
+        try:
+            total = len(urls_to_check)
+            # prepare a short preview of the first 20 entries
+            preview_items = []
+            for e in urls_to_check[:20]:
+                m = e.get('musical') or 'unknown'
+                u = e.get('url') or ''
+                preview_items.append(f"{m}->{u}")
+            preview_text = ", ".join(preview_items)
+            more_text = f", ... (+{total-20} more)" if total > 20 else ""
+            app.logger.info(f"Running check on {total} URLs. Preview: {preview_text}{more_text}")
+        except Exception:
+            app.logger.info("Running check on URLs (unable to build preview)")
+
     for entry in urls_to_check:
         url = entry.get('url')
         musical = entry.get('musical')
