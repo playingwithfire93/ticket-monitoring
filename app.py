@@ -794,6 +794,20 @@ def admin_test_telegram():
         app.logger.error(f"Error in admin_test_telegram: {e}")
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+
+# Simple health endpoint for Render and uptime checks
+@app.route('/health', methods=['GET'])
+def health_check():
+    try:
+        return jsonify({
+            'ok': True,
+            'time': datetime.now(UTC).isoformat(),
+            'port_env': int(os.getenv('PORT', 0)),
+            'monitor_interval': int(os.getenv('MONITOR_INTERVAL', '5'))
+        })
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ==================== RUN ====================
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
