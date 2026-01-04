@@ -500,25 +500,27 @@ def run_check_and_alert():
                 for m in musicals:
                     links = MusicalLink.query.filter_by(musical_id=m.id).all()
                     for ln in links:
-                        urls_to_check.append({'musical': m.name, 'url': ln.url})
+                        urls_to_check.append({'musical': m.name, 'url': ln.url, 'source': 'db'})
     except Exception:
         pass
-
-    # fallback to static/python/urls.json
-    if not urls_to_check and URLS_FILE.exists():
+    # Also merge URLs from static/python/urls.json (avoid duplicates)
+    if URLS_FILE.exists():
         try:
             with URLS_FILE.open('r', encoding='utf-8') as f:
                 data = json.load(f)
             if isinstance(data, list):
+                existing_urls = {entry.get('url') for entry in urls_to_check if entry.get('url')}
                 for item in data:
                     name = item.get('musical') or item.get('name') or item.get('siteName') or 'unknown'
                     urls = item.get('urls') or item.get('url') or []
                     if isinstance(urls, str):
                         urls = [urls]
                     for u in urls:
-                        urls_to_check.append({'musical': name, 'url': u})
-        except Exception:
-            pass
+                        if u and u not in existing_urls:
+                            urls_to_check.append({'musical': name, 'url': u, 'source': 'file'})
+                            existing_urls.add(u)
+        except Exception as e:
+            app.logger.warning(f"Error reading {URLS_FILE}: {e}")
 
     # Log which URLs we will check (useful for Render logs)
     if not urls_to_check:
@@ -580,6 +582,46 @@ def run_check_and_alert():
                     notified = True
                 except Exception:
                     notified = False
+
+                # Persist change to DB if possible
+                try:
+                    with app.app_context():
+                        # Prefer to find a MusicalLink by URL
+                        link = MusicalLink.query.filter_by(url=url).first()
+                        if link:
+                            old_val = (prev_body or '')[:20000]
+                            new_val = (body or '')[:20000]
+                            change = MusicalChange(
+                                musical_id=link.musical_id,
+                                change_type='page_diff',
+                                old_value=old_val,
+                                new_value=new_val
+                            )
+                            db.session.add(change)
+                            # update last_checked on link
+                            try:
+                                link.last_checked = datetime.now(UTC)
+                            except Exception:
+                                pass
+                            db.session.commit()
+                            app.logger.info(f"Saved change to DB for musical_id={link.musical_id} url={url}")
+                        else:
+                            # Try to match by musical name
+                            musical = Musical.query.filter_by(name=musical).first()
+                            if musical:
+                                old_val = (prev_body or '')[:20000]
+                                new_val = (body or '')[:20000]
+                                change = MusicalChange(
+                                    musical_id=musical.id,
+                                    change_type='page_diff',
+                                    old_value=old_val,
+                                    new_value=new_val
+                                )
+                                db.session.add(change)
+                                db.session.commit()
+                                app.logger.info(f"Saved change to DB for musical (by name) id={musical.id} url={url}")
+                except Exception as e:
+                    app.logger.warning(f"Could not persist change to DB for {url}: {e}")
 
             # store limited body to avoid unbounded snapshots sizes
             store_body = body if len(body) <= 20000 else body[:20000]
