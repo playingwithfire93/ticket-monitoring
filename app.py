@@ -91,6 +91,25 @@ print("=" * 60)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# Validate SQLAlchemy URL to avoid parse errors on startup (Render deploys)
+try:
+    from sqlalchemy.engine.url import make_url
+    candidate = app.config.get('SQLALCHEMY_DATABASE_URI')
+    if candidate and isinstance(candidate, str) and candidate.startswith(('postgres://', 'postgresql://', 'mysql://')):
+        try:
+            make_url(candidate)
+        except Exception as e:
+            print(f"⚠️  Invalid DATABASE_URL detected: {e}")
+            print("⚠️  Falling back to local SQLite for startup. Fix DATABASE_URL in environment.")
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + str(BASE / 'musicals.db')
+            try:
+                os.environ.pop('DATABASE_URL', None)
+            except Exception:
+                pass
+except Exception:
+    # If sqlalchemy not available at this point, let init handle it
+    pass
+
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -311,6 +330,41 @@ with app.app_context():
                                 db.session.commit()
                 
                 app.logger.info(f"✅ Successfully loaded musicals from urls.json")
+                # Process any entries that are flagged as suggestion-only:
+                try:
+                    def _process_suggestion_only_entries():
+                        if not isinstance(data, list):
+                            return
+                        changed = False
+                        for item in data:
+                            if not isinstance(item, dict):
+                                continue
+                            if item.get('suggestion_only') and not item.get('sent_to_suggestions'):
+                                # Build a friendly message
+                                name = item.get('musical') or item.get('name') or item.get('siteName') or 'Suggestion'
+                                urls = item.get('urls') or item.get('url') or []
+                                if isinstance(urls, str):
+                                    urls = [urls]
+                                url = urls[0] if urls else ''
+                                message = f"📨 Nueva sugerencia (importada): {name}\n{url}"
+                                try:
+                                    send_discord_webhook(message, webhook_type='suggestion')
+                                    app.logger.info(f"Sent suggestion-only entry to Discord: {name} {url}")
+                                except Exception as e:
+                                    app.logger.warning(f"Failed sending suggestion-only entry to Discord: {e}")
+                                item['sent_to_suggestions'] = True
+                                changed = True
+                        if changed:
+                            try:
+                                with URLS_FILE.open('w', encoding='utf-8') as wf:
+                                    json.dump(data, wf, indent=2, ensure_ascii=False)
+                                app.logger.info('Updated urls.json after processing suggestion-only entries')
+                            except Exception as e:
+                                app.logger.warning(f'Could not write urls.json: {e}')
+
+                    _process_suggestion_only_entries()
+                except Exception as e:
+                    app.logger.warning(f"Error processing suggestion-only entries: {e}")
             except Exception as e:
                 app.logger.error(f"Error loading urls.json: {e}")
                 db.session.rollback()
