@@ -6,6 +6,10 @@ from functools import wraps
 from flask import Flask, render_template, jsonify, send_from_directory, request, Response
 from flask_socketio import SocketIO
 import requests
+import hashlib
+import asyncio
+import threading
+import time
 from models import db, Musical, MusicalLink, MusicalChange
 from telegram import Bot
 from telegram.ext import Application
@@ -23,6 +27,7 @@ STATIC_DIR = BASE / "static"
 URLS_FILE = STATIC_DIR / "python" / "urls.json"
 SUGGESTIONS_FILE = STATIC_DIR / "python" / "suggestions.json"
 EVENTS_FILE = STATIC_DIR / "data" / "events.json"
+SNAPSHOTS_FILE = STATIC_DIR / "data" / "snapshots.json"
 EXCLUSIONS_FILE = STATIC_DIR / "data" / "exclusions.json"
 
 UTC = timezone.utc
@@ -414,10 +419,96 @@ def api_suggest_site():
 def api_check_now():
     """Trigger manual check"""
     try:
-        # Tu lógica de verificación aquí
-        return jsonify({"ok": True, "message": "Check initiated"})
+        # Reuse the run-check logic via helper to keep behaviour consistent
+        res = run_check_and_alert()
+        return jsonify({"ok": True, "results": res})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+def _load_snapshots():
+    try:
+        if SNAPSHOTS_FILE.exists():
+            with SNAPSHOTS_FILE.open('r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+
+def _save_snapshots(snap):
+    try:
+        SNAPSHOTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with SNAPSHOTS_FILE.open('w', encoding='utf-8') as f:
+            json.dump(snap, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def run_check_and_alert():
+    """Check monitored URLs, detect body-hash changes and send Telegram alerts.
+
+    Returns a dict with per-URL status and whether a notification was sent.
+    """
+    results = []
+    snapshots = _load_snapshots()
+
+    # Build list of URLs to check from DB if possible, else from urls.json
+    urls_to_check = []
+    try:
+        with app.app_context():
+            musicals = Musical.query.all()
+            if musicals:
+                for m in musicals:
+                    links = MusicalLink.query.filter_by(musical_id=m.id).all()
+                    for ln in links:
+                        urls_to_check.append({'musical': m.name, 'url': ln.url})
+    except Exception:
+        pass
+
+    # fallback to static/python/urls.json
+    if not urls_to_check and URLS_FILE.exists():
+        try:
+            with URLS_FILE.open('r', encoding='utf-8') as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                for item in data:
+                    name = item.get('musical') or item.get('name') or item.get('siteName') or 'unknown'
+                    urls = item.get('urls') or item.get('url') or []
+                    if isinstance(urls, str):
+                        urls = [urls]
+                    for u in urls:
+                        urls_to_check.append({'musical': name, 'url': u})
+        except Exception:
+            pass
+
+    for entry in urls_to_check:
+        url = entry.get('url')
+        musical = entry.get('musical')
+        try:
+            r = requests.get(url, timeout=8)
+            body = r.text or ''
+            h = hashlib.sha256(body.encode('utf-8')).hexdigest()
+            prev = snapshots.get(url)
+            changed = (prev is not None and prev != h)
+            # If first time, record snapshot but do not alert
+            notified = False
+            if changed:
+                # send Telegram notification (sync via asyncio.run)
+                msg = f"🔔 Cambio detectado en {musical}: {url}"
+                try:
+                    asyncio.run(send_telegram_notification_async(msg))
+                    notified = True
+                except Exception:
+                    notified = False
+
+            snapshots[url] = h
+            results.append({'musical': musical, 'url': url, 'status_code': r.status_code, 'changed': changed, 'notified': notified})
+        except Exception as e:
+            results.append({'musical': musical, 'url': url, 'error': str(e), 'changed': False, 'notified': False})
+
+    _save_snapshots(snapshots)
+    return results
 
 @app.route("/api/calendar-events", methods=["GET"])
 def api_calendar_events():
@@ -624,4 +715,23 @@ def admin_test_telegram():
 # ==================== RUN ====================
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
+    # Start background monitor thread if requested
+    try:
+        monitor_interval = int(os.getenv('MONITOR_INTERVAL', '5'))
+    except Exception:
+        monitor_interval = 5
+
+    def _start_background_monitor():
+        def _loop():
+            app.logger.info(f"Background monitor started (interval={monitor_interval}s)")
+            while True:
+                try:
+                    run_check_and_alert()
+                except Exception as e:
+                    app.logger.error(f"Background check error: {e}")
+                time.sleep(monitor_interval)
+        t = threading.Thread(target=_loop, daemon=True)
+        t.start()
+
+    _start_background_monitor()
     socketio.run(app, debug=False, host='0.0.0.0', port=port)
