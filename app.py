@@ -7,6 +7,7 @@ from flask import Flask, render_template, jsonify, send_from_directory, request,
 from flask_socketio import SocketIO
 import requests
 import hashlib
+import difflib
 import asyncio
 import threading
 import time
@@ -459,7 +460,15 @@ def _load_snapshots():
     try:
         if SNAPSHOTS_FILE.exists():
             with SNAPSHOTS_FILE.open('r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                # Normalize legacy format (url -> hash) to new format (url -> {hash, body})
+                normalized = {}
+                for k, v in (data.items() if isinstance(data, dict) else []):
+                    if isinstance(v, dict):
+                        normalized[k] = v
+                    else:
+                        normalized[k] = {'hash': v, 'body': None, 'last_checked': None}
+                return normalized
     except Exception:
         pass
     return {}
@@ -518,21 +527,47 @@ def run_check_and_alert():
             r = requests.get(url, timeout=8)
             body = r.text or ''
             h = hashlib.sha256(body.encode('utf-8')).hexdigest()
-            prev = snapshots.get(url)
-            changed = (prev is not None and prev != h)
-            # If first time, record snapshot but do not alert
+
+            prev_entry = snapshots.get(url)
+            prev_hash = None
+            prev_body = None
+            if isinstance(prev_entry, dict):
+                prev_hash = prev_entry.get('hash')
+                prev_body = prev_entry.get('body')
+            elif isinstance(prev_entry, str):
+                prev_hash = prev_entry
+
+            changed = (prev_hash is not None and prev_hash != h)
             notified = False
+            diff_snippet = None
+
             if changed:
+                # try to compute a unified diff if we have previous body
+                if prev_body is not None:
+                    prev_lines = prev_body.splitlines()
+                    curr_lines = body.splitlines()
+                    diff_lines = list(difflib.unified_diff(prev_lines, curr_lines, fromfile='before', tofile='after', lineterm=''))
+                    if diff_lines:
+                        diff_text = '\n'.join(diff_lines)
+                        # truncate to a safe size for messages and logs
+                        max_chars = 1200
+                        diff_snippet = diff_text if len(diff_text) <= max_chars else diff_text[:max_chars] + '\n... (truncated)'
                 # send Telegram notification (sync via asyncio.run)
                 msg = f"🔔 Cambio detectado en {musical}: {url}"
+                if diff_snippet:
+                    msg = msg + "\n\nDiff (truncated):\n" + diff_snippet
+
                 try:
                     asyncio.run(send_telegram_notification_async(msg))
                     notified = True
                 except Exception:
                     notified = False
 
-            snapshots[url] = h
-            results.append({'musical': musical, 'url': url, 'status_code': r.status_code, 'changed': changed, 'notified': notified})
+            # store limited body to avoid unbounded snapshots sizes
+            store_body = body if len(body) <= 20000 else body[:20000]
+            snapshots[url] = {'hash': h, 'body': store_body, 'last_checked': datetime.now(UTC).isoformat()}
+
+            results.append({'musical': musical, 'url': url, 'status_code': r.status_code, 'changed': changed, 'notified': notified, 'diff_snippet': diff_snippet})
         except Exception as e:
             results.append({'musical': musical, 'url': url, 'error': str(e), 'changed': False, 'notified': False})
 
