@@ -5,6 +5,9 @@ from pathlib import Path
 from functools import wraps
 from flask import Flask, render_template, jsonify, send_from_directory, request, Response
 from flask_socketio import SocketIO
+from flask_compress import Compress
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import requests
 import hashlib
 import difflib
@@ -40,12 +43,31 @@ TELEGRAM_CHANNEL_URL = os.getenv("TELEGRAM_CHANNEL_URL", "https://t.me/TheBookOf
 DISCORD_WEBHOOK_ALERTS = os.getenv("DISCORD_WEBHOOK_ALERTS")
 DISCORD_WEBHOOK_SUGGESTIONS = os.getenv("DISCORD_WEBHOOK_SUGGESTIONS")
 DISCORD_SERVER_URL = os.getenv("DISCORD_SERVER_URL", "https://discord.gg/dGxUQ8mM")
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+if not ADMIN_PASSWORD:
+    raise RuntimeError(
+        "SECURITY: ADMIN_PASSWORD environment variable is not set. "
+        "Set a strong ADMIN_PASSWORD before starting the application."
+    )
 SMTP_SERVER = os.getenv('SMTP_SERVER')
 SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
 SMTP_USERNAME = os.getenv('SMTP_USERNAME')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 SENDER_EMAIL = os.getenv('SENDER_EMAIL')
+
+# Configuration flags (safe defaults)
+TELEGRAM_CONFIGURED = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
+DISCORD_CONFIGURED = bool(DISCORD_WEBHOOK_ALERTS or DISCORD_WEBHOOK_SUGGESTIONS)
+SMTP_CONFIGURED = bool(SMTP_SERVER and SMTP_USERNAME and SMTP_PASSWORD and SENDER_EMAIL)
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+DATABASE_CONFIGURED = bool(DATABASE_URL)
+
+if not TELEGRAM_CONFIGURED:
+    print('⚠️  TELEGRAM not configured: notifications via Telegram will be disabled')
+if not DISCORD_CONFIGURED:
+    print('⚠️  DISCORD webhooks not configured: suggestion/alert webhooks will be disabled')
+if not SMTP_CONFIGURED:
+    print('⚠️  SMTP not configured: confirmation emails will be skipped')
 
 # ==================== FLASK APP SETUP ====================
 app = Flask(__name__,
@@ -112,6 +134,75 @@ except Exception:
 
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+Compress(app)
+
+# Rate limiting: sensible defaults and key by remote address
+# Allow configuring a persistent storage backend via `RATELIMIT_STORAGE_URL` (e.g. redis://...)
+ratelimit_storage = os.getenv('RATELIMIT_STORAGE_URL') or os.getenv('REDIS_URL') or os.getenv('RATELIMIT_STORAGE')
+# Emit rate limit headers so clients can see remaining quota
+app.config['RATELIMIT_HEADERS_ENABLED'] = True
+
+if ratelimit_storage:
+    try:
+        print(f"🔒 Using rate-limit storage backend: {ratelimit_storage}")
+        limiter = Limiter(
+            key_func=get_remote_address,
+            app=app,
+            default_limits=["200 per day", "50 per hour"],
+            storage_uri=ratelimit_storage
+        )
+    except Exception as e:
+        # If storage backend fails to initialize, fall back to in-memory but log the issue
+        app.logger.warning(f"Could not initialize rate-limit storage '{ratelimit_storage}': {e}. Falling back to in-memory storage.")
+        limiter = Limiter(
+            key_func=get_remote_address,
+            app=app,
+            default_limits=["200 per day", "50 per hour"]
+        )
+else:
+    limiter = Limiter(
+        key_func=get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"]
+    )
+
+
+# WSGI middleware to enforce security headers on ALL responses (includes static and socket responses)
+class SecurityHeadersMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        def custom_start(status, headers, exc_info=None):
+            try:
+                # Prevent duplicate headers by using a dict-style set
+                hdrs = {k.lower(): v for k, v in headers}
+            except Exception:
+                hdrs = {}
+
+            # HSTS only when served over HTTPS (we cannot detect scheme reliably here, set conservatively)
+            hdrs.setdefault('strict-transport-security', 'max-age=63072000; includeSubDomains; preload')
+            hdrs.setdefault('x-content-type-options', 'nosniff')
+            hdrs.setdefault('x-frame-options', 'DENY')
+            hdrs.setdefault('referrer-policy', 'no-referrer-when-downgrade')
+            hdrs.setdefault('x-xss-protection', '0')
+            hdrs.setdefault('permissions-policy', "geolocation=(), microphone=()")
+
+            # Minimal CSP — adjust later for external vendors
+            hdrs.setdefault('content-security-policy', "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:;")
+
+            # Convert back to list preserving original header order roughly
+            new_headers = [(k, v) for k, v in headers if k.lower() not in hdrs]
+            for k, v in hdrs.items():
+                new_headers.append((k, v))
+
+            return start_response(status, new_headers, exc_info)
+
+        return self.app(environ, custom_start)
+
+
+# Wrap the WSGI app so headers are always applied
+app.wsgi_app = SecurityHeadersMiddleware(app.wsgi_app)
 
 # Log configuration
 print("=" * 60)
@@ -151,7 +242,8 @@ def load_events():
 
 async def send_telegram_notification_async(message_text):
     """Send notification via Telegram (async version for v20+)"""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+    if not TELEGRAM_CONFIGURED:
+        app.logger.info('Telegram not configured; skipping telegram notification')
         return {"ok": False, "reason": "telegram-not-configured"}
     try:
         bot = Bot(token=TELEGRAM_BOT_TOKEN)
@@ -194,8 +286,8 @@ def _send_telegram_http(message_text):
 def send_discord_webhook(message_text, webhook_type="alert"):
     """Send notification via Discord webhook"""
     webhook_url = DISCORD_WEBHOOK_SUGGESTIONS if webhook_type == "suggestion" else DISCORD_WEBHOOK_ALERTS
-    
-    if not webhook_url:
+    if not DISCORD_CONFIGURED or not webhook_url:
+        app.logger.info('Discord webhook not configured; skipping discord notification')
         return {"ok": False, "reason": "discord-not-configured"}
     
     try:
@@ -397,6 +489,37 @@ def index():
             discord_url=DISCORD_SERVER_URL
         )
 
+
+    # Security & caching headers for all responses
+    @app.after_request
+    def set_security_headers(response):
+        try:
+            # HSTS only when served over HTTPS
+            if request.scheme == 'https':
+                response.headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload'
+
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.headers['X-Frame-Options'] = 'DENY'
+            response.headers['Referrer-Policy'] = 'no-referrer-when-downgrade'
+            response.headers['X-XSS-Protection'] = '0'
+
+            # Minimal CSP — adjust for external vendors as needed
+            csp = "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:;"
+            response.headers['Content-Security-Policy'] = csp
+
+            # Permissions policy (formerly feature-policy)
+            response.headers['Permissions-Policy'] = "geolocation=(), microphone=()"
+
+            # Cache policy: long cache for static assets, conservative for dynamic
+            if request.path.startswith('/static/'):
+                response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+            else:
+                # Default for API/dynamic responses
+                response.headers.setdefault('Cache-Control', 'no-cache, no-store, must-revalidate')
+        except Exception:
+            pass
+        return response
+
 @app.route("/shows")
 def shows():
     """Página de cartelera de musicales"""
@@ -476,6 +599,7 @@ def api_get_musicals():
         return jsonify(result)
 
 @app.route("/api/suggest-site", methods=["POST"])
+@limiter.limit("10 per hour")
 def api_suggest_site():
     """Endpoint para recibir sugerencias de musicales"""
     data = request.get_json(silent=True) or {}
@@ -538,6 +662,7 @@ def api_suggest_site():
 
 @app.route("/api/check-now", methods=["POST"])
 @require_auth
+@limiter.limit("5 per hour")
 def api_check_now():
     """Trigger manual check"""
     try:
@@ -686,6 +811,10 @@ def run_check_and_alert():
                             change = MusicalChange(
                                 musical_id=link.musical_id,
                                 change_type='page_diff',
+                                url=url,
+                                status_code=(r.status_code if 'r' in locals() and hasattr(r, 'status_code') else None),
+                                notified=bool(notified),
+                                diff_snippet=(diff_snippet or None),
                                 old_value=old_val,
                                 new_value=new_val,
                                 created_at=datetime.now(UTC)
@@ -714,6 +843,10 @@ def run_check_and_alert():
                                 change = MusicalChange(
                                     musical_id=musical_obj.id,
                                     change_type='page_diff',
+                                    url=url,
+                                    status_code=(r.status_code if 'r' in locals() and hasattr(r, 'status_code') else None),
+                                    notified=bool(notified),
+                                    diff_snippet=(diff_snippet or None),
                                     old_value=old_val,
                                     new_value=new_val,
                                     created_at=datetime.now(UTC)
@@ -865,6 +998,10 @@ def api_get_changes():
                 'musical_id': r.musical_id,
                 'musical': musical.name if musical else None,
                 'change_type': r.change_type,
+                'url': getattr(r, 'url', None),
+                'status_code': getattr(r, 'status_code', None),
+                'notified': bool(getattr(r, 'notified', False)),
+                'diff_snippet': (getattr(r, 'diff_snippet', None) or '')[:2000],
                 'old_value': (r.old_value or '')[:2000],
                 'new_value': (r.new_value or '')[:2000],
                 'created_at': r.created_at.isoformat() if r.created_at else None
@@ -1007,5 +1144,10 @@ if __name__ == '__main__':
         t = threading.Thread(target=_loop, daemon=True)
         t.start()
 
-    _start_background_monitor()
+    # Background monitor is opt-in. Set START_MONITOR=1 to enable background checks.
+    if os.getenv('START_MONITOR', '0') == '1':
+        app.logger.info('START_MONITOR=1 detected; starting background monitor')
+        _start_background_monitor()
+    else:
+        app.logger.info('Background monitor disabled by default. Set START_MONITOR=1 to enable.')
     socketio.run(app, debug=False, host='0.0.0.0', port=port)

@@ -62,6 +62,19 @@
   // session snapshot key (keeps baseline for "since you logged in")
   const SESSION_SNAP_KEY = 'tm_session_snapshot_v1';
 
+  // small debounce helper to avoid excessive re-renders on fast input
+  function debounce(fn, wait = 200) {
+    let t = null;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  // fetch-in-flight guard and client-side fetch cache key
+  let fetchInFlight = false;
+  const LAST_FETCH_CACHE_KEY = 'tm_last_fetch_v1';
+
   // load session baseline (taken at first full data load)
   function loadSessionSnapshot(){
     try {
@@ -363,12 +376,7 @@
 
       // friendly label or simple host
       const labelText = labelForUrl(item.musical || item.name, entry.url);
-      const a = document.createElement('a');
-      a.href = entry.url.startsWith('http') ? entry.url : 'https://' + entry.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.className = 'url-chip';
-      a.textContent = labelText;
+      const a = createUrlChip(item.musical || item.name, entry.url);
       a.title = entry.url;
       labelTd.appendChild(a);
 
@@ -575,11 +583,13 @@
     if (images.length) {
       const inner = document.createElement('div');
       inner.className = 'mc-slides';
+      // defer loading: set data-src and loading=lazy; actual src set on visibility/open
       images.forEach((src, i) => {
         const img = document.createElement('img');
-        img.className = 'mc-slide';
-        img.src = src;
+        img.className = 'mc-slide deferred-img';
+        img.dataset.src = src;
         img.alt = (item.musical || item.name || 'Imagen');
+        img.loading = 'lazy';
         if (i === 0) img.classList.add('active');
         inner.appendChild(img);
       });
@@ -589,14 +599,22 @@
       prev.className = 'mc-nav prev';
       prev.type = 'button';
       prev.textContent = '‹';
+      prev.setAttribute('aria-label', 'Anterior imagen');
       const next = document.createElement('button');
       next.className = 'mc-nav next';
       next.type = 'button';
       next.textContent = '›';
+      next.setAttribute('aria-label', 'Siguiente imagen');
       slideWrap.appendChild(prev);
       slideWrap.appendChild(next);
 
-      initMiniSlideshow(slideWrap);
+      // init slideshow but do not start loading until visible
+      initMiniSlideshow(slideWrap, { lazyLoad: true });
+      // when card is opened, ensure images are loaded immediately
+      card.addEventListener('click', () => {
+        const imgs = slideWrap.querySelectorAll('img.deferred-img');
+        imgs.forEach(iimg => { if (!iimg.src && iimg.dataset.src) iimg.src = iimg.dataset.src; });
+      });
     }
 
     const header = document.createElement('div');
@@ -625,12 +643,8 @@
     const urls = document.createElement('div');
     urls.className = 'urls';
     (item.urls||[]).forEach(u=>{
-      const a = document.createElement('a');
-      a.className = 'url-chip';
-      a.href = u.startsWith('http') ? u : 'https://' + u;
-      a.target = '_blank'; a.rel = 'noopener noreferrer';
-      a.textContent = (typeof labelForUrl === 'function') ? labelForUrl(item.musical || item.name, u) : (u.replace(/^https?:\/\//,''));
-      urls.appendChild(a);
+      const chip = createUrlChip(item.musical || item.name || 'Musical', u);
+      urls.appendChild(chip);
     });
     const actions = document.createElement('div');
     actions.className = 'actions';
@@ -651,11 +665,19 @@
     card.appendChild(header);
     card.appendChild(body);
     card.appendChild(details);
-
-    // hover and click expand
+    // make card keyboard accessible and add interactions
+    card.tabIndex = 0;
+    card.setAttribute('role', 'article');
+    card.setAttribute('aria-label', item.musical || item.name || 'Musical card');
     card.addEventListener('mouseenter', ()=> card.classList.add('hover'));
     card.addEventListener('mouseleave', ()=> card.classList.remove('hover'));
     card.addEventListener('click', ()=> card.classList.toggle('open'));
+    card.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        card.click();
+      }
+    });
     return card;
   }
 
@@ -666,9 +688,12 @@
     // Do not render extras marked as hidden (integrated but unlisted)
     const extras = (extraCardItems||[]).filter(it => !have.has(keyForItem(it)) && !it.hidden);
     const merged = [...(list||[]), ...extras];
+    // batch DOM updates
     cardsGrid.innerHTML = '';
     if (!merged.length) return;
-    merged.forEach((item,i)=> cardsGrid.appendChild(buildCard(item,i)));
+    const frag = document.createDocumentFragment();
+    merged.forEach((item,i) => frag.appendChild(buildCard(item,i)));
+    cardsGrid.appendChild(frag);
   }
 
   // Load extra cards from events.json and suggestions.json (optional)
@@ -982,12 +1007,42 @@
   function stopSlideAuto() { if (slideAutoId) { clearInterval(slideAutoId); slideAutoId = null; } }
 
   // events
-  if (search) search.addEventListener('input', () => renderTable(filter(musicals)));
-  if (arToggle) arToggle.addEventListener('click', () => {
-    autoRefresh = !autoRefresh;
-    if (arState) arState.textContent = autoRefresh ? 'ON' : 'OFF';
-    if (autoRefresh) { intervalId = setInterval(fetchData, 8000); fetchData(); } else { clearInterval(intervalId); }
-  });
+  if (search) {
+    const onSearch = debounce(() => renderTable(filter(musicals)), 180);
+    search.addEventListener('input', onSearch);
+  }
+  if (arToggle) {
+    // initialize attributes for accessibility
+    try {
+      arToggle.setAttribute('role','switch');
+      arToggle.setAttribute('aria-checked', arToggle.checked ? 'true' : 'false');
+      arToggle.setAttribute('aria-label', arToggle.getAttribute('aria-label') || 'Auto refresh');
+      if (arState) arState.textContent = arToggle.checked ? 'ON' : 'OFF';
+    } catch(e){}
+
+    // respond to user interaction (use change to capture keyboard toggles)
+    const handleArToggleChange = () => {
+      autoRefresh = !!arToggle.checked;
+      if (arState) arState.textContent = autoRefresh ? 'ON' : 'OFF';
+      try { arToggle.setAttribute('aria-checked', autoRefresh ? 'true' : 'false'); } catch(e){}
+      if (autoRefresh) { if (!intervalId) intervalId = setInterval(fetchData, 8000); fetchData(); } else { clearInterval(intervalId); }
+    };
+    arToggle.addEventListener('change', handleArToggleChange);
+
+    // forward clicks on the visible `.switch` element to the hidden checkbox
+    const visibleSwitch = document.querySelector('.toggle-switch .switch');
+    if (visibleSwitch) {
+      visibleSwitch.tabIndex = 0; // allow keyboard focus
+      visibleSwitch.addEventListener('click', (e) => {
+        e.preventDefault();
+        arToggle.checked = !arToggle.checked;
+        arToggle.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      visibleSwitch.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); visibleSwitch.click(); }
+      });
+    }
+  }
   // slideshow controls removed with hero slideshow
 
   // --- Safe modal controls: guard against missing elements and provide fallbacks ---
@@ -1071,11 +1126,16 @@
 
     // ---- replace/ensure single fetchData that computes changes and triggers notify ----
     async function fetchData() {
+      if (fetchInFlight) return; // avoid overlapping requests
+      fetchInFlight = true;
       try {
         const res = await fetch(api);
         if (!res.ok) throw new Error('Network response not ok');
         const data = await res.json();
         musicals = Array.isArray(data) ? data : musicals;
+
+        // cache latest successful fetch to sessionStorage so UI can recover on transient failures
+        try { sessionStorage.setItem(LAST_FETCH_CACHE_KEY, JSON.stringify(musicals)); } catch(e) { /* ignore */ }
 
         // ensure session baseline exists for this tab
         let sessionSnap = loadSessionSnapshot();
@@ -1094,6 +1154,20 @@
         updateLastChecked();
       } catch (e) {
         console.error('fetchData', e);
+        // on error, try to use cached data
+        try {
+          const raw = sessionStorage.getItem(LAST_FETCH_CACHE_KEY);
+          if (raw) {
+            const cached = JSON.parse(raw);
+            if (Array.isArray(cached) && cached.length) {
+              musicals = cached;
+              changesMap = computeChangesMap(loadSessionSnapshot() || [], musicals || []);
+              renderTable(filter(musicals));
+            }
+          }
+        } catch (inner) { /* ignore cache failures */ }
+      } finally {
+        fetchInFlight = false;
       }
     }
 
@@ -1195,14 +1269,16 @@
   updateLastChecked();
   // no page-level slideshow
 
-  // ensure auto-refresh is ALWAYS ON
-  autoRefresh = true;
-  if (arState) arState.textContent = 'ON';
-  if (arToggle) { 
-    arToggle.disabled = true;          // prevent toggling
-    arToggle.title = 'Auto-refresh fixed ON';
+  // initialize auto-refresh from toggle (or default to true)
+  if (arToggle) {
+    autoRefresh = !!arToggle.checked;
+  } else {
+    autoRefresh = true;
   }
-  if (!intervalId) intervalId = setInterval(fetchData, 8000);
+  if (arState) arState.textContent = autoRefresh ? 'ON' : 'OFF';
+  if (autoRefresh) {
+    if (!intervalId) intervalId = setInterval(fetchData, 8000);
+  }
   // initial fetch immediately
   setTimeout(fetchData, 200);
 

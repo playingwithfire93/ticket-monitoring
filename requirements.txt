@@ -33,6 +33,11 @@ python-engineio>=4.9.0
 # Security (recomendado)
 cryptography>=41.0.0
 
+# Compression
+Flask-Compress>=1.13.0
+Flask-Limiter>=2.0.2
+redis>=4.5.0
+
 # Build tools
 setuptools>=69.0.0
 wheel>=0.42.0

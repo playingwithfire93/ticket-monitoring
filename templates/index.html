@@ -323,6 +323,9 @@
 </head>
 <body class="pink-theme">
 
+  <!-- ARIA live region for polite announcements (visually hidden) -->
+  <div id="aria-notifications" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
   <!-- Header SIMPLE -->
   <header class="topbar">
     <div class="container topbar-inner">
@@ -334,9 +337,15 @@
       <div class="controls">
         <div class="search-wrap">
           <span class="search-icon" aria-hidden="true">🔎</span>
-          <input id="search" placeholder="Buscar musical..." />
+          <input id="search" placeholder="Buscar musical..." aria-label="Buscar musical" />
         </div>
         <label class="auto-refresh" aria-live="polite">
+          <span class="ar-label" aria-hidden="true">Auto-refresh</span>
+          <div class="toggle-switch">
+            <input id="toggle-refresh" type="checkbox" aria-label="Activar auto-refresh">
+            <span class="switch" aria-hidden="true"></span>
+          </div>
+          <span id="ar-state" class="ar-state" aria-live="polite">OFF</span>
         </label>
         <div class="last-checked">⏱️ <small class="lc-label">Última verificación</small> <span id="last-checked">--</span></div>
         <div class="last-checked">📝 <small class="lc-label">Últimos cambios</small> <span id="last-changes">--</span></div>
@@ -630,23 +639,20 @@
     <!-- Inline suggestion card -->
     <section id="inline-suggest" class="suggestion-card fade-in" aria-labelledby="suggest-inline-title">
       <h3 id="suggest-inline-title">💌 Enviar sugerencia</h3>
-      <form id="inline-suggest-form" class="suggestion-form" novalidate>
+      <form id="inline-suggest-form" class="suggestion-form" novalidate role="form" aria-labelledby="suggest-inline-title" aria-describedby="inline-suggest-status">
         <div class="row">
-          <label>Nombre del Musical *<br>
-            <input name="siteName" type="text" placeholder="Ej. The Book of Mormon" required>
-          </label>
-          <label>URL del sitio *<br>
-            <input name="siteUrl" type="url" placeholder="https://tickets.ejemplo.com" required>
-          </label>
+          <label for="s_siteName">Nombre del Musical *</label>
+          <input id="s_siteName" name="siteName" type="text" placeholder="Ej. The Book of Mormon" required aria-required="true">
+
+          <label for="s_siteUrl">URL del sitio *</label>
+          <input id="s_siteUrl" name="siteUrl" type="url" placeholder="https://tickets.ejemplo.com" required aria-required="true">
         </div>
 
-        <label>¿Por qué deberíamos monitorearlo?<br>
-          <textarea name="reason" rows="3" placeholder="Opcional: cuéntanos qué parte de la web te interesa monitorear..."></textarea>
-        </label>
+        <label for="s_reason">¿Por qué deberíamos monitorearlo?</label>
+        <textarea id="s_reason" name="reason" rows="3" placeholder="Opcional: cuéntanos qué parte de la web te interesa monitorear..."></textarea>
 
-        <label>Tu contacto (email o Instagram) — requerido<br>
-          <input name="contact" type="text" placeholder="ej: tu@correo.com o @tu_insta" required>
-        </label>
+        <label for="s_contact">Tu contacto (email o Instagram) — requerido</label>
+        <input id="s_contact" name="contact" type="text" placeholder="ej: tu@correo.com o @tu_insta" required aria-required="true">
 
         <div class="suggest-controls">
           <button type="submit" class="btn primary">✨ Enviar Sugerencia</button>
