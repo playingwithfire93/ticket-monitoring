@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let selectedSet = new Set();
   let colorsMap = {}; // musical -> color mapping
   let showPast = false; // whether to include past events
+  let showFromToday = false; // whether to jump/start calendar at today
 
   const COLOR_PALETTE = ['#FF6B6B','#FFB86B','#FFD93D','#8BE9B4','#69B7FF','#8A79FF','#FF8AD6','#A0E1E0','#D6A2E8','#F6C6EA'];
 
@@ -168,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const lbl = document.createElement('div'); lbl.className='monday-label'; lbl.textContent='Libre'; info.el.appendChild(lbl);
         }
       }
-      // highlight today
+      // highlight today and mark past days
       try{
         const todayStrLocal = formatLocalDate(new Date());
         const thisStr = formatLocalDate(info.date);
@@ -178,6 +179,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const tl = document.createElement('div'); tl.className='today-label'; tl.textContent='Hoy'; info.el.appendChild(tl);
           }
         }
+        // de-emphasize past days (local comparison)
+        try{
+          const todayObj = parseLocalDate(todayStrLocal);
+          const thisObj = parseLocalDate(thisStr);
+          if(thisObj && todayObj && thisObj < todayObj){
+            info.el.classList.add('fc-past-day');
+          }
+        }catch(e){}
       }catch(e){}
     },
 
@@ -300,6 +309,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const lbl = document.createElement('label'); lbl.htmlFor='cb-show-past'; lbl.textContent = ' Mostrar eventos pasados';
     controls.appendChild(cb); controls.appendChild(lbl);
     cb.addEventListener('change', function(){ showPast = !!cb.checked; allEventsCache = null; calendar.refetchEvents(); });
+    // Add 'Start from today' control
+    const cb2 = document.createElement('input'); cb2.type = 'checkbox'; cb2.id = 'cb-start-today'; cb2.checked = showFromToday; cb2.style.marginLeft = '12px';
+    const lbl2 = document.createElement('label'); lbl2.htmlFor = 'cb-start-today'; lbl2.textContent = ' Empezar en hoy';
+    controls.appendChild(cb2); controls.appendChild(lbl2);
+    cb2.addEventListener('change', function(){ showFromToday = !!cb2.checked; if(showFromToday){ try{ calendar.gotoDate(new Date()); }catch(e){} } });
   }catch(e){console.warn('no calendar controls', e);}
 
   // safe UI handlers if present
