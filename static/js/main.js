@@ -200,6 +200,9 @@
   // update fetchData to set baseline on first load and compute changes
   async function fetchData() {
     try {
+      // show skeleton placeholders while loading
+      showTableSkeletons(6);
+      showCardSkeletons(6);
       const res = await fetch(api);
       if (!res.ok) throw new Error('Network response not ok');
       const data = await res.json();
@@ -216,9 +219,16 @@
       changesMap = computeChangesMap(sessionSnap || [], musicals);
 
       renderTable(filter(musicals));
+      renderCards(filter(musicals));
       updateLastChecked();
     } catch (e) {
       console.error('fetchData', e);
+      // keep skeletons briefly to indicate failure
+      showToast('Error loading data', 'error');
+    } finally {
+      // remove skeletons once settled
+      hideCardSkeletons();
+      hideTableSkeletons();
     }
   }
 
@@ -695,6 +705,53 @@
     merged.forEach((item,i) => frag.appendChild(buildCard(item,i)));
     cardsGrid.appendChild(frag);
   }
+
+  // Show simple skeleton cards while data is loading
+  function showCardSkeletons(count = 4) {
+    try {
+      if (!cardsGrid) return;
+      cardsGrid.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      for (let i=0;i<count;i++) {
+        const s = document.createElement('article');
+        s.className = 'skeleton-card';
+        const slide = document.createElement('div'); slide.className = 'skeleton skeleton-slide';
+        const title = document.createElement('div'); title.className = 'skeleton skeleton-title';
+        const meta = document.createElement('div'); meta.className = 'skeleton-meta';
+        const line1 = document.createElement('div'); line1.className = 'skeleton skeleton-line';
+        const line2 = document.createElement('div'); line2.className = 'skeleton skeleton-line';
+        meta.appendChild(line1); meta.appendChild(line2);
+        s.appendChild(slide); s.appendChild(title); s.appendChild(meta);
+        frag.appendChild(s);
+      }
+      cardsGrid.appendChild(frag);
+    } catch(e) { console.warn('showCardSkeletons failed', e); }
+  }
+
+  function hideCardSkeletons() {
+    try { if (!cardsGrid) return; const els = cardsGrid.querySelectorAll('.skeleton-card'); els.forEach(e=>e.remove()); } catch(e){}
+  }
+
+  // Table skeletons
+  function showTableSkeletons(count = 6) {
+    try {
+      if (!tableBody) return;
+      tableBody.innerHTML = '';
+      for (let i=0;i<count;i++) {
+        const tr = document.createElement('tr'); tr.className = 'table-skeleton-row';
+        const td1 = document.createElement('td'); const td2 = document.createElement('td'); const td3 = document.createElement('td'); const td4 = document.createElement('td');
+        const c1 = document.createElement('div'); c1.className = 'skeleton-cell w-60';
+        const c2 = document.createElement('div'); c2.className = 'skeleton-cell w-20';
+        const c3 = document.createElement('div'); c3.className = 'skeleton-cell w-40';
+        const c4 = document.createElement('div'); c4.className = 'skeleton-cell w-30';
+        td1.appendChild(c1); td2.appendChild(c2); td3.appendChild(c3); td4.appendChild(c4);
+        tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+        tableBody.appendChild(tr);
+      }
+    } catch(e) { console.warn('showTableSkeletons failed', e); }
+  }
+
+  function hideTableSkeletons() { try { if (!tableBody) return; tableBody.querySelectorAll('.table-skeleton-row').forEach(e=>e.remove()); } catch(e){} }
 
   // Load extra cards from events.json and suggestions.json (optional)
   async function loadExtraData(){
@@ -1286,6 +1343,48 @@
   window.plusSlides = (n) => { showSlide(currentIndex + n); stopSlideAuto(); };
   // kick off loading of extra cards in background
   try { loadExtraData(); } catch(e){}
+
+  // ==================== Hero lazy-load (reduce initial payload) ====================
+  function lazyLoadHeroVideos() {
+    try {
+      const heroWrap = document.querySelector('.video-hero-background');
+      if (!heroWrap) return;
+      const videos = Array.from(heroWrap.querySelectorAll('video.hero-video'));
+      const loadVideos = () => {
+        videos.forEach(v => {
+          if (!v.src && v.dataset && v.dataset.src) {
+            v.src = v.dataset.src;
+            v.load();
+            v.classList.add('loading');
+            v.addEventListener('canplay', () => { v.classList.add('playing'); v.play().catch(()=>{}); });
+          }
+        });
+        const btn = document.getElementById('hero-load-videos');
+        if (btn) btn.style.display = 'none';
+      };
+
+      // user-initiated load button
+      const btn = document.getElementById('hero-load-videos');
+      if (btn) btn.addEventListener('click', () => { loadVideos(); });
+
+      // if user prefers reduced motion, skip autoplay
+      const prefersReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduce) return;
+
+      // auto-load when hero is visible (first time)
+      const obs = new IntersectionObserver((entries, o) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) {
+            loadVideos();
+            o.disconnect();
+          }
+        });
+      }, { threshold: 0.4 });
+      obs.observe(heroWrap);
+    } catch(e) { console.warn('hero lazy load failed', e); }
+  }
+  // defer binding to DOMContentLoaded to ensure hero elements exist
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lazyLoadHeroVideos); else lazyLoadHeroVideos();
 })();
 
 /* quick test helper: call /admin/test-telegram and show a popup with the result */
@@ -1383,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = document.getElementById('inline-suggest-status');
     form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
-      status.textContent = 'Enviando…';
+      // client-side validation
       const fd = new FormData(form);
       const payload = {
         siteName: (fd.get('siteName') || '').trim(),
@@ -1393,19 +1492,46 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       if (!payload.siteName || !payload.siteUrl || !payload.contact) {
         status.textContent = 'Por favor indica nombre, URL y un contacto.';
+        showToast('Por favor completa los campos requeridos.', 'error');
         return;
       }
+
       const btn = form.querySelector('button[type="submit"]');
-      if (btn) btn.disabled = true;
+      if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+      status.textContent = 'Enviando…';
       try {
         const res = await fetch('/api/suggest-site', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const j = await res.json().catch(()=>({ok:false}));
-        if (res.ok && j.ok) { status.textContent = '¡Gracias! Sugerencia enviada.'; form.reset(); }
-        else { status.textContent = 'Error: ' + (j.error || j.body || res.statusText || 'no enviado'); }
+        if (res.ok && j.ok) {
+          status.textContent = '¡Gracias! Sugerencia enviada.';
+          showToast('Sugerencia enviada. Gracias 😊', 'success');
+          form.reset();
+        } else {
+          const err = j && (j.error || j.body) ? (j.error || j.body) : res.statusText || 'no enviado';
+          status.textContent = 'Error: ' + err;
+          showToast('Error al enviar: ' + err, 'error');
+        }
       } catch(e) {
         status.textContent = 'Error de red';
-      } finally { if (btn) btn.disabled = false; setTimeout(()=>status.textContent='',3000); }
+        showToast('Error de red al enviar sugerencia', 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+        setTimeout(()=>status.textContent='',4000);
+      }
     });
+  }
+
+  // Toast helper
+  function showToast(message, type = 'info', timeout = 4500) {
+    try {
+      const container = document.getElementById('toasts');
+      if (!container) return;
+      const t = document.createElement('div');
+      t.className = 'toast ' + (type === 'success' ? 'success' : type === 'error' ? 'error' : '');
+      t.textContent = message;
+      container.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(()=> t.remove(), 300); }, timeout);
+    } catch(e) { console.warn('showToast failed', e); }
   }
 });
 

@@ -357,41 +357,15 @@
   <main class="container">
     <!-- Hero Banner CON VIDEOS Y BORDE AMARILLO -->
     <div class="catalog-hero">
-      <!-- Videos de fondo -->
+      <!-- Videos de fondo (poster + lazy-load) -->
       <div class="video-hero-background">
-        <video class="hero-video active" muted loop playsinline preload="auto" autoplay>
-          <source src="/static/videos/video1.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video2.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video3.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video4.webm" type="video/webm">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video5.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video6.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video7.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video8.mp4" type="video/mp4">
-        </video>
-        <iframe class="hero-video" 
-          src="https://www.youtube.com/embed/jSkL4TLAyiM?autoplay=1&mute=1&loop=1&playlist=jSkL4TLAyiM&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3"
-          frameborder="0" 
-          allow="autoplay; encrypted-media"
-          allowfullscreen>
-        </iframe>
-        <video class="hero-video" muted loop playsinline preload="auto">
-          <source src="/static/videos/video9.mp4" type="video/mp4">
-        </video>
+        <!-- Decorative poster as first layer to avoid video downloads -->
+        <div class="hero-poster" role="img" aria-label="Imagen de fondo de musicales"></div>
+        <button id="hero-load-videos" class="hero-load-btn" aria-label="Cargar animación de fondo">Mostrar animación</button>
+        <!-- videos kept with data-src to avoid immediate network requests -->
+        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video1.mp4" poster="/static/fotos/poster1.jpg"></video>
+        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video2.mp4" poster="/static/fotos/poster2.jpg"></video>
+        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video3.mp4" poster="/static/fotos/poster3.jpg"></video>
       </div>
 
       <!-- Botones de navegación -->
@@ -666,6 +640,9 @@
   <footer class="footer">
     <small>Made with 💖 — dynamic cute monitor</small>
   </footer>
+
+  <!-- Toast container for UX microinteractions -->
+  <div id="toasts" aria-live="polite" aria-atomic="true" class="toasts-container"></div>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
