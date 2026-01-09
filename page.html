@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📅 Calendario de Musicales - Ticket Monitor</title>
+  
+  <link rel="stylesheet" href="/static/css/style.css">
+  
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+  
+  <style>
+    .calendar-container {
+      max-width: 1400px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    #calendar {
+      margin-top: 20px;
+    }
+
+    /* Estilo personalizado para eventos */
+    .fc-event {
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none !important;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color: white !important; /* ← Texto blanco para mejor contraste */
+    }
+
+    .fc-event:hover {
+      transform: scale(1.15) translateZ(0);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+      z-index: 1000 !important;
+    }
+
+    /* Asegurar que el título sea visible */
+    .fc-event-title {
+      color: white !important;
+      font-weight: 600;
+    }
+
+    /* Tooltip/Card hover mejorado */
+    .event-item {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .event-tooltip {
+      position: fixed; /* ← Cambio clave: fixed en vez de absolute */
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      z-index: 9999;
+      min-width: 300px;
+      max-width: 400px;
+      pointer-events: none; /* No interfiere con el hover */
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .event-item:hover .event-tooltip {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Flecha del tooltip (arriba o abajo según posición) */
+    .event-tooltip::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+    }
+
+    /* Flecha apuntando abajo (tooltip arriba del elemento) */
+    .event-tooltip.tooltip-top::before {
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top-color: white;
+      border-bottom: none;
+    }
+
+    /* Flecha apuntando arriba (tooltip abajo del elemento) */
+    .event-tooltip.tooltip-bottom::before {
+      top: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: white;
+      border-top: none;
+    }
+
+    /* Contenido del tooltip */
+    .tooltip-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .tooltip-icon {
+      font-size: 2rem;
+    }
+
+    .tooltip-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+      margin: 0;
+    }
+
+    .tooltip-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tooltip-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .tooltip-row strong {
+      color: #333;
+      min-width: 80px;
+    }
+
+    .tooltip-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .tooltip-badge.available {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .tooltip-badge.sold-out {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Filtros */
+    .calendar-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: var(--light-pink);
+      border-radius: 8px;
+    }
+
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .filter-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .filter-chip.active {
+      border-color: white;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    }
+
+    .filter-all { background: #34495e; }
+
+    /* COLORES PARA CADA MUSICAL */
+    .event-wicked { 
+      background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+      border-left: 4px solid #229954 !important;
+    }
+
+    .event-book-mormon { 
+      background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+      border-left: 4px solid #a93226 !important;
+    }
+
+    .event-les-miserables { 
+      background: linear-gradient(135deg, #3498db, #2980b9) !important;
+      border-left: 4px solid #1f618d !important;
+    }
+
+    .event-rey-leon { 
+      background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+      border-left: 4px solid #d68910 !important;
+    }
+
+    .event-cabaret { 
+      background: linear-gradient(135deg, #34495e, #2c3e50) !important;
+      border-left: 4px solid #1c2833 !important;
+    }
+
+    .event-houdini { 
+      background: linear-gradient(135deg, #e67e22, #d35400) !important;
+      border-left: 4px solid #ba4a00 !important;
+    }
+
+    .event-cenicienta { 
+      background: linear-gradient(135deg, #ec407a, #d81b60) !important;
+      border-left: 4px solid #ad1457 !important;
+    }
+
+    .event-oliver-twist { 
+      background: linear-gradient(135deg, #78909c, #607d8b) !important;
+      border-left: 4px solid #455a64 !important;
+    }
+
+    .event-raffaella { 
+      background: linear-gradient(135deg, #ab47bc, #8e24aa) !important;
+      border-left: 4px solid #6a1b9a !important;
+    }
+
+    .event-pilares { 
+      background: linear-gradient(135deg, #26a69a, #00897b) !important;
+      border-left: 4px solid #00695c !important;
+    }
+
+    /* Default para musicales no especificados */
+    .fc-event {
+      background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
+      border-left: 4px solid #626567 !important;
+    }
+
+    /* Mejorar hover */
+    .fc-event:hover {
+      opacity: 0.85 !important;
+      transform: scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Filtros con colores matching */
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .filter-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .filter-chip.active {
+      border-color: white;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+      transform: scale(1.05);
+    }
+
+    .filter-all { 
+      background: linear-gradient(135deg, #34495e, #2c3e50); 
+    }
+
+    .filter-chip.event-wicked { 
+      background: linear-gradient(135deg, #2ecc71, #27ae60); 
+    }
+
+    .filter-chip.event-book-mormon { 
+      background: linear-gradient(135deg, #e74c3c, #c0392b); 
+    }
+
+    .filter-chip.event-les-miserables { 
+      background: linear-gradient(135deg, #3498db, #2980b9); 
+    }
+
+    .filter-chip.event-rey-leon { 
+      background: linear-gradient(135deg, #f39c12, #e67e22); 
+    }
+
+    .filter-chip.event-cabaret { 
+      background: linear-gradient(135deg, #34495e, #2c3e50); 
+    }
+
+    .filter-chip.event-houdini { 
+      background: linear-gradient(135deg, #e67e22, #d35400); 
+    }
+
+    .filter-chip.event-cenicienta { 
+      background: linear-gradient(135deg, #ec407a, #d81b60); 
+    }
+
+    .filter-chip.event-oliver-twist { 
+      background: linear-gradient(135deg, #78909c, #607d8b); 
+    }
+
+    .filter-chip.event-raffaella { 
+      background: linear-gradient(135deg, #ab47bc, #8e24aa); 
+    }
+
+    .filter-chip.event-pilares { 
+      background: linear-gradient(135deg, #26a69a, #00897b); 
+    }
+
+    /* Leyenda de colores (opcional) */
+    .calendar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .event-tooltip {
+        min-width: 250px;
+        max-width: 90vw;
+      }
+    }
+
+    /* TOOLTIP MEJORADO - Aparece donde está el cursor */
+    .musical-tooltip {
+      position: fixed;
+      display: none;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      width: 380px;
+      max-width: 90vw;
+      overflow: hidden;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none; /* ← CLAVE: No bloquea el hover */
+    }
+
+    .musical-tooltip.active {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto; /* ← Permitir clicks en los botones */
+    }
+
+    /* Imagen del tooltip */
+    .tooltip-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 16px 16px 0 0;
+    }
+
+    /* Contenido del tooltip */
+    .tooltip-content {
+      padding: 20px;
+    }
+
+    .tooltip-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ff69b4;
+      margin: 0 0 12px 0;
+    }
+
+    .tooltip-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tooltip-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .tooltip-meta-item span {
+      font-size: 1.2rem;
+    }
+
+    .tooltip-location-link {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .tooltip-location-link:hover {
+      color: #2980b9;
+      text-decoration: underline;
+    }
+
+    .tooltip-description {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.5;
+      margin: 0 0 16px 0;
+    }
+
+    /* Botones del tooltip */
+    .tooltip-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tooltip-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .tooltip-button-primary {
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      color: white;
+    }
+
+    .tooltip-button-primary:hover {
+      background: linear-gradient(135deg, #ff1493, #c71585);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4);
+    }
+
+    .tooltip-button-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .tooltip-button-secondary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    /* Badge de disponibilidad */
+    .tooltip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .tooltip-badge.available {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .tooltip-badge.sold-out {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .musical-tooltip {
+        width: 320px;
+      }
+
+      .tooltip-image {
+        height: 160px;
+      }
+
+      .tooltip-content {
+        padding: 16px;
+      }
+
+      .tooltip-title {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* Añade este CSS en el <style> del calendario */
+
+.event-card {
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.event-card:hover {
+  box-shadow: 0 15px 50px rgba(241, 124, 216, 0.6) !important;
+  transform: scale(1.05);
+}
+  </style>
+
+  <!-- Añade esto en el <head> -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css"/>
+
+  <script>
+    // Inicializar tooltips con Tippy.js
+    document.addEventListener('DOMContentLoaded', () => {
+      tippy('.event-item', {
+        content(reference) {
+          const template = reference.querySelector('.event-tooltip');
+          return template ? template.innerHTML : 'Sin información';
+        },
+        allowHTML: true,
+        placement: 'auto', // ← Se posiciona automáticamente
+        interactive: true,
+        animation: 'scale',
+        theme: 'light-border',
+        maxWidth: 400,
+        offset: [0, 10],
+      });
+    });
+  </script>
+
+  <style>
+    /* Tema custom para Tippy.js */
+    .tippy-box[data-theme~='light-border'] {
+      background-color: white;
+      color: #333;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+    }
+
+    .tippy-box[data-theme~='light-border'][data-placement^='top'] > .tippy-arrow::before {
+      border-top-color: white;
+    }
+
+    .tippy-box[data-theme~='light-border'][data-placement^='bottom'] > .tippy-arrow::before {
+      border-bottom-color: white;
+    }
+
+    /* Ocultar el tooltip inline (Tippy lo clonará) */
+    .event-tooltip {
+      display: none;
+    }
+  </style>
+</head>
+<body class="pink-theme">
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="logo-badge" aria-hidden="true">📅</div>
+        <h1>Calendario de Musicales</h1>
+      </div>
+      
+      <div class="controls">
+        <a href="/" class="btn small" style="text-decoration:none">← Volver al Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <div class="catalog-hero">
+      <div class="catalog-hero-inner">
+        <h1>📅 Calendario de Musicales 2025-2026</h1>
+        <p class="lead">Pasa el ratón sobre un musical para ver más información</p>
+      </div>
+    </div>
+
+    <div class="calendar-container">
+      <!-- Filtros -->
+      <div class="calendar-filters">
+        <button class="filter-chip filter-all active" data-musical="all">
+          📋 Todos los musicales
+        </button>
+        <button class="filter-chip event-wicked" data-musical="wicked">
+          Wicked
+        </button>
+        <button class="filter-chip event-book-mormon" data-musical="the book of mormon">
+          The Book of Mormon
+        </button>
+        <button class="filter-chip event-les-miserables" data-musical="les misérables">
+          Les Misérables
+        </button>
+        <button class="filter-chip event-rey-leon" data-musical="el rey león">
+          El Rey León
+        </button>
+        <button class="filter-chip event-cabaret" data-musical="cabaret">
+          Cabaret
+        </button>
+        <button class="filter-chip event-houdini" data-musical="houdini">
+          Houdini
+        </button>
+      </div>
+
+      <!-- Calendario -->
+      <div id="calendar"></div>
+      
+      <!-- Leyenda de colores -->
+      <div class="calendar-legend">
+        <h4 style="width: 100%; margin: 0 0 10px 0; color: #333;">🎨 Leyenda de Musicales:</h4>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #2ecc71, #27ae60);"></div>
+          <span>Wicked</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+          <span>The Book of Mormon</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #3498db, #2980b9);"></div>
+          <span>Les Misérables</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #f39c12, #e67e22);"></div>
+          <span>El Rey León</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #34495e, #2c3e50);"></div>
+          <span>Cabaret</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #e67e22, #d35400);"></div>
+          <span>Houdini</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #ec407a, #d81b60);"></div>
+          <span>Cenicienta</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #78909c, #607d8b);"></div>
+          <span>Oliver Twist</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #ab47bc, #8e24aa);"></div>
+          <span>Raffaella</span>
+        </div>
+        
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #26a69a, #00897b);"></div>
+          <span>Los Pilares de la Tierra</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Tooltip flotante -->
+  <div id="musical-tooltip" class="musical-tooltip"></div>
+
+  <footer class="footer">
+    <small>Made with 💖 — Musical Calendar Monitor</small>
+  </footer>
+
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <!-- Centralized calendar behavior (includes filters, legend, tooltip, past-date controls) -->
+  <script src="/static/js/calendar.js"></script>
+
+  <script>
+    // ==================== POSICIONAMIENTO INTELIGENTE DEL TOOLTIP ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      const eventItems = document.querySelectorAll('.event-item');
+
+      eventItems.forEach(item => {
+        const tooltip = item.querySelector('.event-tooltip');
+        if (!tooltip) return;
+
+        item.addEventListener('mouseenter', (e) => {
+          positionTooltip(item, tooltip);
+        });
+
+        // Reposicionar al mover el mouse (opcional, para mejor experiencia)
+        item.addEventListener('mousemove', () => {
+          positionTooltip(item, tooltip);
+        });
+      });
+
+      function positionTooltip(item, tooltip) {
+        const itemRect = item.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Calcular espacio disponible arriba y abajo
+        const spaceAbove = itemRect.top;
+        const spaceBelow = viewportHeight - itemRect.bottom;
+
+        // Decidir si mostrar arriba o abajo
+        const showAbove = spaceBelow < tooltipRect.height + 20 && spaceAbove > spaceBelow;
+
+        if (showAbove) {
+          // Mostrar arriba
+          tooltip.style.top = `${itemRect.top - tooltipRect.height - 10}px`;
+          tooltip.classList.add('tooltip-top');
+          tooltip.classList.remove('tooltip-bottom');
+        } else {
+          // Mostrar abajo
+          tooltip.style.top = `${itemRect.bottom + 10}px`;
+          tooltip.classList.add('tooltip-bottom');
+          tooltip.classList.remove('tooltip-top');
+        }
+
+        // Centrar horizontalmente, pero ajustar si se sale de la pantalla
+        let left = itemRect.left + (itemRect.width / 2) - (tooltipRect.width / 2);
+
+        // Ajustar si se sale por la izquierda
+        if (left < 10) {
+          left = 10;
+        }
+
+        // Ajustar si se sale por la derecha
+        if (left + tooltipRect.width > viewportWidth - 10) {
+          left = viewportWidth - tooltipRect.width - 10;
+        }
+
+        tooltip.style.left = `${left}px`;
+      }
+    });
+  </script>
+
+  <!-- Añade este script al final, antes de </body> -->
+  <script>
+// ==================== TOOLTIP CARD POSITIONING ====================
+let tooltipCard = null;
+
+document.querySelectorAll('.event-card').forEach(card => {
+  card.addEventListener('mouseenter', function(e) {
+    tooltipCard = this;
+    updateTooltipPosition(e);
+  });
+
+  card.addEventListener('mousemove', function(e) {
+    if (tooltipCard === this) {
+      updateTooltipPosition(e);
+    }
+  });
+
+  card.addEventListener('mouseleave', function() {
+    if (tooltipCard === this) {
+      tooltipCard.style.position = '';
+      tooltipCard.style.left = '';
+      tooltipCard.style.top = '';
+      tooltipCard.style.zIndex = '';
+    }
+    tooltipCard = null;
+  });
+});
+
+function updateTooltipPosition(e) {
+  if (!tooltipCard) return;
+
+  tooltipCard.style.transform = 'scale(1.15) translateZ(0)';
+  tooltipCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+  tooltipCard.style.zIndex = '1000';
+  tooltipCard.style.position = 'relative';
+}
+</script>
+</body>
+</html>
