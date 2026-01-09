@@ -314,6 +314,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const lbl2 = document.createElement('label'); lbl2.htmlFor = 'cb-start-today'; lbl2.textContent = ' Empezar en hoy';
     controls.appendChild(cb2); controls.appendChild(lbl2);
     cb2.addEventListener('change', function(){ showFromToday = !!cb2.checked; if(showFromToday){ try{ calendar.gotoDate(new Date()); }catch(e){} } });
+    // Add 'Hide past dates' control (collapses past day cells)
+    const cb3 = document.createElement('input'); cb3.type = 'checkbox'; cb3.id = 'cb-hide-past'; cb3.checked = false; cb3.style.marginLeft = '12px';
+    const lbl3 = document.createElement('label'); lbl3.htmlFor = 'cb-hide-past'; lbl3.textContent = ' Ocultar fechas pasadas';
+    controls.appendChild(cb3); controls.appendChild(lbl3);
+    cb3.addEventListener('change', function(){
+      try{
+        if(cb3.checked){ el.classList.add('hide-past-days'); } else { el.classList.remove('hide-past-days'); }
+        // ensure visual refresh
+        try{ calendar.render(); }catch(e){}
+      }catch(e){console.warn('toggle hide past failed', e);}    
+    });
   }catch(e){console.warn('no calendar controls', e);}
 
   // safe UI handlers if present

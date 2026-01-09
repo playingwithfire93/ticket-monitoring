@@ -483,6 +483,11 @@ input:checked + .switch:before {
 .fc-past-day .fc-daygrid-day-number { color: #9aa0a6; }
 .fc-past-day .fc-event { opacity: 0.7; filter: grayscale(0.08); }
 
+/* When user chooses to hide past days, collapse those day cells */
+.hide-past-days .fc-past-day { display: none !important; }
+.hide-past-days .fc-daygrid-body { /* try to avoid layout jump, let FC handle reflow */ }
+.hide-past-days .fc-daygrid-day-frame { padding: 6px; }
+
 .slideshow-placeholder {
   display: flex;
   flex-direction: column;
