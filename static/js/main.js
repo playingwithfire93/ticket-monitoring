@@ -114,6 +114,47 @@
 
   // mark a single item as seen: update session snapshot for that key
   function markItemAsSeen(item){
+
+  // Attempt to set an image from a list of candidate URLs sequentially until one loads.
+  // img: HTMLImageElement; candidates: string[]
+  function setImageWithFallback(img, candidates = []){
+    if (!img || !candidates || !candidates.length) return Promise.resolve(false);
+    // If already has src and loaded, resolve
+    if (img.src) {
+      return new Promise((res) => {
+        if (img.complete && img.naturalWidth) return res(true);
+        img.addEventListener('load', () => res(true), { once: true });
+        img.addEventListener('error', () => res(false), { once: true });
+      });
+    }
+    // try candidates sequentially
+    let idx = 0;
+    return new Promise((resolve) => {
+      const tryNext = () => {
+        if (idx >= candidates.length) return resolve(false);
+        const url = candidates[idx++];
+        // set a data attribute for debugging
+        img.dataset.attempt = url;
+        img.src = url;
+        const onLoad = () => {
+          cleanup();
+          resolve(true);
+        };
+        const onErr = () => {
+          cleanup();
+          // try next candidate
+          setTimeout(tryNext, 10);
+        };
+        function cleanup(){
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onErr);
+        }
+        img.addEventListener('load', onLoad, { once: true });
+        img.addEventListener('error', onErr, { once: true });
+      };
+      tryNext();
+    });
+  }
     const snap = loadSessionSnapshot() || [];
     const k = keyForItem(item);
     // replace or add
@@ -598,10 +639,12 @@
     if (images.length) {
       const inner = document.createElement('div');
       inner.className = 'mc-slides';
-      // defer loading: set data-src and loading=lazy; actual src set on visibility/open
+      // defer loading: store candidate URLs and loading=lazy; actual src set on visibility/open
       images.forEach((src, i) => {
         const img = document.createElement('img');
         img.className = 'mc-slide deferred-img';
+        // store full candidate list for robust fallback attempts
+        try { img.dataset.candidates = JSON.stringify(images); } catch(e) { img.dataset.candidates = images.join(','); }
         img.dataset.src = src;
         img.alt = (item.musical || item.name || 'Imagen');
         img.loading = 'lazy';
@@ -625,10 +668,17 @@
 
       // init slideshow but do not start loading until visible
       initMiniSlideshow(slideWrap, { lazyLoad: true });
-      // when card is opened, ensure images are loaded immediately
+      // when card is opened, ensure images are loaded immediately using fallback loader
       card.addEventListener('click', () => {
-        const imgs = slideWrap.querySelectorAll('img.deferred-img');
-        imgs.forEach(iimg => { if (!iimg.src && iimg.dataset.src) iimg.src = iimg.dataset.src; });
+        const imgs = Array.from(slideWrap.querySelectorAll('img.deferred-img'));
+        imgs.forEach(iimg => {
+          try {
+            const candidates = iimg.dataset.candidates ? JSON.parse(iimg.dataset.candidates) : (iimg.dataset.src ? [iimg.dataset.src] : []);
+            if (candidates && candidates.length) setImageWithFallback(iimg, candidates).catch(()=>{});
+          } catch(e) {
+            if (iimg.dataset.src) iimg.src = iimg.dataset.src;
+          }
+        });
       });
     }
 
@@ -1371,10 +1421,16 @@
       const loadVideos = () => {
         videos.forEach(v => {
           if (!v.src && v.dataset && v.dataset.src) {
-            v.src = v.dataset.src;
-            v.load();
-            v.classList.add('loading');
-            v.addEventListener('canplay', () => { v.classList.add('playing'); v.play().catch(()=>{}); });
+            try {
+              v.src = v.dataset.src;
+              try { v.load(); } catch(e) { /* some user agents may abort load; ignore */ }
+              v.classList.add('loading');
+              v.addEventListener('canplay', () => { v.classList.add('playing'); try { v.play().catch(()=>{}); } catch(e){} });
+              v.addEventListener('error', (ev) => { v.classList.remove('loading'); console.warn('hero video load error', ev); });
+              v.addEventListener('abort', () => { v.classList.remove('loading'); });
+            } catch(e) {
+              console.warn('failed to load hero video', e);
+            }
           }
         });
         const btn = document.getElementById('hero-load-videos');
