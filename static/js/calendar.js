@@ -399,91 +399,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showTooltip(event, mouseEvent) {
       const props = event.extendedProps || {};
-      
-      // Imagen con fallback
       let image = props.image || '';
       if (!image || image.includes('default.jpg')) {
         image = `https://via.placeholder.com/380x200/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}`;
       }
-      
+
       const description = props.description || 'Disfruta de este increíble musical en Madrid';
       const location = props.location || 'Madrid';
       const url = props.url || '#';
       const isAvailable = props.isAvailable !== false;
-      
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Madrid')}`;
-      
-      // Generar HTML del tooltip
-      tooltipEl.innerHTML = `
-        <img 
-          src="${image}" 
-          alt="${event.title}" 
-          class="tooltip-image" 
-          onerror="this.src='https://via.placeholder.com/380x200/ff69b4/ffffff?text=Musical';"
-        >
-        <div class="tooltip-content">
-          <h3 class="tooltip-title">${event.title}</h3>
-          
-          <div class="tooltip-meta">
-            <div class="tooltip-meta-item">
-              <span>📍</span>
-              <a href="${mapsUrl}" target="_blank" class="tooltip-location-link" onclick="event.stopPropagation()">
-                ${location}
-              </a>
-            </div>
-            
-            <div class="tooltip-meta-item">
-              <span>🎫</span>
-              <span class="tooltip-badge ${isAvailable ? 'available' : 'sold-out'}">
-                ${isAvailable ? '✅ Entradas disponibles' : '❌ Agotado'}
-              </span>
-            </div>
-          </div>
-          
-          <p class="tooltip-description">${description}</p>
-          
-          <div class="tooltip-buttons">
-            ${url !== '#' ? `
-              <a href="${url}" target="_blank" class="tooltip-button tooltip-button-primary" onclick="event.stopPropagation()">
-                🎟️ Comprar Entradas
-              </a>
-            ` : ''}
-            <a href="${mapsUrl}" target="_blank" class="tooltip-button tooltip-button-secondary" onclick="event.stopPropagation()">
-              🗺️ Ver en Google Maps
-            </a>
-          </div>
-        </div>
-      `;
-      
-      // Posicionamiento inteligente
-      const tooltipWidth = 380;
-      const tooltipHeight = tooltipEl.offsetHeight || 550;
-      
+
+      // Clear previous content and build DOM for accessibility and event handling
+      tooltipEl.innerHTML = '';
+      tooltipEl.setAttribute('role', 'dialog');
+      tooltipEl.setAttribute('aria-label', `Detalles ${event.title}`);
+      tooltipEl.tabIndex = -1;
+
+      const img = document.createElement('img');
+      img.className = 'tooltip-image';
+      img.alt = event.title || 'Imagen';
+      img.src = image;
+      img.loading = 'lazy';
+      img.addEventListener('error', function(){ img.src = `https://via.placeholder.com/380x200/ff69b4/ffffff?text=${encodeURIComponent(event.title.substring(0, 20))}`; });
+
+      const content = document.createElement('div'); content.className = 'tooltip-content';
+      const h3 = document.createElement('h3'); h3.className = 'tooltip-title'; h3.textContent = event.title;
+
+      const meta = document.createElement('div'); meta.className = 'tooltip-meta';
+      const metaLoc = document.createElement('div'); metaLoc.className = 'tooltip-meta-item';
+      metaLoc.innerHTML = `<span>📍</span>`;
+      const aLoc = document.createElement('a'); aLoc.href = mapsUrl; aLoc.target = '_blank'; aLoc.className = 'tooltip-location-link'; aLoc.textContent = location; aLoc.addEventListener('click', (ev)=>ev.stopPropagation());
+      metaLoc.appendChild(aLoc);
+
+      const metaAvail = document.createElement('div'); metaAvail.className = 'tooltip-meta-item';
+      metaAvail.innerHTML = `<span>🎫</span>`;
+      const availSpan = document.createElement('span'); availSpan.className = `tooltip-badge ${isAvailable ? 'available' : 'sold-out'}`;
+      availSpan.textContent = isAvailable ? '✅ Entradas disponibles' : '❌ Agotado';
+      metaAvail.appendChild(availSpan);
+
+      meta.appendChild(metaLoc); meta.appendChild(metaAvail);
+
+      const p = document.createElement('p'); p.className = 'tooltip-description'; p.textContent = description;
+
+      const btns = document.createElement('div'); btns.className = 'tooltip-buttons';
+      if(url !== '#'){
+        const buy = document.createElement('a'); buy.className = 'tooltip-button tooltip-button-primary'; buy.href = url; buy.target = '_blank'; buy.textContent = '🎟️ Comprar Entradas'; buy.addEventListener('click', (ev)=>ev.stopPropagation());
+        btns.appendChild(buy);
+      }
+      const mapsBtn = document.createElement('a'); mapsBtn.className = 'tooltip-button tooltip-button-secondary'; mapsBtn.href = mapsUrl; mapsBtn.target = '_blank'; mapsBtn.textContent = '🗺️ Ver en Google Maps'; mapsBtn.addEventListener('click', (ev)=>ev.stopPropagation());
+      btns.appendChild(mapsBtn);
+
+      const closeBtn = document.createElement('button'); closeBtn.className = 'tooltip-close'; closeBtn.setAttribute('aria-label','Cerrar'); closeBtn.innerHTML = '✕';
+      closeBtn.addEventListener('click', function(ev){ ev.stopPropagation(); tooltipEl.classList.remove('active'); setTimeout(()=>{ tooltipEl.innerHTML=''; },200); });
+
+      content.appendChild(h3); content.appendChild(meta); content.appendChild(p); content.appendChild(btns);
+      tooltipEl.appendChild(img); tooltipEl.appendChild(content); tooltipEl.appendChild(closeBtn);
+
+      // Positioning
+      const tooltipWidth = Math.min(420, Math.max(280, tooltipEl.offsetWidth || 340));
+      const tooltipHeight = tooltipEl.offsetHeight || 220;
       let left = mouseEvent.pageX + 20;
       let top = mouseEvent.pageY - 100;
-      
-      if (left + tooltipWidth > window.innerWidth + window.scrollX) {
-        left = mouseEvent.pageX - tooltipWidth - 20;
-      }
-      
-      if (left < window.scrollX + 10) {
-        left = window.scrollX + 10;
-      }
-      
-      if (top + tooltipHeight > window.innerHeight + window.scrollY) {
-        top = window.innerHeight + window.scrollY - tooltipHeight - 10;
-      }
-      
-      if (top < window.scrollY + 10) {
-        top = window.scrollY + 10;
-      }
-      
-      tooltipEl.style.left = left + 'px';
-      tooltipEl.style.top = top + 'px';
-      
-      setTimeout(() => {
-        tooltipEl.classList.add('active');
-      }, 10);
+      if (left + tooltipWidth > window.innerWidth + window.scrollX) left = mouseEvent.pageX - tooltipWidth - 20;
+      if (left < window.scrollX + 10) left = window.scrollX + 10;
+      if (top + tooltipHeight > window.innerHeight + window.scrollY) top = window.innerHeight + window.scrollY - tooltipHeight - 10;
+      if (top < window.scrollY + 10) top = window.scrollY + 10;
+      tooltipEl.style.left = left + 'px'; tooltipEl.style.top = top + 'px';
+
+      // show with small delay to avoid flicker on fast mouse moves
+      setTimeout(()=>{ tooltipEl.classList.add('active'); tooltipEl.focus({preventScroll:true}); }, 80);
+
+      // keyboard: Esc hides
+      const onKey = function(e){ if(e.key === 'Escape'){ tooltipEl.classList.remove('active'); document.removeEventListener('keydown', onKey); } };
+      document.addEventListener('keydown', onKey);
     }
   })();
 });

@@ -478,6 +478,27 @@ input:checked + .switch:before {
 .tooltip-image { width: 160px; height: 90px; object-fit:cover; border-radius:6px; float:left; margin-right:8px; }
 .tooltip-content { max-width: 320px; }
 
+/* Tooltip enhanced styles */
+.tooltip { position: absolute; z-index: 999999; background: linear-gradient(180deg, #ffffff, #fff7fb); border-radius: 10px; padding: 12px; box-shadow: 0 10px 30px rgba(6,7,12,0.12); opacity: 0; transform: translateY(6px) scale(0.995); transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.9,.3,1); width: auto; max-width: 420px; }
+.tooltip.active { opacity: 1; transform: translateY(0) scale(1); }
+.tooltip .tooltip-image { width: 180px; height: 110px; float:left; margin-right:10px; border-radius:8px; }
+.tooltip .tooltip-content { overflow: hidden; }
+.tooltip-title { font-size: 1rem; margin: 0 0 6px 0; color: #2c3e50; }
+.tooltip-meta { display:flex; gap:10px; align-items:center; margin-bottom:8px; font-size:0.92rem; color:#6b6b6b; }
+.tooltip-description { font-size:0.92rem; color:#555; margin-bottom:8px; }
+.tooltip-buttons { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.tooltip-button { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.9rem; }
+.tooltip-button-primary { background: var(--primary-pink); color:white; }
+.tooltip-button-secondary { background: rgba(0,0,0,0.06); color:#222; }
+.tooltip-close { position:absolute; right:8px; top:8px; background:transparent; border:none; font-size:14px; cursor:pointer; color:#666; padding:6px; border-radius:6px; }
+.tooltip-close:hover { background: rgba(0,0,0,0.04); }
+
+@media (max-width: 720px){
+  .tooltip { position: fixed !important; left: 8px !important; right: 8px !important; top: 20% !important; max-width: calc(100% - 24px); }
+  .tooltip .tooltip-image { width: 100%; height: 160px; float:none; margin:0 0 10px 0; }
+  .calendar-legend { display:none; }
+}
+
 /* Past day de-emphasis */
 .fc-past-day { opacity: 0.62; filter: grayscale(0.06); background-color: rgba(0,0,0,0.01); }
 .fc-past-day .fc-daygrid-day-number { color: #9aa0a6; }
