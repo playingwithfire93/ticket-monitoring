@@ -680,6 +680,14 @@ def api_get_musicals():
                 musical_dict['is_available'] = musical.is_available
             if hasattr(musical, 'updated_at') and musical.updated_at:
                 musical_dict['updated_at'] = musical.updated_at.isoformat()
+            # include latest change timestamp if available
+            try:
+                last_change = MusicalChange.query.filter_by(musical_id=musical.id).order_by(MusicalChange.created_at.desc()).first()
+                if last_change and getattr(last_change, 'created_at', None):
+                    musical_dict['last_change'] = last_change.created_at.isoformat()
+            except Exception:
+                # if MusicalChange not available or query fails, skip silently
+                pass
                 
             result.append(musical_dict)
         

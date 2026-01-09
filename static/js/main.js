@@ -194,6 +194,17 @@
     // name cell
     const nameTd = document.createElement('td');
     nameTd.textContent = item.musical || item.name || 'Sin nombre';
+    // show last change timestamp if available
+    try {
+      if (item.last_change) {
+        const lc = document.createElement('div');
+        lc.className = 'last-change-small';
+        const d = new Date(item.last_change);
+        lc.textContent = `Último cambio: ${d.toLocaleString()}`;
+        lc.style.fontSize = '0.8rem'; lc.style.color = '#7a5a6a'; lc.style.marginTop = '6px';
+        nameTd.appendChild(lc);
+      }
+    } catch(e){}
 
     // urls count cell
     const urlsTd = document.createElement('td');
@@ -695,6 +706,17 @@
     sub.textContent = `${urlNum} URL · +${ch.added}/-${ch.removed}`;
     header.appendChild(title);
     header.appendChild(sub);
+    // last change timestamp (show under subtitle)
+    try {
+      if (item.last_change) {
+        const lc = document.createElement('div');
+        lc.className = 'mc-last-change';
+        const d = new Date(item.last_change);
+        lc.textContent = `Último cambio: ${d.toLocaleString()}`;
+        lc.style.fontSize = '0.85rem'; lc.style.color = '#7a5a6a'; lc.style.marginTop = '6px';
+        header.appendChild(lc);
+      }
+    } catch(e){}
 
     const body = document.createElement('div');
     body.className = 'mc-body';
