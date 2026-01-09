@@ -1420,18 +1420,38 @@
       navs.forEach(n=>n.classList.add('disabled'));
       const loadVideos = () => {
         videos.forEach(v => {
-          if (!v.src && v.dataset && v.dataset.src) {
-            try {
-              v.src = v.dataset.src;
-              try { v.load(); } catch(e) { /* some user agents may abort load; ignore */ }
+          // Avoid race conditions: if a video is already loading/loaded, skip
+          try {
+            if (v._loading) return;
+            if (!v.src && v.dataset && v.dataset.src) {
+              v._loading = true;
               v.classList.add('loading');
-              v.addEventListener('canplay', () => { v.classList.add('playing'); try { v.play().catch(()=>{}); } catch(e){} });
-              v.addEventListener('error', (ev) => { v.classList.remove('loading'); console.warn('hero video load error', ev); });
-              v.addEventListener('abort', () => { v.classList.remove('loading'); });
-            } catch(e) {
-              console.warn('failed to load hero video', e);
+              v.src = v.dataset.src;
+              try { v.load(); } catch (e) { /* ignore load() errors */ }
+
+              const onCanPlay = () => {
+                v.classList.add('playing');
+                v._loading = false;
+                // attempt to play but swallow promise rejections
+                try { v.play().catch(()=>{}); } catch(e){}
+                cleanup();
+              };
+              const onErr = (ev) => {
+                v.classList.remove('loading');
+                v._loading = false;
+                console.warn('hero video load error', ev);
+                cleanup();
+              };
+              function cleanup(){
+                v.removeEventListener('canplay', onCanPlay);
+                v.removeEventListener('error', onErr);
+                v.removeEventListener('abort', onErr);
+              }
+              v.addEventListener('canplay', onCanPlay);
+              v.addEventListener('error', onErr);
+              v.addEventListener('abort', onErr);
             }
-          }
+          } catch(e) { console.warn('hero load guard error', e); }
         });
         const btn = document.getElementById('hero-load-videos');
         if (btn) btn.style.display = 'none';

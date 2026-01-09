@@ -634,6 +634,15 @@ def serve_foto(relpath):
     app.logger.debug(f"Photo not found: {relpath_norm}")
     return Response('Not found', status=404)
 
+
+# Serve favicon (redirect to SVG placeholder)
+@app.route('/favicon.ico')
+def favicon():
+    try:
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.svg', mimetype='image/svg+xml')
+    except Exception:
+        return Response(status=404)
+
 # ==================== API ENDPOINTS ====================
 @app.route("/api/musicals", methods=["GET"])
 def api_get_musicals():
