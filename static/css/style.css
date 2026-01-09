@@ -306,6 +306,14 @@ input:checked + .switch:before {
   box-shadow: 0 6px 20px rgba(0,0,0,0.12);
 }
 
+.hero-load-btn.small { padding: 8px 14px; font-size: 0.95rem; }
+.hero-load-btn.large { padding: 14px 22px; font-size: 1.05rem; }
+
+/* hide video controls until the videos are loaded to avoid orphan controls */
+.video-hero-dots.disabled, .video-hero-nav.disabled { display: none !important; }
+
+.hero-poster { background-blend-mode: multiply; }
+
 .video-hero-background video { opacity: 0; transition: opacity 800ms ease-in-out; z-index: 1; }
 .video-hero-background video.playing { opacity: 1; }
 

@@ -1350,6 +1350,11 @@
       const heroWrap = document.querySelector('.video-hero-background');
       if (!heroWrap) return;
       const videos = Array.from(heroWrap.querySelectorAll('video.hero-video'));
+      // hide controls until we actually load videos
+      const dots = document.querySelectorAll('.video-hero-dots');
+      const navs = document.querySelectorAll('.video-hero-nav');
+      dots.forEach(d=>d.classList.add('disabled'));
+      navs.forEach(n=>n.classList.add('disabled'));
       const loadVideos = () => {
         videos.forEach(v => {
           if (!v.src && v.dataset && v.dataset.src) {
@@ -1361,6 +1366,9 @@
         });
         const btn = document.getElementById('hero-load-videos');
         if (btn) btn.style.display = 'none';
+        // reveal controls when videos are loaded
+        dots.forEach(d=>d.classList.remove('disabled'));
+        navs.forEach(n=>n.classList.remove('disabled'));
       };
 
       // user-initiated load button
