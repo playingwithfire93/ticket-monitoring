@@ -1935,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let timer = null;
     slides.forEach((s,i) => {
       // smoother, slightly slower fade with gentle scale for perceived fluidity
-      s.style.transition = 'opacity 640ms cubic-bezier(0.2,0.8,0.2,1), transform 640ms cubic-bezier(0.2,0.8,0.2,1)';
+      s.style.transition = 'opacity 1000ms cubic-bezier(0.2,0.8,0.2,1), transform 1000ms cubic-bezier(0.2,0.8,0.2,1)';
       s.style.position = 'absolute';
       s.style.left = 0; s.style.top = 0; s.style.width = '100%';
       s.style.opacity = i === idx ? '1' : '0';
@@ -1950,10 +1950,36 @@ document.addEventListener('DOMContentLoaded', function () {
     const next = container.querySelector('.slideshow-next');
     const prev = container.querySelector('.slideshow-prev');
 
+    const SLIDE_FADE_MS = 1000;
     function show(n) {
-      slides[idx].style.opacity = '0'; slides[idx].style.transform = 'scale(0.985)'; slides[idx].style.zIndex = 1;
-      idx = (n + slides.length) % slides.length;
-      slides[idx].style.opacity = '1'; slides[idx].style.transform = 'scale(1)'; slides[idx].style.zIndex = 2;
+      const prevIdx = idx;
+      const nextIdx = (n + slides.length) % slides.length;
+      if (prevIdx === nextIdx) return;
+      const prev = slides[prevIdx];
+      const next = slides[nextIdx];
+
+      // Prepare next above previous so it can fade in immediately
+      next.style.transition = next.style.transition || '';
+      next.style.zIndex = 3;
+      // ensure starting state for next (in case it was hidden)
+      next.style.transform = 'scale(0.985)';
+      next.style.opacity = '0';
+
+      // Force a reflow so the browser registers the starting opacity
+      void next.offsetWidth;
+
+      // Start cross-fade: next fades in while prev fades out
+      next.style.opacity = '1';
+      next.style.transform = 'scale(1)';
+      prev.style.opacity = '0';
+      prev.style.transform = 'scale(0.985)';
+
+      // After transition completes, normalize z-indexes and update idx
+      setTimeout(() => {
+        prev.style.zIndex = 1;
+        next.style.zIndex = 2;
+        idx = nextIdx;
+      }, SLIDE_FADE_MS + 20);
     }
 
     function nextSlide(){ show(idx + 1); }
