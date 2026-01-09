@@ -1,6 +1,6 @@
 /* consolidated main.js: safe guards, table + collapsible rows, url chips, slideshow */
 (() => {
-  const api = '/api/monitored-urls';
+  const api = '/api/musicals';
 
   // DOM
   const tableBody = document.getElementById('table-body');
@@ -800,13 +800,12 @@
   function getImagesForItem(item){
     const m = ((item.musical || item.name || '').toLowerCase());
     const paths = [];
-    const base = (p) => `/static/${p}`;
-    const pushIf = (arr) => arr.forEach(p=>paths.push(base(p)));
-    if (/mormon|bom|book of mormon/.test(m)) pushIf(['BOM1.jpg','BOM2.jpg','BOM3.jpg']);
-    if (/houdini/.test(m)) pushIf(['HOUDINI1.jpg','HOUDINI2.webp','HOUDINI3.webp']);
-    if (/wicked/.test(m)) pushIf(['WICKED1.webp','WICKED2.jpg','WICKED3.jpg']);
-    if (/les\s?mis|miserables/.test(m)) pushIf(['LESMIS1.jpg','LESMIS2.jpg','LESMIS3.png']);
-    if (/audrey|little shop/.test(m)) pushIf(['AUDREY1.jpg']);
+    const push = (folder, arr) => arr.forEach(n => paths.push(`/static/fotos/${folder}/${n}`));
+    if (/mormon|bom|book of mormon/.test(m)) push('book_of_mormon', ['BOM1.jpg','BOM2.jpg','BOM3.jpg','BOM4.jpg']);
+    if (/houdini/.test(m)) push('Houdini', ['HOUDINI1.jpg','HOUDINI2.webp','HOUDINI3.webp','HOUDINI4.webp']);
+    if (/wicked/.test(m)) push('Wicked', ['WICKED1.webp','WICKED2.jpg','WICKED3.jpg','WICKED4.jpeg','WICKED5.jpg']);
+    if (/les\s?mis|miserables/.test(m)) push('los_miserables', ['LESMIS1.jpg','LESMIS2.jpg','LESMIS3.png','LESMIS4.jpg']);
+    if (/audrey|little shop/.test(m)) paths.push('/static/fotos/AUDREY1.jpg');
     // if server provided images
     if (Array.isArray(item.images) && item.images.length) {
       return item.images.map(u => (u.startsWith('http')?u:`/static/${u}`));

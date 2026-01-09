@@ -360,12 +360,12 @@
       <!-- Videos de fondo (poster + lazy-load) -->
       <div class="video-hero-background">
         <!-- Decorative poster as first layer to avoid video downloads -->
-        <div class="hero-poster" role="img" aria-label="Imagen de fondo de musicales"></div>
+        <div class="hero-poster" role="img" aria-label="Imagen de fondo de musicales" style="background-image: url('/static/fotos/Wicked/WICKED3.jpg');"></div>
         <button id="hero-load-videos" class="hero-load-btn" aria-label="Cargar animación de fondo">Mostrar animación</button>
         <!-- videos kept with data-src to avoid immediate network requests -->
-        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video1.mp4" poster="/static/fotos/poster1.jpg"></video>
-        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video2.mp4" poster="/static/fotos/poster2.jpg"></video>
-        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video3.mp4" poster="/static/fotos/poster3.jpg"></video>
+        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video1.mp4" poster="/static/fotos/Wicked/WICKED3.jpg"></video>
+        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video2.mp4" poster="/static/fotos/book_of_mormon/BOM1.jpg"></video>
+        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video3.mp4" poster="/static/fotos/Houdini/HOUDINI1.jpg"></video>
       </div>
 
       <!-- Botones de navegación -->
@@ -637,6 +637,12 @@
     </section>
   </main>
 
+    <!-- Fallback client-side containers for legacy/remote main.js (prevents runtime errors)
+      These are kept hidden when server-side templates render content. -->
+    <div id="cards-grid" style="display:none"></div>
+    <table id="monitor-table" style="display:none"><tbody id="table-body"></tbody></table>
+    <div id="no-data" style="display:none"></div>
+
   <footer class="footer">
     <small>Made with 💖 — dynamic cute monitor</small>
   </footer>
@@ -644,7 +650,7 @@
   <!-- Toast container for UX microinteractions -->
   <div id="toasts" aria-live="polite" aria-atomic="true" class="toasts-container"></div>
 
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=20260109"></script>
   <script>
     // ==================== VIDEO HERO CAROUSEL ====================
     let currentHeroVideoIndex = 0;
