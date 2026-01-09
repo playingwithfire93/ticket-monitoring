@@ -1934,11 +1934,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const interval = parseInt(container.dataset.interval || 5000, 10);
     let timer = null;
     slides.forEach((s,i) => {
-      s.style.transition = 'opacity 480ms ease';
+      // smoother, slightly slower fade with gentle scale for perceived fluidity
+      s.style.transition = 'opacity 640ms cubic-bezier(0.2,0.8,0.2,1), transform 640ms cubic-bezier(0.2,0.8,0.2,1)';
       s.style.position = 'absolute';
       s.style.left = 0; s.style.top = 0; s.style.width = '100%';
       s.style.opacity = i === idx ? '1' : '0';
+      s.style.transform = i === idx ? 'scale(1)' : 'scale(0.985)';
       s.style.zIndex = i === idx ? '2' : '1';
+      s.style.willChange = 'opacity, transform';
+      s.style.backfaceVisibility = 'hidden';
     });
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
@@ -1947,9 +1951,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const prev = container.querySelector('.slideshow-prev');
 
     function show(n) {
-      slides[idx].style.opacity = '0'; slides[idx].style.zIndex = 1;
+      slides[idx].style.opacity = '0'; slides[idx].style.transform = 'scale(0.985)'; slides[idx].style.zIndex = 1;
       idx = (n + slides.length) % slides.length;
-      slides[idx].style.opacity = '1'; slides[idx].style.zIndex = 2;
+      slides[idx].style.opacity = '1'; slides[idx].style.transform = 'scale(1)'; slides[idx].style.zIndex = 2;
     }
 
     function nextSlide(){ show(idx + 1); }
