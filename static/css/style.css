@@ -511,10 +511,10 @@ input:checked + .switch:before {
 .cdp-none { color:var(--text-light); padding:8px; }
 
 @media (min-width: 1100px){
-  /* place panel to the right of calendar */
-  .calendar-container { display:flex; gap:20px; align-items:flex-start; }
-  #calendar { flex:1 1 auto; }
-  .calendar-day-panel { position:relative; top:0; right:0; width:320px; }
+  /* place filters, calendar and sidebar in three columns to avoid overlap */
+  .calendar-container { display: grid; grid-template-columns: 240px 1fr 320px; gap: 20px; align-items: start; }
+  #calendar { width: 100%; min-width: 420px; }
+  .calendar-day-panel { position:relative; width:100%; max-width:320px; }
 }
 
 /* Past day de-emphasis */
