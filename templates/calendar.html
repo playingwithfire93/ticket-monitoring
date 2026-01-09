@@ -609,7 +609,8 @@
 
     <!-- Topbar with filters (moves filters out of the left column into a collapsible top toolbar) -->
     <div class="calendar-topbar">
-      <div class="calendar-filters" role="toolbar" aria-label="Filtros de musicales">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div class="calendar-filters" role="toolbar" aria-label="Filtros de musicales">
         <button class="filter-chip filter-all active" data-musical="all">
           📋 Todos los musicales
         </button>
@@ -631,6 +632,12 @@
         <button class="filter-chip event-houdini" data-musical="houdini">
           Houdini
         </button>
+      </div>
+        <div class="view-toggle" aria-label="Cambiar vista del calendario">
+          <button class="view-btn active" data-view="dayGridMonth">Mes</button>
+          <button class="view-btn" data-view="dayGridWeek">Semana</button>
+          <button class="view-btn" data-view="listWeek">Lista</button>
+        </div>
       </div>
     </div>
 

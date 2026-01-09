@@ -130,16 +130,20 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   function preferredEventComparator(a,b){ const A=orderKeyForEvent(a), B=orderKeyForEvent(b); if(A.zone!==B.zone) return A.zone-B.zone; if(A.zone===0) return A.idx-B.idx; return A.tie.localeCompare(B.tie); }
 
+  // responsive initial view: listWeek on small screens, month on larger
+  const prefersWeek = window.innerWidth < 900;
+  const initialView = prefersWeek ? 'listWeek' : 'dayGridMonth';
+
   // create calendar
   const calendar = new FullCalendar.Calendar(el, {
     locale: 'es',
     firstDay: 1,
-    initialView: 'dayGridMonth',
+    initialView: initialView,
     initialDate: isoToday,
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek,listWeek' },
     height: 700,
     validRange: { start: MIN_DATE, end: MAX_DATE },
-    dayMaxEventRows: 3,
+    dayMaxEventRows: prefersWeek ? 6 : 3,
     dayMaxEvents: true,
     eventOrder: preferredEventComparator,
     eventContent: function(arg){
@@ -294,6 +298,24 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   calendar.render();
+
+  // Wire view toggle buttons
+  (function wireViewButtons(){
+    try{
+      const btns = Array.from(document.querySelectorAll('.view-btn'));
+      if(!btns.length) return;
+      btns.forEach(b => b.addEventListener('click', function(){
+        btns.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        const view = b.dataset.view;
+        try{ calendar.changeView(view); }catch(e){ console.warn('changeView failed', e); }
+        // adjust dayMaxEventRows for week view
+        if(view === 'dayGridWeek') calendar.setOption('dayMaxEventRows', 8);
+        else if(view === 'dayGridMonth') calendar.setOption('dayMaxEventRows', 3);
+        else calendar.setOption('dayMaxEventRows', 999);
+      }));
+    }catch(err){ console.warn('wireViewButtons failed', err); }
+  })();
 
   // Wire up static filter chips (buttons in the template)
   (function wireFilterChips(){

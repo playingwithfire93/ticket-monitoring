@@ -528,6 +528,15 @@ input:checked + .switch:before {
   .calendar-topbar .calendar-filters { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; padding:10px 12px; }
 }
 
+.view-toggle { display:flex; gap:8px; }
+.view-toggle .view-btn { background: #2f3b46; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:700; }
+.view-toggle .view-btn.active { background: #ff69b4; color: #fff; box-shadow: 0 6px 20px rgba(241,124,216,0.18); transform: translateY(-1px); }
+.view-toggle .view-btn:hover { opacity: 0.95; }
+
+/* Make calendar more compact in week view */
+.fc .fc-daygrid-body { line-height: 1.05; }
+.fc .fc-daygrid-day-events .fc-event { padding: 4px 6px; font-size: 12px; }
+
 /* Slide-over styles for day details */
 .day-slideover {
   position: fixed;
