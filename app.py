@@ -34,6 +34,9 @@ EVENTS_FILE = STATIC_DIR / "data" / "events.json"
 SNAPSHOTS_FILE = STATIC_DIR / "data" / "snapshots.json"
 EXCLUSIONS_FILE = STATIC_DIR / "data" / "exclusions.json"
 
+# In-memory cache for resolved photo paths (key: requested lower-path -> actual relative path)
+PHOTO_PATH_CACHE = {}
+
 UTC = timezone.utc
 
 # Environment variables
@@ -555,6 +558,81 @@ def serve_poster(filename):
     """Serve poster images"""
     posters_dir = os.path.join(app.root_path, 'static', 'fotos', 'posters')
     return send_from_directory(posters_dir, filename)
+
+
+# Robust fotos handler: tries exact path first, then common case variants,
+# then performs a case-insensitive filesystem scan (cached) and finally
+# serves a placeholder if nothing is found. This helps on case-sensitive
+# deployments where local filenames may differ in casing.
+@app.route('/static/fotos/<path:relpath>')
+def serve_foto(relpath):
+    fotos_root = os.path.join(app.root_path, 'static', 'fotos')
+    # Normalize relpath to forward slashes
+    relpath_norm = relpath.replace('\\', '/')
+
+    # Exact match first
+    exact_path = os.path.join(fotos_root, relpath_norm)
+    if os.path.exists(exact_path):
+        app.logger.debug(f"Serving exact photo: {relpath_norm}")
+        return send_from_directory(fotos_root, relpath_norm)
+
+    key = relpath_norm.lower()
+    # Cached resolution
+    cached = PHOTO_PATH_CACHE.get(key)
+    if cached:
+        candidate = os.path.join(fotos_root, cached)
+        if os.path.exists(candidate):
+            app.logger.debug(f"Serving cached photo for {relpath_norm} -> {cached}")
+            return send_from_directory(fotos_root, cached)
+        else:
+            PHOTO_PATH_CACHE.pop(key, None)
+
+    # Try common folder/filename casing permutations
+    parts = relpath_norm.split('/', 1)
+    candidates = []
+    if len(parts) == 2:
+        folder, fname = parts
+        candidates.extend([
+            f"{folder}/{fname}",
+            f"{folder.lower()}/{fname}",
+            f"{folder.title()}/{fname}",
+            f"{folder.upper()}/{fname}",
+            f"{folder}/{fname.lower()}",
+            f"{folder}/{fname.upper()}"
+        ])
+    else:
+        candidates.extend([relpath_norm, relpath_norm.lower(), relpath_norm.upper()])
+
+    for cand in candidates:
+        cand_path = os.path.join(fotos_root, cand)
+        if os.path.exists(cand_path):
+            PHOTO_PATH_CACHE[key] = cand.replace('\\', '/')
+            app.logger.debug(f"Resolved photo {relpath_norm} -> {cand}")
+            return send_from_directory(fotos_root, cand)
+
+    # Last resort: do a case-insensitive scan (expensive the first time)
+    try:
+        requested_lower = relpath_norm.lower()
+        for root, dirs, files in os.walk(fotos_root):
+            rel_root = os.path.relpath(root, fotos_root)
+            for f in files:
+                candidate_rel = os.path.join(rel_root, f) if rel_root != '.' else f
+                candidate_rel_norm = candidate_rel.replace('\\', '/')
+                if candidate_rel_norm.lower() == requested_lower:
+                    PHOTO_PATH_CACHE[key] = candidate_rel_norm
+                    app.logger.debug(f"Scanned and found photo {relpath_norm} -> {candidate_rel_norm}")
+                    return send_from_directory(fotos_root, candidate_rel_norm)
+    except Exception as e:
+        app.logger.warning(f"Photo resolution scan failed: {e}")
+
+    # If still not found, try to serve a placeholder if available
+    placeholder = os.path.join(app.root_path, 'static', 'posters', 'placeholder.png')
+    if os.path.exists(placeholder):
+        app.logger.debug(f"Photo not found, serving placeholder for {relpath_norm}")
+        return send_from_directory(os.path.join(app.root_path, 'static', 'posters'), 'placeholder.png')
+
+    app.logger.debug(f"Photo not found: {relpath_norm}")
+    return Response('Not found', status=404)
 
 # ==================== API ENDPOINTS ====================
 @app.route("/api/musicals", methods=["GET"])
