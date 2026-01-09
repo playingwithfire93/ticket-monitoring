@@ -464,6 +464,20 @@ input:checked + .switch:before {
   cursor: pointer;
 }
 
+/* Calendar small UX improvements */
+.calendar-controls { display:flex; align-items:center; gap:12px; margin:12px 0; font-size:0.95rem; color:var(--text-dark); }
+.calendar-controls input[type="checkbox"] { width:16px; height:16px; }
+.calendar-legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; align-items:center; }
+.calendar-legend .legend-item { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.7); padding:6px 8px; border-radius:8px; box-shadow: var(--shadow-sm); font-size:0.9rem; }
+.calendar-legend .legend-dot { width:12px; height:12px; border-radius:3px; display:inline-block; }
+.fc-today-highlight { outline: 2px solid rgba(255,105,180,0.12); position: relative; }
+.fc-today-highlight .today-label { position:absolute; right:6px; top:6px; background:var(--primary-pink); color:white; font-size:0.75rem; padding:2px 6px; border-radius:999px; box-shadow:var(--shadow-sm); }
+.fc-event-dot { display:inline-block; vertical-align:middle; margin-right:6px; }
+
+/* tooltip tweaks */
+.tooltip-image { width: 160px; height: 90px; object-fit:cover; border-radius:6px; float:left; margin-right:8px; }
+.tooltip-content { max-width: 320px; }
+
 .slideshow-placeholder {
   display: flex;
   flex-direction: column;

@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let musicalsList = []; // unique musical names
   let selectedSet = new Set();
   let colorsMap = {}; // musical -> color mapping
+  let showPast = false; // whether to include past events
 
   const COLOR_PALETTE = ['#FF6B6B','#FFB86B','#FFD93D','#8BE9B4','#69B7FF','#8A79FF','#FF8AD6','#A0E1E0','#D6A2E8','#F6C6EA'];
 
@@ -68,6 +69,21 @@ document.addEventListener('DOMContentLoaded', function() {
       div.addEventListener('keydown', (e)=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); div.click(); } });
     });
     updateFilterCount();
+    // also render compact legend for quick reference
+    try{ renderLegend(); }catch(e){}
+  }
+
+  function renderLegend(){
+    const parent = el.parentNode || document.body;
+    let legend = parent.querySelector('.calendar-legend');
+    if(!legend){ legend = document.createElement('div'); legend.className='calendar-legend'; parent.insertBefore(legend, el); }
+    legend.innerHTML = '';
+    musicalsList.slice(0,20).forEach(name => {
+      const item = document.createElement('div'); item.className='legend-item';
+      const dot = document.createElement('span'); dot.className='legend-dot'; dot.style.background = pickColorFor(name);
+      const txt = document.createElement('span'); txt.className='legend-name'; txt.textContent = name;
+      item.appendChild(dot); item.appendChild(txt); legend.appendChild(item);
+    });
   }
 
   function toggleSelection(name, checked){ if(checked) selectedSet.add(name); else selectedSet.delete(name); updateInputPlaceholder(); calendar.refetchEvents(); }
@@ -114,28 +130,55 @@ document.addEventListener('DOMContentLoaded', function() {
     firstDay: 1,
     initialView: 'dayGridMonth',
     initialDate: isoToday,
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
     height: 700,
     validRange: { start: MIN_DATE, end: MAX_DATE },
     dayMaxEventRows: 3,
     dayMaxEvents: true,
     eventOrder: preferredEventComparator,
     eventContent: function(arg){
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.gap = '6px';
+
+      const dot = document.createElement('span');
+      dot.className = 'fc-event-dot';
+      dot.style.width = '10px';
+      dot.style.height = '10px';
+      dot.style.borderRadius = '50%';
+      dot.style.background = arg.event.backgroundColor || (arg.event.extendedProps && arg.event.extendedProps.color) || '#888';
+
       const div = document.createElement('div');
       div.style.fontSize='12px';
       div.style.whiteSpace='nowrap'; div.style.overflow='hidden'; div.style.textOverflow='ellipsis';
       div.textContent = arg.event.title;
-      return { domNodes: [div] };
+
+      wrapper.appendChild(dot);
+      wrapper.appendChild(div);
+      return { domNodes: [wrapper] };
     },
 
     // mark Mondays visually
     dayCellDidMount: function(info){
+      // mark Mondays visually
       if(info.date && info.date.getDay() === 1){
         info.el.classList.add('fc-monday-off');
         if(!info.el.querySelector('.monday-label')){
           const lbl = document.createElement('div'); lbl.className='monday-label'; lbl.textContent='Libre'; info.el.appendChild(lbl);
         }
       }
+      // highlight today
+      try{
+        const todayStrLocal = formatLocalDate(new Date());
+        const thisStr = formatLocalDate(info.date);
+        if(thisStr === todayStrLocal){
+          info.el.classList.add('fc-today-highlight');
+          if(!info.el.querySelector('.today-label')){
+            const tl = document.createElement('div'); tl.className='today-label'; tl.textContent='Hoy'; info.el.appendChild(tl);
+          }
+        }
+      }catch(e){}
     },
 
     events: async function(fetchInfo, successCallback, failureCallback){
@@ -147,7 +190,19 @@ document.addEventListener('DOMContentLoaded', function() {
           await loadExclusions();
           buildMusicalDropdown(allEventsCache);
         }
-        const filtered = applyFilter(allEventsCache || []);
+        let filtered = applyFilter(allEventsCache || []);
+
+        // by default, hide events that have already ended (local date before today)
+        try{
+          if(!showPast){
+            const todayDateObj = parseLocalDate(formatLocalDate(new Date()));
+            filtered = filtered.filter(ev => {
+              const evEnd = parseLocalDate(ev.end || ev.start);
+              if(!evEnd) return true;
+              return evEnd >= todayDateObj;
+            });
+          }
+        }catch(e){/* ignore filtering errors */}
 
         // expand multi-day events into per-day events, parse local dates, skip Mondays and exclusions
         const expanded = [];
@@ -231,6 +286,21 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   calendar.render();
+
+  // add simple controls: show past toggle
+  try{
+    const parent = el.parentNode || document.body;
+    let controls = parent.querySelector('.calendar-controls');
+    if(!controls){
+      controls = document.createElement('div'); controls.className='calendar-controls';
+      parent.insertBefore(controls, el);
+    }
+    controls.innerHTML = '';
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.id='cb-show-past'; cb.checked = showPast;
+    const lbl = document.createElement('label'); lbl.htmlFor='cb-show-past'; lbl.textContent = ' Mostrar eventos pasados';
+    controls.appendChild(cb); controls.appendChild(lbl);
+    cb.addEventListener('change', function(){ showPast = !!cb.checked; allEventsCache = null; calendar.refetchEvents(); });
+  }catch(e){console.warn('no calendar controls', e);}
 
   // safe UI handlers if present
   if(inputEl){
