@@ -160,6 +160,14 @@ document.addEventListener('DOMContentLoaded', function() {
       return { domNodes: [wrapper] };
     },
 
+    // Update day-panel when visible range changes
+    datesSet: function(info){
+      try{ renderDayPanel(info.start); }catch(e){}
+    },
+    dateClick: function(info){
+      try{ renderDayPanel(info.date); }catch(e){}
+    },
+
     // mark Mondays visually
     dayCellDidMount: function(info){
       // mark Mondays visually
@@ -281,6 +289,49 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   calendar.render();
+
+  // Day events panel: shows all events for a selected day (defaults to today)
+  function renderDayPanel(dateLike){
+    try{
+      let d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
+      const ds = formatLocalDate(d);
+      const parent = el.parentNode || document.body;
+      let panel = parent.querySelector('.calendar-day-panel');
+      if(!panel){ panel = document.createElement('aside'); panel.className = 'calendar-day-panel'; parent.insertBefore(panel, el.nextSibling); }
+      panel.innerHTML = '';
+      const hdr = document.createElement('div'); hdr.className = 'cdp-header'; hdr.textContent = `Eventos para ${ds}`; panel.appendChild(hdr);
+      const list = document.createElement('div'); list.className = 'cdp-list'; panel.appendChild(list);
+
+      const evs = calendar.getEvents().filter(ev => {
+        try{
+          if(!ev.start) return false;
+          const evd = new Date(ev.start);
+          const es = formatLocalDate(evd);
+          return es === ds;
+        }catch(e){return false}
+      });
+
+      if(evs.length === 0){ const none = document.createElement('div'); none.className='cdp-none'; none.textContent = 'No hay shows este día.'; list.appendChild(none); return; }
+
+      evs.sort((a,b)=> (a.title || '').localeCompare(b.title || ''));
+      evs.forEach(ev => {
+        const item = document.createElement('div'); item.className='cdp-item';
+        const img = document.createElement('img'); img.className='cdp-thumb'; img.alt = ev.title || 'img';
+        const url = (ev.extendedProps && ev.extendedProps.url) || (ev.url || '#');
+        const imgSrc = (ev.extendedProps && ev.extendedProps.image) || (`/static/fotos/${(ev.extendedProps && ev.extendedProps.musical)||''}`) || '';
+        if(imgSrc) img.src = imgSrc; else img.src = `https://via.placeholder.com/160x90?text=${encodeURIComponent(ev.title||'')}`;
+        const meta = document.createElement('div'); meta.className='cdp-meta';
+        const title = document.createElement('a'); title.className='cdp-title'; title.textContent = ev.title || 'Evento'; title.href = url || '#'; title.target='_blank';
+        const desc = document.createElement('div'); desc.className='cdp-desc'; desc.textContent = (ev.extendedProps && ev.extendedProps.description) || '';
+        meta.appendChild(title); meta.appendChild(desc);
+        item.appendChild(img); item.appendChild(meta);
+        list.appendChild(item);
+      });
+    }catch(e){ console.warn('renderDayPanel error', e); }
+  }
+
+  // initial render for today
+  try{ renderDayPanel(new Date()); }catch(e){}
 
   // add simple controls: show past toggle
   try{

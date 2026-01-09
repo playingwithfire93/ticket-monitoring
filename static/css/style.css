@@ -499,6 +499,24 @@ input:checked + .switch:before {
   .calendar-legend { display:none; }
 }
 
+/* Day panel (shows events for selected day) */
+.calendar-day-panel { background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); margin-top: 12px; max-width: 420px; }
+.calendar-day-panel .cdp-header { font-weight:700; margin-bottom:8px; color:var(--primary-pink); }
+.calendar-day-panel .cdp-list { display:flex; flex-direction:column; gap:8px; }
+.cdp-item { display:flex; gap:10px; align-items:flex-start; padding:8px; border-radius:8px; background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9)); }
+.cdp-thumb { width: 96px; height: 54px; object-fit:cover; border-radius:6px; flex:0 0 96px; }
+.cdp-meta { display:flex; flex-direction:column; gap:6px; }
+.cdp-title { font-weight:700; color:var(--text-dark); text-decoration:none; }
+.cdp-desc { font-size:0.9rem; color:var(--text-light); }
+.cdp-none { color:var(--text-light); padding:8px; }
+
+@media (min-width: 1100px){
+  /* place panel to the right of calendar */
+  .calendar-container { display:flex; gap:20px; align-items:flex-start; }
+  #calendar { flex:1 1 auto; }
+  .calendar-day-panel { position:relative; top:0; right:0; width:320px; }
+}
+
 /* Past day de-emphasis */
 .fc-past-day { opacity: 0.62; filter: grayscale(0.06); background-color: rgba(0,0,0,0.01); }
 .fc-past-day .fc-daygrid-day-number { color: #9aa0a6; }
