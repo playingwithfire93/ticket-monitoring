@@ -773,7 +773,8 @@
     }
 
     // events.json provides schedule info (try multiple common locations)
-    const evs = await getJsonFromFirst(['/events.json','/static/data/events.json','/static/events.json']);
+    // Prefer the project's static data folder first (common on deployments)
+    const evs = await getJsonFromFirst(['/static/data/events.json','/events.json','/static/events.json']);
     (Array.isArray(evs)?evs:[]).forEach(ev => {
       const name = ev.musical || ev.title || '';
       if (!name) return;
@@ -782,7 +783,8 @@
     });
 
     // suggestions.json (try multiple locations)
-    const sug = await getJsonFromFirst(['/suggestions.json','/static/data/suggestions.json','/static/suggestions.json']);
+    // In this repo `suggestions.json` lives under `/static/js` — try that first
+    const sug = await getJsonFromFirst(['/static/js/suggestions.json','/static/data/suggestions.json','/static/suggestions.json','/suggestions.json']);
     (Array.isArray(sug)?sug:[]).forEach(s => {
       const name = s.siteName || '';
       if (!name) return;
@@ -800,17 +802,24 @@
   function getImagesForItem(item){
     const m = ((item.musical || item.name || '').toLowerCase());
     const paths = [];
-    const push = (folder, arr) => arr.forEach(n => paths.push(`/static/fotos/${folder}/${n}`));
+    const push = (folder, arr) => arr.forEach(n => {
+      // push the canonical folder and a lowercase variant to handle case-sensitive filesystems
+      paths.push(`/static/fotos/${folder}/${n}`);
+      paths.push(`/static/fotos/${folder.toLowerCase()}/${n}`);
+    });
     if (/mormon|bom|book of mormon/.test(m)) push('book_of_mormon', ['BOM1.jpg','BOM2.jpg','BOM3.jpg','BOM4.jpg']);
     if (/houdini/.test(m)) push('Houdini', ['HOUDINI1.jpg','HOUDINI2.webp','HOUDINI3.webp','HOUDINI4.webp']);
-    if (/wicked/.test(m)) push('Wicked', ['WICKED1.webp','WICKED2.jpg','WICKED3.jpg','WICKED4.jpeg','WICKED5.jpg']);
+    if (/wicked/.test(m)) push('Wicked', ['WICKED1.webp','WICKED2.jpg','WICKED3.jpg','WICKED4.jpeg','WICKED5.jpg','WICKED6.jpg','WICKED7.webp']);
     if (/les\s?mis|miserables/.test(m)) push('los_miserables', ['LESMIS1.jpg','LESMIS2.jpg','LESMIS3.png','LESMIS4.jpg']);
-    if (/audrey|little shop/.test(m)) paths.push('/static/fotos/AUDREY1.jpg');
-    // if server provided images
-    if (Array.isArray(item.images) && item.images.length) {
-      return item.images.map(u => (u.startsWith('http')?u:`/static/${u}`));
+    if (/audrey|little shop/.test(m)) {
+      paths.push('/static/fotos/AUDREY1.jpg');
+      paths.push('/static/fotos/audrey1.jpg');
     }
-    return paths.slice(0, 5);
+    // if server provided images, prefer them (allow absolute URLs or static paths)
+    if (Array.isArray(item.images) && item.images.length) {
+      return item.images.map(u => (u.startsWith('http') ? u : (u.startsWith('/static/') ? u : `/static/${u}`)));
+    }
+    return paths.slice(0, 8);
   }
 
   // Initialize a simple fading slideshow inside a .mc-slideshow

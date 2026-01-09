@@ -1026,40 +1026,106 @@ MUSICAL_COLORS = {
 def get_calendar_events():
     """Obtener eventos del calendario con colores específicos"""
     try:
+        # Accept optional start/end query params (ISO date strings)
+        start_q = request.args.get('start')
+        end_q = request.args.get('end')
+        from datetime import datetime
+        start_dt = None
+        end_dt = None
+        if start_q:
+            try:
+                start_dt = datetime.fromisoformat(start_q)
+            except Exception:
+                start_dt = None
+        if end_q:
+            try:
+                end_dt = datetime.fromisoformat(end_q)
+            except Exception:
+                end_dt = None
+
+        events_out = []
+
+        # Prefer events.json source if present
+        if EVENTS_FILE.exists():
+            raw = load_events()
+            from datetime import datetime, timedelta
+            for ev in raw:
+                try:
+                    ev_start = datetime.strptime(ev.get('start'), '%Y-%m-%d')
+                    ev_end = datetime.strptime(ev.get('end'), '%Y-%m-%d')
+                except Exception:
+                    continue
+
+                # expand daily occurrences
+                cur = ev_start
+                while cur <= ev_end:
+                    # range filter
+                    if start_dt and cur.date() < (start_dt.date() if hasattr(start_dt,'date') else start_dt):
+                        cur = cur + timedelta(days=1)
+                        continue
+                    if end_dt and cur.date() > (end_dt.date() if hasattr(end_dt,'date') else end_dt):
+                        break
+
+                    date_str = cur.strftime('%Y-%m-%d')
+                    events_out.append({
+                        'id': f"{ev.get('id','e')}-{date_str}",
+                        'title': ev.get('title') or ev.get('musical') or 'Evento',
+                        'start': date_str,
+                        'allDay': True,
+                        'extendedProps': {
+                            'musical': ev.get('musical'),
+                            'location': ev.get('location'),
+                            'description': ev.get('description'),
+                            'image': ev.get('image'),
+                            'url': ev.get('url'),
+                            'type': ev.get('type')
+                        }
+                    })
+                    cur = cur + timedelta(days=1)
+
+            return jsonify(events_out)
+
+        # Fallback: build from DB musicals (limited, requires link dates)
         musicals = Musical.query.all()
-        events = []
-        
         for musical in musicals:
             musical_name = musical.name.lower()
-            
-            # Obtener color específico del musical
-            color = MUSICAL_COLORS.get(musical_name, '#95a5a6')  # Gris por defecto
-            
-            # Obtener clase CSS para el musical
-            css_class = 'event-' + musical_name.replace(' ', '-').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
-            
+            color = MUSICAL_COLORS.get(musical_name, '#95a5a6')
+            css_class = 'event-' + musical_name.replace(' ', '-')
             for link in musical.links:
-                event = {
+                # Attempt to use last_checked/created_at if no explicit date
+                dt = None
+                if hasattr(link, 'date') and getattr(link, 'date'):
+                    dt = getattr(link, 'date')
+                elif getattr(link, 'last_checked', None):
+                    dt = getattr(link, 'last_checked')
+                elif getattr(link, 'created_at', None):
+                    dt = getattr(link, 'created_at')
+                if not dt:
+                    continue
+                if start_dt and dt.date() < (start_dt.date() if hasattr(start_dt,'date') else start_dt):
+                    continue
+                if end_dt and dt.date() > (end_dt.date() if hasattr(end_dt,'date') else end_dt):
+                    continue
+                events_out.append({
                     'title': musical.name,
-                    'start': link.date.isoformat() if link.date else datetime.now().isoformat(),
+                    'start': dt.isoformat(),
                     'backgroundColor': color,
                     'borderColor': color,
                     'textColor': '#ffffff',
-                    'classNames': [css_class],  # ← Clase CSS para aplicar estilos
+                    'classNames': [css_class],
                     'extendedProps': {
                         'musical': musical.name,
                         'url': link.url,
                         'isAvailable': link.is_available,
-                        'image': musical.images[0] if musical.images else None,
+                        'image': (musical.images[0] if musical.images else None),
                         'description': f"{'✅ Disponible' if link.is_available else '❌ Agotado'}",
-                        'location': 'Madrid'
+                        'location': 'N/A'
                     }
-                }
-                events.append(event)
-        
-        return jsonify(events)
+                })
+
+        return jsonify(events_out)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error generating calendar events: {e}")
         return jsonify([]), 500
 
 
