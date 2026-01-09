@@ -49,7 +49,7 @@
   const nextBtn = null;
   // NOTE: all dots/polka logic removed — no variables, functions or comments referencing "dot(s)" remain
 
-  if (!tableBody) { console.error('Missing #table-body — aborting'); return; }
+  if (!tableBody) { console.warn('Missing #table-body — continuing without table rendering'); }
 
   // state
   let musicals = Array.isArray(window.INITIAL_MUSICALS) ? window.INITIAL_MUSICALS : [];
