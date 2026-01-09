@@ -517,6 +517,9 @@ input:checked + .switch:before {
   .calendar-day-panel { position:relative; width:100%; max-width:320px; }
 }
 
+/* Sidebar wrapper (contains legend and day panel) */
+.calendar-sidebar { display:flex; flex-direction:column; gap:12px; }
+
 /* Past day de-emphasis */
 .fc-past-day { opacity: 0.62; filter: grayscale(0.06); background-color: rgba(0,0,0,0.01); }
 .fc-past-day .fc-daygrid-day-number { color: #9aa0a6; }

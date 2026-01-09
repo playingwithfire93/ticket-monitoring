@@ -296,8 +296,10 @@ document.addEventListener('DOMContentLoaded', function() {
       let d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
       const ds = formatLocalDate(d);
       const parent = el.parentNode || document.body;
-      let panel = parent.querySelector('.calendar-day-panel');
-      if(!panel){ panel = document.createElement('aside'); panel.className = 'calendar-day-panel'; parent.insertBefore(panel, el.nextSibling); }
+      let sidebar = parent.querySelector('.calendar-sidebar');
+      if(!sidebar){ sidebar = document.createElement('aside'); sidebar.className='calendar-sidebar'; parent.appendChild(sidebar); }
+      let panel = sidebar.querySelector('.calendar-day-panel');
+      if(!panel){ panel = document.createElement('div'); panel.className = 'calendar-day-panel'; sidebar.appendChild(panel); }
       panel.innerHTML = '';
       const hdr = document.createElement('div'); hdr.className = 'cdp-header'; hdr.textContent = `Eventos para ${ds}`; panel.appendChild(hdr);
       const list = document.createElement('div'); list.className = 'cdp-list'; panel.appendChild(list);
