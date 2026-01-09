@@ -95,7 +95,12 @@ document.addEventListener('DOMContentLoaded', function() {
   function applyFilter(events){
     const selected = getSelectedMusicalsArray();
     if(!selected || selected.length===0){ updateFilterCount(events.length); return events; }
-    const filtered = events.filter(e => selected.includes(e.musical || e.title || ''));
+    // compare normalized keys so UI labels (lowercase) match event titles
+    const selNorm = selected.map(s => normalizeKey(s));
+    const filtered = events.filter(e => {
+      const name = e.musical || e.title || '';
+      return selNorm.includes(normalizeKey(name));
+    });
     updateFilterCount(filtered.length);
     return filtered;
   }
@@ -290,19 +295,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
   calendar.render();
 
+  // Wire up static filter chips (buttons in the template)
+  (function wireFilterChips(){
+    try{
+      const chips = Array.from(document.querySelectorAll('.filter-chip'));
+      if(!chips || chips.length===0) return;
+      const allChip = document.querySelector('.filter-chip.filter-all');
+      chips.forEach(chip => {
+        chip.addEventListener('click', function(e){
+          const name = chip.dataset && chip.dataset.musical ? chip.dataset.musical : (chip.textContent||'').trim();
+          // 'all' resets selection
+          if(name && name.toLowerCase() === 'all'){
+            selectedSet.clear();
+            chips.forEach(c=>c.classList.remove('active'));
+            if(allChip) allChip.classList.add('active');
+            allEventsCache = null;
+            updateInputPlaceholder();
+            calendar.refetchEvents();
+            return;
+          }
+          // toggle active class
+          const isActive = chip.classList.toggle('active');
+          if(allChip) allChip.classList.remove('active');
+          if(isActive) selectedSet.add(name); else selectedSet.delete(name);
+          allEventsCache = null;
+          updateInputPlaceholder();
+          calendar.refetchEvents();
+        });
+      });
+    }catch(err){ console.warn('wireFilterChips failed', err); }
+  })();
+
   // Day events panel: shows all events for a selected day (defaults to today)
-  function renderDayPanel(dateLike){
+  function renderDayPanel(dateLike, opts){
+    opts = opts || { open: true };
     try{
       let d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
       const ds = formatLocalDate(d);
-      const parent = el.parentNode || document.body;
-      let sidebar = parent.querySelector('.calendar-sidebar');
-      if(!sidebar){ sidebar = document.createElement('aside'); sidebar.className='calendar-sidebar'; parent.appendChild(sidebar); }
-      let panel = sidebar.querySelector('.calendar-day-panel');
-      if(!panel){ panel = document.createElement('div'); panel.className = 'calendar-day-panel'; sidebar.appendChild(panel); }
-      panel.innerHTML = '';
-      const hdr = document.createElement('div'); hdr.className = 'cdp-header'; hdr.textContent = `Eventos para ${ds}`; panel.appendChild(hdr);
-      const list = document.createElement('div'); list.className = 'cdp-list'; panel.appendChild(list);
+      const slideover = document.getElementById('day-slideover');
+      if(!slideover){ console.warn('no slideover container found'); return; }
+      slideover.innerHTML = '';
+      const close = document.createElement('button'); close.className = 'slideover-close'; close.setAttribute('aria-label','Cerrar panel'); close.innerHTML = '✕';
+      close.addEventListener('click', function(){ slideover.classList.remove('active'); slideover.setAttribute('aria-hidden','true'); });
+      slideover.appendChild(close);
+      const hdr = document.createElement('div'); hdr.className = 'cdp-header'; hdr.textContent = `Eventos para ${ds}`; slideover.appendChild(hdr);
+      const list = document.createElement('div'); list.className = 'cdp-list'; slideover.appendChild(list);
 
       const evs = calendar.getEvents().filter(ev => {
         try{
@@ -313,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }catch(e){return false}
       });
 
-      if(evs.length === 0){ const none = document.createElement('div'); none.className='cdp-none'; none.textContent = 'No hay shows este día.'; list.appendChild(none); return; }
+      if(evs.length === 0){ const none = document.createElement('div'); none.className='cdp-none'; none.textContent = 'No hay shows este día.'; list.appendChild(none); if(opts.open){ slideover.classList.add('active'); slideover.setAttribute('aria-hidden','false'); } return; }
 
       evs.sort((a,b)=> (a.title || '').localeCompare(b.title || ''));
       evs.forEach(ev => {
@@ -329,11 +366,12 @@ document.addEventListener('DOMContentLoaded', function() {
         item.appendChild(img); item.appendChild(meta);
         list.appendChild(item);
       });
+      if(opts.open){ slideover.classList.add('active'); slideover.setAttribute('aria-hidden','false'); }
     }catch(e){ console.warn('renderDayPanel error', e); }
   }
 
-  // initial render for today
-  try{ renderDayPanel(new Date()); }catch(e){}
+  // initial prepare (populate but keep hidden)
+  try{ renderDayPanel(new Date(), { open: false }); }catch(e){}
 
   // add simple controls: show past toggle
   try{
