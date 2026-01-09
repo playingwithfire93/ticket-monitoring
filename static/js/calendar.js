@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let colorsMap = {}; // musical -> color mapping
   let showPast = false; // whether to include past events
   let showFromToday = false; // whether to jump/start calendar at today
+  let musicalsMeta = {}; // normalized name -> metadata from /api/musicals (links, description)
 
   const COLOR_PALETTE = ['#FF6B6B','#FFB86B','#FFD93D','#8BE9B4','#69B7FF','#8A79FF','#FF8AD6','#A0E1E0','#D6A2E8','#F6C6EA'];
 
@@ -85,6 +86,21 @@ document.addEventListener('DOMContentLoaded', function() {
       const txt = document.createElement('span'); txt.className='legend-name'; txt.textContent = name;
       item.appendChild(dot); item.appendChild(txt); legend.appendChild(item);
     });
+  }
+
+  // Prefetch musical metadata (urls, descriptions) so tooltips can show buy links
+  async function loadMusicalsMeta(){
+    try{
+      const r = await fetch('/api/musicals');
+      if(!r.ok) return;
+      const arr = await r.json();
+      musicalsMeta = {};
+      arr.forEach(m => {
+        const key = normalizeKey(m.name || m.id || '');
+        musicalsMeta[key] = m;
+      });
+      console.info('musicals meta loaded', Object.keys(musicalsMeta).length);
+    }catch(err){ console.warn('could not load musicals meta', err); }
   }
 
   function toggleSelection(name, checked){ if(checked) selectedSet.add(name); else selectedSet.delete(name); updateInputPlaceholder(); calendar.refetchEvents(); }
@@ -215,6 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
           allEventsCache = await res.json();
           await loadExclusions();
           buildMusicalDropdown(allEventsCache);
+          try{ await loadMusicalsMeta(); }catch(e){ /* ignore meta load errors */ }
         }
         let filtered = applyFilter(allEventsCache || []);
 
@@ -504,8 +521,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const description = props.description || 'Disfruta de este increíble musical en Madrid';
-      const location = props.location || 'Madrid';
-      const url = props.url || '#';
+      // try fallback to musicals metadata for location and buy link
+      const normalized = normalizeKey(event.title || '');
+      const meta = musicalsMeta[normalized] || {};
+      const location = props.location || meta.location || 'Madrid';
+      const url = props.url || (meta.links && meta.links[0] && meta.links[0].url) || '#';
       const isAvailable = props.isAvailable !== false;
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + ', Madrid')}`;
 
