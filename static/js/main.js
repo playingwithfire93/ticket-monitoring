@@ -510,6 +510,11 @@
 
   // improved renderTable with friendly empty-state + CTAs
   function renderTable(list) {
+    if (!tableBody) {
+      // If table is not present (minimal template), still render cards grid and exit.
+      try { if (typeof renderCards === 'function' && (cardsGrid || list)) renderCards(list || []); } catch(e){}
+      return;
+    }
     tableBody.innerHTML = '';
 
     // empty/fallback state
