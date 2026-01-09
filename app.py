@@ -1284,6 +1284,15 @@ def health_check():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+
+@app.route('/about', methods=['GET'])
+def about_page():
+    try:
+        return render_template('about.html')
+    except Exception as e:
+        app.logger.error(f"Error rendering about page: {e}")
+        return "About page is unavailable", 500
+
 # ==================== RUN ====================
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
