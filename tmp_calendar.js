@@ -193,8 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
     events: async function(fetchInfo, successCallback, failureCallback){
       try{
         if(!allEventsCache){
-          // load events + exclusions
-          const res = await fetch('/api/events');
+          // load events + exclusions (use server calendar endpoint)
+          const res = await fetch('/api/calendar-events');
           allEventsCache = await res.json();
           await loadExclusions();
           buildMusicalDropdown(allEventsCache);
@@ -276,22 +276,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     },
 
-    eventClick: function(info){
-      const title = prompt('Editar título (o escribe DELETE para borrar):', info.event.title);
-      if(title === null) return;
-      if(title === 'DELETE'){
-        fetch('/api/events?id=' + info.event.id, { method: 'DELETE' }).then(()=>{ allEventsCache=null; calendar.refetchEvents(); });
-        return;
-      }
-      fetch('/api/events', { method: 'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: info.event.id, title, start: info.event.startStr, end: info.event.endStr, allDay: info.event.allDay }) }).then(()=>{ allEventsCache=null; calendar.refetchEvents(); });
-    },
-
-    selectable: true,
-    select: function(selInfo){
-      const title = prompt('Título del evento (cancel para no crear):');
-      if(!title){ calendar.unselect(); return; }
-      fetch('/api/events', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ title, start: selInfo.startStr, end: selInfo.endStr || selInfo.startStr, allDay: selInfo.allDay }) }).then(()=>{ allEventsCache=null; calendar.refetchEvents(); });
-    }
+    // Editing is disabled in this build (server exposes read-only calendar endpoint)
+    selectable: false
   });
 
   calendar.render();
