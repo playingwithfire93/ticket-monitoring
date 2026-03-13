@@ -277,11 +277,15 @@ input:checked + .switch:before {
 .hero-poster {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(135deg, rgba(255,192,203,0.25), rgba(255,240,245,0.08));
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center;
   z-index: 0;
-  filter: saturate(0.95) contrast(0.95);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.hero-poster.active {
+  opacity: 1;
 }
 
 .hero-load-btn {

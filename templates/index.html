@@ -45,32 +45,20 @@
   <main class="container">
     <!-- Hero Banner CON VIDEOS Y BORDE AMARILLO -->
     <div class="catalog-hero">
-      <!-- Videos de fondo (poster + lazy-load) -->
+      <!-- Slideshow de imágenes de fondo -->
       <div class="video-hero-background">
-        <!-- Decorative poster as first layer to avoid video downloads -->
-        <div class="hero-poster" role="img" aria-label="Imagen de fondo de musicales" style="background-image: url('/static/fotos/Wicked/WICKED3.jpg');"></div>
-        <button id="hero-load-videos" class="hero-load-btn" aria-label="Cargar animación de fondo">Mostrar animación</button>
-        <!-- videos kept with data-src to avoid immediate network requests -->
-        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video1.mp4" poster="/static/fotos/Wicked/WICKED3.jpg"></video>
-        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video2.mp4" poster="/static/fotos/book_of_mormon/BOM1.jpg"></video>
-        <video class="hero-video" muted loop playsinline preload="none" data-src="/static/videos/video3.mp4" poster="/static/fotos/Houdini/HOUDINI1.jpg"></video>
+        <div class="hero-poster active" role="img" aria-label="Mi año musical 2025" style="background-image: url('/static/videos/2b8f0ec8-1bdd-4578-947b-2ac4ae0230fe.png'); background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
+        <div class="hero-poster" role="img" aria-label="Mi año musical 2025" style="background-image: url('/static/videos/8cb7a6aa-642e-48c8-810b-3b8543f4295b.png'); background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
       </div>
 
       <!-- Botones de navegación -->
-      <button class="video-hero-nav prev" onclick="previousHeroVideo()">‹</button>
-      <button class="video-hero-nav next" onclick="nextHeroVideo()">›</button>
+      <button class="video-hero-nav prev" onclick="previousHeroImg()">‹</button>
+      <button class="video-hero-nav next" onclick="nextHeroImg()">›</button>
 
       <!-- Indicadores -->
       <div class="video-hero-dots">
-        <div class="dot active" onclick="goToHeroVideo(0)"></div>
-        <div class="dot" onclick="goToHeroVideo(1)"></div>
-        <div class="dot" onclick="goToHeroVideo(2)"></div>
-        <div class="dot" onclick="goToHeroVideo(3)"></div>
-        <div class="dot" onclick="goToHeroVideo(4)"></div>
-        <div class="dot" onclick="goToHeroVideo(5)"></div>
-        <div class="dot" onclick="goToHeroVideo(6)"></div>
-        <div class="dot" onclick="goToHeroVideo(7)"></div>
-        <div class="dot" onclick="goToHeroVideo(8)"></div>
+        <div class="dot active" onclick="goToHeroImg(0)"></div>
+        <div class="dot" onclick="goToHeroImg(1)"></div>
       </div>
 
       <!-- Contenido (con emojis y texto) -->
@@ -340,66 +328,47 @@
 
   <script src="{{ url_for('static', filename='js/main.js') }}?v=20260109"></script>
   <script>
-    // ==================== VIDEO HERO CAROUSEL ====================
-    let currentHeroVideoIndex = 0;
-    let heroVideos = document.querySelectorAll('.hero-video');
-    let heroDots = document.querySelectorAll('.video-hero-dots .dot');
-    let heroVideoInterval;
+    // ==================== IMAGE HERO CAROUSEL ====================
+    let currentHeroImgIndex = 0;
+    let heroImgs = [];
+    let heroDots = [];
+    let heroImgInterval;
 
-    function goToHeroVideo(index) {
-      heroVideos[currentHeroVideoIndex].pause();
-      heroVideos[currentHeroVideoIndex].classList.remove('active');
-      heroDots[currentHeroVideoIndex].classList.remove('active');
-
-      currentHeroVideoIndex = index;
-      heroVideos[currentHeroVideoIndex].classList.add('active');
-      heroDots[currentHeroVideoIndex].classList.add('active');
-      heroVideos[currentHeroVideoIndex].play();
-
-      resetHeroVideoInterval();
+    function goToHeroImg(index) {
+      heroImgs[currentHeroImgIndex].classList.remove('active');
+      heroDots[currentHeroImgIndex].classList.remove('active');
+      currentHeroImgIndex = index;
+      heroImgs[currentHeroImgIndex].classList.add('active');
+      heroDots[currentHeroImgIndex].classList.add('active');
+      resetHeroImgInterval();
     }
 
-    function nextHeroVideo() {
-      goToHeroVideo((currentHeroVideoIndex + 1) % heroVideos.length);
+    function nextHeroImg() {
+      goToHeroImg((currentHeroImgIndex + 1) % heroImgs.length);
     }
 
-    function previousHeroVideo() {
-      goToHeroVideo((currentHeroVideoIndex - 1 + heroVideos.length) % heroVideos.length);
+    function previousHeroImg() {
+      goToHeroImg((currentHeroImgIndex - 1 + heroImgs.length) % heroImgs.length);
     }
 
-    function startHeroVideoAutoPlay() {
-      heroVideoInterval = setInterval(nextHeroVideo, 10000);
+    function resetHeroImgInterval() {
+      clearInterval(heroImgInterval);
+      heroImgInterval = setInterval(nextHeroImg, 6000);
     }
-
-    function resetHeroVideoInterval() {
-      clearInterval(heroVideoInterval);
-      startHeroVideoAutoPlay();
-    }
-
-    heroVideos.forEach((video) => {
-      video.addEventListener('ended', () => {
-        nextHeroVideo();
-      });
-    });
 
     document.addEventListener('DOMContentLoaded', () => {
-      if (heroVideos.length > 0) {
-        heroVideos[0].play();
-        startHeroVideoAutoPlay();
-
-        document.querySelector('.catalog-hero').addEventListener('mouseenter', () => {
-          clearInterval(heroVideoInterval);
-        });
-
-        document.querySelector('.catalog-hero').addEventListener('mouseleave', () => {
-          startHeroVideoAutoPlay();
-        });
+      heroImgs = Array.from(document.querySelectorAll('.video-hero-background .hero-poster'));
+      heroDots = Array.from(document.querySelectorAll('.video-hero-dots .dot'));
+      if (heroImgs.length > 0) {
+        resetHeroImgInterval();
+        document.querySelector('.catalog-hero').addEventListener('mouseenter', () => clearInterval(heroImgInterval));
+        document.querySelector('.catalog-hero').addEventListener('mouseleave', resetHeroImgInterval);
       }
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') previousHeroVideo();
-      if (e.key === 'ArrowRight') nextHeroVideo();
+      if (e.key === 'ArrowLeft') previousHeroImg();
+      if (e.key === 'ArrowRight') nextHeroImg();
     });
 
     // ==================== RESTO DE FUNCIONES ====================
