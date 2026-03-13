@@ -468,23 +468,69 @@ with app.app_context():
         app.logger.error(f"Database initialization error: {e}")
 
 # ==================== ROUTES ====================
+def get_musicals_fallback():
+    """Build a minimal list of musical dicts from static/python/urls.json when DB is disabled."""
+    import json
+    from pathlib import Path as _Path
+
+    path = BASE / 'static' / 'python' / 'urls.json'
+    try:
+        with open(path, 'r', encoding='utf-8') as fh:
+            data = json.load(fh)
+    except Exception:
+        return []
+
+    results = []
+    for i, item in enumerate(data):
+        name = item.get('musical') or item.get('name') or f'Musical {i+1}'
+        urls = item.get('urls', []) or item.get('links', [])
+
+        # Try to load images from static/fotos/<MusicalName> if present
+        images = []
+        safe_folder = name.replace(' ', '_')
+        fotos_dir = BASE / 'static' / 'fotos' / safe_folder
+        if fotos_dir.exists() and fotos_dir.is_dir():
+            for img in sorted(fotos_dir.iterdir()):
+                if img.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp'):
+                    # store a web-relative path for templates
+                    images.append(str(_Path('static') / 'fotos' / safe_folder / img.name))
+
+        links = []
+        for u in urls:
+            links.append({'url': u, 'is_available': False, 'last_checked': None})
+
+        results.append({
+            'id': i + 1,
+            'name': name,
+            'images': images,
+            'updated_at': None,
+            'is_available': False,
+            'links': links,
+            'active_links': 0,
+            'sold_out_links': 0,
+        })
+
+    return results
 @app.route("/")
 def index():
     """Página principal con el dashboard"""
     with app.app_context():
-        musicals = Musical.query.all()
-        
-        # Prepare data for each musical
-        for musical in musicals:
-            musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
-            # Check if is_available attribute exists
-            if musical.links and hasattr(musical.links[0], 'is_available'):
-                musical.active_links = sum(1 for link in musical.links if link.is_available)
-                musical.sold_out_links = len(musical.links) - musical.active_links
-            else:
-                musical.active_links = len(musical.links)
-                musical.sold_out_links = 0
-        
+        # If a production DATABASE_URL is configured, use the ORM; otherwise fall back to a
+        # lightweight JSON-based representation to avoid any DB connections while we debug.
+        if DATABASE_CONFIGURED:
+            musicals = Musical.query.all()
+            # Prepare data for each musical
+            for musical in musicals:
+                musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
+                if musical.links and hasattr(musical.links[0], 'is_available'):
+                    musical.active_links = sum(1 for link in musical.links if link.is_available)
+                    musical.sold_out_links = len(musical.links) - musical.active_links
+                else:
+                    musical.active_links = len(musical.links)
+                    musical.sold_out_links = 0
+        else:
+            musicals = get_musicals_fallback()
+
         return render_template(
             'index.html',
             musicals=musicals,
@@ -527,9 +573,12 @@ def index():
 def shows():
     """Página de cartelera de musicales"""
     with app.app_context():
-        musicals = Musical.query.all()
-        for musical in musicals:
-            musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
+        if DATABASE_CONFIGURED:
+            musicals = Musical.query.all()
+            for musical in musicals:
+                musical.links = MusicalLink.query.filter_by(musical_id=musical.id).all()
+        else:
+            musicals = get_musicals_fallback()
         return render_template('shows.html', musicals=musicals)
 
 @app.route("/calendar")
