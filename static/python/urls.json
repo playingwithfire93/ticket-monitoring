@@ -31,6 +31,13 @@
   }
   ,
   {
+    "musical": "Test (httpbin)",
+    "urls": [
+      "https://httpbin.org/uuid"
+    ]
+  }
+  ,
+  {
     "musical": "Funciones TBOM (Privado)",
     "urls": [
       "https://alejandrofmesa.notion.site/Funciones-TBOM-2aed6f31095680c197c5c0886b2bfc46"
