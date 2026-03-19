@@ -634,10 +634,16 @@
           Houdini
         </button>
       </div>
-        <div class="view-toggle" aria-label="Cambiar vista del calendario">
-          <button class="view-btn active" data-view="dayGridMonth">Mes</button>
-          <button class="view-btn" data-view="dayGridWeek">Semana</button>
-          <button class="view-btn" data-view="listWeek">Lista</button>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <label style="font-size:0.85rem;font-weight:600;color:#555;white-space:nowrap;">📅 Ir a:</label>
+          <input type="month" id="month-jump" min="2025-01" max="2026-12"
+            style="padding:6px 10px;border-radius:20px;border:2px solid #e0e0e0;font-size:0.85rem;cursor:pointer;background:#fff;"
+            aria-label="Ir al mes">
+          <div class="view-toggle" aria-label="Cambiar vista del calendario">
+            <button class="view-btn active" data-view="dayGridMonth">Mes</button>
+            <button class="view-btn" data-view="dayGridWeek">Semana</button>
+            <button class="view-btn" data-view="listWeek">Lista</button>
+          </div>
         </div>
       </div>
     </div>

@@ -467,6 +467,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.calendarRefresh = function(){ allEventsCache=null; selectedSet.clear(); updateInputPlaceholder(); calendar.refetchEvents(); };
 
+  // Wire month-jump input
+  (function wireMonthJump(){
+    try{
+      const input = document.getElementById('month-jump');
+      if(!input) return;
+      // set initial value to current month
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth()+1).padStart(2,'0');
+      input.value = `${yr}-${mo}`;
+      input.addEventListener('change', function(){
+        const val = input.value; // "YYYY-MM"
+        if(!val) return;
+        const [y,m] = val.split('-').map(Number);
+        try{ calendar.gotoDate(new Date(y, m-1, 1)); }catch(e){ console.warn('gotoDate failed', e); }
+      });
+    }catch(e){ console.warn('wireMonthJump failed', e); }
+  })();
+
   // ==================== TOOLTIP FUNCTIONALITY ====================
   (function() {
     const tooltipEl = document.getElementById('musical-tooltip');
@@ -545,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const content = document.createElement('div'); content.className = 'tooltip-content';
       const h3 = document.createElement('h3'); h3.className = 'tooltip-title'; h3.textContent = event.title;
 
-      const meta = document.createElement('div'); meta.className = 'tooltip-meta';
+      const metaDiv = document.createElement('div'); metaDiv.className = 'tooltip-meta';
       const metaLoc = document.createElement('div'); metaLoc.className = 'tooltip-meta-item';
       metaLoc.innerHTML = `<span>📍</span>`;
       const aLoc = document.createElement('a'); aLoc.href = mapsUrl; aLoc.target = '_blank'; aLoc.className = 'tooltip-location-link'; aLoc.textContent = location; aLoc.addEventListener('click', (ev)=>ev.stopPropagation());
@@ -557,7 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
       availSpan.textContent = isAvailable ? '✅ Entradas disponibles' : '❌ Agotado';
       metaAvail.appendChild(availSpan);
 
-      meta.appendChild(metaLoc); meta.appendChild(metaAvail);
+      metaDiv.appendChild(metaLoc); metaDiv.appendChild(metaAvail);
 
       const p = document.createElement('p'); p.className = 'tooltip-description'; p.textContent = description;
 
@@ -572,7 +591,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const closeBtn = document.createElement('button'); closeBtn.className = 'tooltip-close'; closeBtn.setAttribute('aria-label','Cerrar'); closeBtn.innerHTML = '✕';
       closeBtn.addEventListener('click', function(ev){ ev.stopPropagation(); tooltipEl.classList.remove('active'); setTimeout(()=>{ tooltipEl.innerHTML=''; },200); });
 
-      content.appendChild(h3); content.appendChild(meta); content.appendChild(p); content.appendChild(btns);
+      content.appendChild(h3); content.appendChild(metaDiv); content.appendChild(p); content.appendChild(btns);
       tooltipEl.appendChild(img); tooltipEl.appendChild(content); tooltipEl.appendChild(closeBtn);
 
       // Positioning
