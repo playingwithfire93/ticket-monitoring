@@ -14,6 +14,10 @@ import difflib
 import asyncio
 import threading
 import time
+try:
+    import anthropic as _anthropic
+except ImportError:
+    _anthropic = None
 from models import db, Musical, MusicalLink, MusicalChange
 from telegram import Bot
 from telegram.ext import Application
@@ -844,6 +848,56 @@ def _save_snapshots(snap):
         pass
 
 
+_anthropic_client = None
+
+def _get_anthropic_client():
+    global _anthropic_client
+    if _anthropic_client is None:
+        if _anthropic is None:
+            return None
+        api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+        if api_key:
+            _anthropic_client = _anthropic.Anthropic(api_key=api_key)
+    return _anthropic_client
+
+
+def summarize_diff(url, diff_text, musical_name=''):
+    """Use Claude Haiku to generate a human-readable summary of a page change.
+    Returns {'title': str, 'description': str} or None on failure."""
+    client = _get_anthropic_client()
+    if not client:
+        return None
+
+    truncated = diff_text[:3000] if len(diff_text) > 3000 else diff_text
+    prompt = (
+        "Eres el asistente de un monitor de webs de musicales en España.\n"
+        f"Se ha detectado un cambio en la web de '{musical_name}': {url}\n\n"
+        f"Diff (las líneas con '-' son lo que había antes, las '+' lo que hay ahora):\n{truncated}\n\n"
+        "Tu tarea: explicar el cambio de forma clara y amigable para fans de musicales, en español.\n"
+        "- Título: máximo 8 palabras, directo al grano (ej: 'Nueva fecha disponible en Book of Mormon').\n"
+        "- Descripción: 1-2 frases explicando exactamente qué ha cambiado y qué significa para los fans.\n"
+        "  Si el cambio parece visual o de maquetación sin contenido relevante (CSS, JS, imágenes reposicionadas), dilo brevemente.\n"
+        "- NO menciones el diff, los guiones ni la URL. Habla como si se lo contaras a un amigo.\n"
+        "Responde ÚNICAMENTE con JSON válido, sin markdown:\n"
+        "{\"title\": \"...\", \"description\": \"...\"}"
+    )
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        raw = message.content[0].text.strip()
+        result = json.loads(raw)
+        return {
+            'title': result.get('title', '').strip().strip('"'),
+            'description': result.get('description', '').strip().strip('"'),
+        }
+    except Exception as e:
+        app.logger.warning(f"Error calling Claude for summary: {e}")
+        return None
+
+
 def run_check_and_alert():
     """Check monitored URLs, detect body-hash changes and send Telegram alerts.
 
@@ -933,10 +987,30 @@ def run_check_and_alert():
                         # truncate to a safe size for messages and logs
                         max_chars = 1200
                         diff_snippet = diff_text if len(diff_text) <= max_chars else diff_text[:max_chars] + '\n... (truncated)'
-                # send Telegram notification (sync via asyncio.run)
-                msg = f"🔔 Cambio detectado en {musical}: {url}"
-                if diff_snippet:
-                    msg = msg + "\n\nDiff (truncated):\n" + diff_snippet
+                # Only notify if we have an actual diff to show
+                if not diff_snippet:
+                    results.append({'musical': musical, 'url': url, 'status_code': r.status_code, 'changed': True, 'notified': False, 'diff_snippet': None})
+                    snapshots[url] = {'hash': h, 'body': body if len(body) <= 20000 else body[:20000], 'last_checked': datetime.now(UTC).isoformat()}
+                    continue
+
+                # Ask Haiku to summarize the change
+                summary = summarize_diff(
+                    url,
+                    diff_text=diff_snippet,
+                    musical_name=musical,
+                )
+
+                # Build notification message
+                if summary:
+                    msg = (
+                        f"🔔 *{summary['title']}*\n"
+                        f"{summary['description']}\n\n"
+                        f"🎭 {musical}\n🔗 {url}"
+                    )
+                else:
+                    msg = f"🔔 Cambio detectado en {musical}: {url}"
+                    if diff_snippet:
+                        msg = msg + "\n\nDiff (truncated):\n" + diff_snippet
 
                 try:
                     asyncio.run(send_telegram_notification_async(msg))

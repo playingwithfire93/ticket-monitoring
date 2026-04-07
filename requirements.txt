@@ -1,3 +1,5 @@
+anthropic>=0.40.0
+
 # Core Framework
 Flask>=3.0.0
 Flask-SQLAlchemy>=3.1.1
