@@ -898,6 +898,21 @@ def summarize_diff(url, diff_text, musical_name=''):
         return None
 
 
+def _is_image_only_diff(diff_text: str) -> bool:
+    """Return True if every changed line in the diff is only an <img src=...> attribute swap.
+    These are pure visual rotations (e.g. banner images) that don't affect ticket availability."""
+    import re
+    changed_lines = [
+        line[1:]  # strip the leading + or -
+        for line in diff_text.splitlines()
+        if len(line) > 1 and line[0] in ('+', '-') and not line.startswith(('+++', '---'))
+    ]
+    if not changed_lines:
+        return False
+    img_pattern = re.compile(r'^\s*<img\b', re.IGNORECASE)
+    return all(img_pattern.match(line) for line in changed_lines)
+
+
 def run_check_and_alert():
     """Check monitored URLs, detect body-hash changes and send Telegram alerts.
 
@@ -990,6 +1005,13 @@ def run_check_and_alert():
                 # Only notify if we have an actual diff to show
                 if not diff_snippet:
                     results.append({'musical': musical, 'url': url, 'status_code': r.status_code, 'changed': True, 'notified': False, 'diff_snippet': None})
+                    snapshots[url] = {'hash': h, 'body': body if len(body) <= 20000 else body[:20000], 'last_checked': datetime.now(UTC).isoformat()}
+                    continue
+
+                # Skip notification if the only changes are <img src=...> swaps (banner rotations)
+                if _is_image_only_diff(diff_snippet):
+                    app.logger.info(f"Skipping image-only change for {url}")
+                    results.append({'musical': musical, 'url': url, 'status_code': r.status_code, 'changed': True, 'notified': False, 'diff_snippet': diff_snippet})
                     snapshots[url] = {'hash': h, 'body': body if len(body) <= 20000 else body[:20000], 'last_checked': datetime.now(UTC).isoformat()}
                     continue
 
